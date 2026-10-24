@@ -2050,6 +2050,29 @@ def edit_workout(
     }
 
 
+def _week_for_date(conn: sqlite3.Connection, plan_id: int, iso_date: str) -> tuple[int, str] | None:
+    """Which training week of this plan contains `iso_date`?
+
+    Returns (week_number, week_phase), or None when the date falls outside
+    every week's span. Derived from the plan's own rows rather than from
+    arithmetic on the start date: engines are free to align weeks however
+    they like, and a fixed-schedule plan may not start on a Monday.
+
+    Engines emit all seven days per week (rest days included), so every date
+    inside the plan window lands in exactly one week.
+    """
+    rows = conn.execute(
+        "SELECT week_number, week_phase, MIN(planned_date) AS lo, MAX(planned_date) AS hi "
+        "FROM plan_workouts WHERE plan_id = ? "
+        "GROUP BY week_number ORDER BY week_number",
+        (plan_id,),
+    ).fetchall()
+    for r in rows:
+        if r["lo"] <= iso_date <= r["hi"]:
+            return int(r["week_number"]), r["week_phase"]
+    return None
+
+
 def move_workout(
     conn: sqlite3.Connection,
     client,
@@ -2110,6 +2133,12 @@ def move_workout(
     old_dow = pw["day_of_week"]
     new_dow = new_date_d.weekday()  # Mon=0..Sun=6 — matches plan generator
 
+    # Resolve both destination weeks *before* writing anything: _week_for_date
+    # reads each week's span from the current rows, so computing the second
+    # lookup after the first UPDATE would read a layout already half-changed.
+    moved_week = _week_for_date(conn, pw["plan_id"], new_date)
+    other_week = _week_for_date(conn, pw["plan_id"], old_date) if other_pw else None
+
     # Clear push state on both rows — re-push the new dates below.
     was_pushed_self = bool(pw.get("garmin_workout_id"))
     old_garmin_id_self = pw.get("garmin_workout_id")
@@ -2122,10 +2151,21 @@ def move_workout(
     released_self = release_garmin_copy(client, old_garmin_id_self) if was_pushed_self else True
     released_other = release_garmin_copy(client, old_garmin_id_other) if was_pushed_other else True
 
-    conn.execute(
-        "UPDATE plan_workouts SET planned_date = ?, day_of_week = ? WHERE id = ?",
-        (new_date, new_dow, plan_workout_id),
-    )
+    # Re-file into the week that actually contains the new date. Without this
+    # the row keeps its old week_number while its date moves, so get_plan_weeks
+    # groups it under the previous week — where it renders behind the "Show N
+    # previous weeks" collapse and looks, to the runner, like it vanished.
+    if moved_week:
+        conn.execute(
+            "UPDATE plan_workouts SET planned_date = ?, day_of_week = ?, "
+            "week_number = ?, week_phase = ? WHERE id = ?",
+            (new_date, new_dow, moved_week[0], moved_week[1], plan_workout_id),
+        )
+    else:
+        conn.execute(
+            "UPDATE plan_workouts SET planned_date = ?, day_of_week = ? WHERE id = ?",
+            (new_date, new_dow, plan_workout_id),
+        )
     # A move changes the date, so an unreleased copy sits on the *old* day.
     # Keep its id as the handle, drop pushed_at so the row doesn't claim the
     # new date is on the watch.
@@ -2141,10 +2181,18 @@ def move_workout(
             (plan_workout_id,),
         )
     if other_pw:
-        conn.execute(
-            "UPDATE plan_workouts SET planned_date = ?, day_of_week = ? WHERE id = ?",
-            (old_date, old_dow, other_pw["id"]),
-        )
+        # The swap partner takes the vacated date, so it re-files too.
+        if other_week:
+            conn.execute(
+                "UPDATE plan_workouts SET planned_date = ?, day_of_week = ?, "
+                "week_number = ?, week_phase = ? WHERE id = ?",
+                (old_date, old_dow, other_week[0], other_week[1], other_pw["id"]),
+            )
+        else:
+            conn.execute(
+                "UPDATE plan_workouts SET planned_date = ?, day_of_week = ? WHERE id = ?",
+                (old_date, old_dow, other_pw["id"]),
+            )
         if released_other:
             conn.execute(
                 "UPDATE plan_workouts SET garmin_workout_id = NULL, pushed_at = NULL "

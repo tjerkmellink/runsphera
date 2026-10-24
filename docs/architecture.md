@@ -106,6 +106,28 @@ The DB columns `garmin_workout_id` and `pushed_at` **are** the push state; nothi
 
 ---
 
+### `week_number` must agree with `planned_date`
+
+`get_plan_weeks` groups rows by `week_number`, and the plans page renders one
+card per group. `planned_date` decides *when* a session happens; `week_number`
+decides *where it appears*. Any write that changes one must change the other.
+
+`move_workout` broke this: it updated `planned_date` and `day_of_week` and
+left `week_number` alone. Moving Sunday's long run to Monday kept it filed in
+the previous week, where an elapsed week renders behind the "Show N previous
+weeks" collapse — so the session looked, to the runner, like it had
+disappeared. The swap case mis-filed *both* rows, leaving one week spanning
+eight days with two Mondays and the next with two Sundays.
+
+`_week_for_date()` resolves the owning week from the plan's own rows rather
+than from arithmetic on the start date, because engines align weeks as they
+like and a `fixed_schedule` plan need not start on a Monday. Every engine
+emits all seven days per week, rest days included, so each date in the plan
+window lands in exactly one week.
+
+Found by moving a workout in the running app and looking at the page — five
+rounds of static review never touched it.
+
 ## 5. Server-rendered HTMX, no build step
 
 FastAPI serves full pages and HTML fragments from Jinja templates in [web/templates/](../running_coach/web/templates/). Templates whose names start with `_` are fragments returned to an `hx-target`. There is no bundler, no npm, no JSON API, and no client-side framework. Charts are Plotly HTML rendered on the server.
@@ -132,7 +154,7 @@ FastAPI serves full pages and HTML fragments from Jinja templates in [web/templa
 
 [llm/connector.py](../running_coach/llm/connector.py) is the single dispatcher between the app and three providers (`_anthropic`, `_openai`, `_gemini` under `llm/providers/`). It resolves the active provider from settings, returns a uniform `LLMResult`, and reports `is_available()` for the **active** provider only — so the dashboard degrades gracefully when the runner switches to a provider they have not configured. Adding a provider is a new `providers/_<name>.py`, a registry entry, a storage column, and a settings tab.
 
-Ingest has no equivalent seam yet. [garmin.py](../running_coach/garmin.py) and [ingest.py](../running_coach/ingest.py) assume one account on one vendor, and Garmin's field names reach the schema directly. Widening this — Samsung, Apple, Polar, Oura, and a mobile client — is designed but not built: see multi-device-support.md and mobile-mvp-brief.md.
+Ingest has no equivalent seam yet. [garmin.py](../running_coach/garmin.py) and [ingest.py](../running_coach/ingest.py) assume one account on one vendor, and Garmin's field names reach the schema directly. Widening this — Samsung, Apple, Polar, Oura, and a mobile client — is designed but not built: see the multi-device plan and the mobile MVP brief.
 
 **Consequence:** new ingest code should not deepen the Garmin assumption any further than it has to. When a choice is cheap, prefer the shape that survives a second provider.
 
