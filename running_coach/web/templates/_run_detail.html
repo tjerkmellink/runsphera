@@ -1,0 +1,439 @@
+{# Tempo run-detail modal — v2 layout (see docs/run-detail-design-brief.md
+   for the redesign rationale).
+
+   Layout: masthead → tabs 01 REPLAY · 02 THE RUN · 03 LOG.
+   - REPLAY (default, only when a GPS route exists): glow header with a
+     rules-based verdict headline + the animated map. The wow moment first.
+   - THE RUN: coach quote (moved down from above the tabs; the old
+     active-block callout card is collapsed into a verdict chip in its
+     attribution row) → stat line → per-lap chart → HR zones (merged in
+     from the old Effort tab) → fastest splits → deeper numbers.
+   - LOG: watch reference (RPE/feel) first, diary input, body nudge last.
+
+   Tabs are CSS-radio driven (zero JS); the prev/next slide-nav buttons are
+   plain <label>s for the same radios. Loaded into <dialog id="run-detail-modal">
+   via HTMX from /runs/{id}. All class names prefixed `tprd-`; styles in
+   running_coach/web/static/app.css.
+#}
+{% if not run %}
+    <div class="card empty">Run not found.</div>
+{% else %}
+{% set mw = run.matched_workout %}
+{% set verdict = run.verdict %}
+{% set tgt_s = mw.target_pace_s_per_km if mw else None %}
+<div class="tprd-root{% if mw and mw.workout_type %} wtype-{{ mw.workout_type }}{% endif %}">
+
+  {# ── Slide system (CSS radio, no JS) ──────────────────────────────────
+     The tab bar is gone; navigation lives in each panel's foot
+     (`.tprd-slidenav`). The masthead sits inside the wrap, after the
+     inputs, so it can be hidden on the Replay slide (see app.css). The
+     close button is the dialog wrapper's generic `.modal-close`. #}
+  <div class="tprd-tabwrap">
+    {% if route %}<input class="tprd-tab-input" type="radio" name="tprd-tab" id="tprd-t-replay" checked>{% endif %}
+    <input class="tprd-tab-input" type="radio" name="tprd-tab" id="tprd-t-run" {% if not route %}checked{% endif %}>
+    <input class="tprd-tab-input" type="radio" name="tprd-tab" id="tprd-t-log">
+
+    {# ── Masthead (hidden on the Replay slide) ─────────────────────── #}
+    <div class="tprd-head">
+      <div style="flex: 1; min-width: 0;">
+        <div class="tprd-kicker">
+          {{ t("RUN DEBRIEF") }}
+          {% if mw and mw.workout_type %} · {{ t(mw.workout_type|capitalize)|upper }}{% endif %}
+        </div>
+        <h1 class="tprd-title">{{ run.activity_name or "Run" }}</h1>
+        <div class="tprd-meta">
+          {% if run.start_time_local %}
+            <span><b>{{ run.start_time_local[11:16] }}</b></span>
+            <span>{{ fmt_date_long(run.start_time_local[:10])|upper }}</span>
+          {% endif %}
+          {% if run.location_name %}<span>{{ run.location_name|upper }}</span>{% endif %}
+          {% if run.min_temperature_c is not none and run.max_temperature_c is not none %}
+            <span>{{ "%.0f"|format(run.min_temperature_c) }}–{{ "%.0f"|format(run.max_temperature_c) }}°C</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="tprd-panels">
+
+      {# ═════════ 01 · REPLAY ═════════
+         GPS track on a Leaflet map (CARTO light/dark basemap picked per
+         theme) with a replay animation: the full route sits underneath as
+         a faint ghost line while a bold trail redraws it in ~3 s,
+         time-proportional to the actual run ([lat, lon, s-from-start]
+         triples from gps_route.py). Default tab, so the map initializes as
+         soon as the dialog is measurable — with a short delay so htmx's
+         attribute settle (20 ms after swap) can't wipe Leaflet's classes. #}
+      {% if route %}
+      <section class="tprd-panel" id="tprd-p-replay">
+
+        <div class="tprd-glow-head">
+          <div>
+            {# Uplifting headline, varied per run. Seeded on the activity id
+               so it's stable for a given run but differs across runs (never
+               flickers on re-open). `{km}` = whole km; km-less variants
+               ignore the kwarg. #}
+            {% set glow_headlines = [
+              "Great work on the {km} km!",
+              "Nice running — {km} km done!",
+              "Strong session!",
+              "Another {km} km in the bank!",
+              "Well run!",
+              "That's a wrap — great effort!",
+              "Boom — {km} km ticked off!",
+            ] %}
+            {% set _hl = glow_headlines[run.activity_id % (glow_headlines|length)] %}
+            <h2 class="tprd-glow-title">{{ t(_hl, km="%.0f"|format(run.km)) }}</h2>
+            {% if verdict and verdict.good %}
+            <p class="tprd-glow-sub">{{ t("Nailed the prescription — active block at {pace}/km against a {target}/km call.",
+                pace="%d:%02d"|format(run.active_block.avg_pace_s_per_km // 60, run.active_block.avg_pace_s_per_km % 60),
+                target="%d:%02d"|format(tgt_s // 60, tgt_s % 60)) }}</p>
+            {% elif verdict %}
+            <p class="tprd-glow-sub">{{ t("Active block came in {n} s/km over the {target}/km call — still money in the bank.",
+                n=verdict.delta,
+                target="%d:%02d"|format(tgt_s // 60, tgt_s % 60)) }}</p>
+            {% else %}
+            <p class="tprd-glow-sub">{{ t("{km} km at {pace} — in the books.", km="%.2f"|format(run.km), pace=run.pace) }}</p>
+            {% endif %}
+          </div>
+          {% if verdict %}
+          <span class="tprd-glow-badge{{ '' if verdict.good else ' over' }}">
+            {%- if verdict.good %}{{ t("✓ Target hit") }}{% else %}{{ t("▲ {n} s/km over", n=verdict.delta) }}{% endif -%}
+          </span>
+          {% endif %}
+        </div>
+
+        <div class="tprd-card tprd-map-card">
+          <div class="tprd-map-top">
+            <span class="tprd-lbl">
+              {% if run.location_name %}{{ run.location_name|upper }}{% endif %}
+            </span>
+            <button type="button" class="tprd-map-replay"
+                    id="tprd-map-replay-{{ run.activity_id }}">↻ {{ t("Replay") }}</button>
+          </div>
+          <div class="tprd-map" id="tprd-map-{{ run.activity_id }}"></div>
+          <div class="tprd-map-foot">
+            <div><b>{{ "%.2f"|format(run.km) }}</b> km</div>
+            {% if run.elevation_gain_m %}<div><b>+{{ "%.0f"|format(run.elevation_gain_m) }}</b> m {{ t("climb") }}</div>{% endif %}
+            {% if run.start_time_local %}<div>{{ t("Start") }} <b>{{ run.start_time_local[11:16] }}</b></div>{% endif %}
+            {% if run.finish_time %}<div>{{ t("Finish") }} <b>{{ run.finish_time }}</b></div>{% endif %}
+          </div>
+        </div>
+
+        <div class="tprd-slidenav">
+          <span class="tprd-nav-btn tprd-nav-ghost">←</span>
+          <div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
+          <label class="tprd-nav-btn next" for="tprd-t-run">{{ t("The Run") }} →</label>
+        </div>
+
+        <script>
+        (() => {
+            const pts = {{ route.points_json | safe }};   // [[lat, lon, t_s], ...]
+            const mapEl = document.getElementById('tprd-map-{{ run.activity_id }}');
+            const tabEl = document.getElementById('tprd-t-replay');
+            const replayBtn = document.getElementById('tprd-map-replay-{{ run.activity_id }}');
+            if (!mapEl || !tabEl || !window.L || pts.length < 2) return;
+
+            const latlngs = pts.map(p => [p[0], p[1]]);
+            const t0 = pts[0][2], T = (pts[pts.length - 1][2] - t0) || 1;
+            const DUR = 6000;
+            const ACCENT = '#ff3b1f';
+            let map = null, trail = null, head = null, raf = null;
+
+            // progress ∈ [0,1] of *run time* → trail up to the interpolated
+            // position at that moment. Pauses and slow stretches replay
+            // slower, fast blocks sweep — the animation tells the pacing story.
+            function draw(progress) {
+                const tt = t0 + progress * T;
+                let i = 1;
+                while (i < pts.length && pts[i][2] <= tt) i++;
+                const slice = latlngs.slice(0, i);
+                if (i < pts.length) {
+                    const a = pts[i - 1], b = pts[i];
+                    const f = b[2] > a[2] ? (tt - a[2]) / (b[2] - a[2]) : 0;
+                    slice.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]);
+                }
+                trail.setLatLngs(slice);
+                head.setLatLng(slice[slice.length - 1]);
+            }
+
+            function replay() {
+                if (!map) return;
+                if (raf) cancelAnimationFrame(raf);
+                const start = performance.now();
+                const tick = (now) => {
+                    const p = Math.min(1, (now - start) / DUR);
+                    // easeInOutQuad — gentle start/finish, honest middle.
+                    const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+                    draw(e);
+                    raf = p < 1 ? requestAnimationFrame(tick) : null;
+                };
+                raf = requestAnimationFrame(tick);
+            }
+
+            function init() {
+                if (map) { map.invalidateSize(); return; }
+                map = L.map(mapEl, { zoomControl: false, scrollWheelZoom: false });
+                // OSM basemap (keyless — CARTO now watermarks unkeyed
+                // requests). Dark mode re-tints the tiles in app.css.
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                }).addTo(map);
+                map.fitBounds(L.latLngBounds(latlngs), { padding: [30, 30] });
+                // Ghost of the full route + start (green) / finish (accent) pins.
+                L.polyline(latlngs, { color: '#8a857c', weight: 2, opacity: 0.5, dashArray: '2 6' }).addTo(map);
+                L.circleMarker(latlngs[0], { radius: 6, weight: 3, color: '#fff', fillColor: '#15803d', fillOpacity: 1 }).addTo(map);
+                L.circleMarker(latlngs[latlngs.length - 1], { radius: 6, weight: 3, color: '#fff', fillColor: ACCENT, fillOpacity: 1 }).addTo(map);
+                trail = L.polyline([latlngs[0]], { color: ACCENT, weight: 4, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+                head = L.circleMarker(latlngs[0], { radius: 7, weight: 2, color: '#fff', fillColor: ACCENT, fillOpacity: 1 }).addTo(map);
+                replay();
+            }
+
+            // Replay is the DEFAULT tab: init as soon as the container is
+            // measurable (the dialog opens moments after the HTMX swap).
+            // The 80 ms delay clears htmx's attribute-settle window, which
+            // would otherwise strip Leaflet's classes off the container.
+            setTimeout(function poll() {
+                if (!document.body.contains(mapEl)) return;   // modal content replaced
+                if (mapEl.offsetHeight > 0) { init(); return; }
+                requestAnimationFrame(() => setTimeout(poll, 50));
+            }, 80);
+            tabEl.addEventListener('change', () => {
+                if (tabEl.checked) requestAnimationFrame(init);
+            });
+            if (replayBtn) replayBtn.addEventListener('click', replay);
+        })();
+        </script>
+      </section>
+      {% endif %}
+
+      {# ═════════ 02 · THE RUN ═════════ #}
+      <section class="tprd-panel" id="tprd-p-run">
+
+        {# Coach voice — loaded lazily while the runner watches the replay.
+           Markup lives in _run_reaction.html so the inline render and the
+           lazy-load/regenerate swap are literally the same block: the swap
+           target wraps quote *and* byline, verdict chip included. #}
+        <div class="tprd-run-intro">
+          <div class="tprd-coach">
+            {% with activity_id = run.activity_id %}{% include "_run_reaction.html" %}{% endwith %}
+          </div>
+
+          {# Stat line — the run's headline numbers, straight under the voice. #}
+          <div class="tprd-statline">
+            <div><div class="k">{{ t("DISTANCE") }}</div><div class="v">{{ "%.2f"|format(run.km) }}<small>km</small></div></div>
+            <div><div class="k">{{ t("TIME") }}</div><div class="v">{{ fmt_duration(run.duration_s) }}</div></div>
+            <div><div class="k">{{ t("AVG PACE") }}</div><div class="v">{{ run.pace }}</div></div>
+            <div><div class="k">{{ t("LOAD") }}</div><div class="v">{% if run.training_load %}{{ "%.0f"|format(run.training_load) }}<small>tss</small>{% else %}—{% endif %}</div></div>
+          </div>
+        </div>
+
+        {# Lap chart — DATA state #}
+        {% if run.lap_chart %}
+        <div class="tprd-card tprd-chart-card">
+          <div class="tprd-chart-head">
+            <span class="tprd-lbl">{{ t("Per-lap pace") }}</span>
+            <div class="tprd-chart-legend">
+              {% set _seen = [] %}
+              {% for b in run.lap_chart.bars %}
+                {% if b.intensity not in _seen %}
+                {% set _ = _seen.append(b.intensity) %}
+                {% set _label_en = b.intensity|replace('WARMUP','WARM-UP')|replace('COOLDOWN','COOL-DOWN') %}
+                <span><i class="tprd-c-{{ b.intensity|lower if b.intensity in ['WARMUP','ACTIVE','COOLDOWN','RECOVERY'] else 'active' }}"
+                          style="background: {{ b.color }};"></i>{{ t(_label_en) }}</span>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+          <div class="tprd-plot">
+            {% if run.lap_chart.target_pct is not none %}
+            <div class="target" style="bottom: {{ run.lap_chart.target_pct }}%;">
+              <span>{{ t("TARGET {pace}", pace=run.lap_chart.target_str) }}</span>
+            </div>
+            {% endif %}
+            {% for b in run.lap_chart.bars %}
+            <div class="tprd-bar" title="{{ b.tooltip }}">
+              <div class="fill" style="height: {{ b.height_pct }}%; background: {{ b.color }};"></div>
+              <div class="blab"><b>{{ b.pace_str|replace('/km','') }}</b>K{{ loop.index }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        {# Lap chart — EMPTY state (run pre-dates lap ingest) #}
+        <div class="tprd-card tprd-stripe tprd-chart-empty">
+          <div class="tprd-lbl">{{ t("Per-lap data not recorded") }}</div>
+          <p>{{ t("This run was synced before <b>per-lap tracking was enabled</b>, so there's no split-by-split chart. Distance, time and pace above are still accurate.")|safe }}</p>
+        </div>
+        {% endif %}
+
+        {# HR zones — merged in from the old Effort tab so pace and heart
+           rate read in one scroll. #}
+        {% if run.has_hr_zones or run.avg_hr %}
+        <div class="tprd-card tprd-stripe tprd-hr-card">
+          <div class="tprd-hr-top">
+            <div class="tprd-hr-fig">
+              <div class="k">{{ t("AVG HR") }}</div>
+              <div class="v">{{ "%.0f"|format(run.avg_hr) if run.avg_hr else "—" }}<small>bpm</small></div>
+            </div>
+            <div class="tprd-hr-fig">
+              <div class="k">{{ t("MAX HR") }}</div>
+              <div class="v">{{ run.max_hr if run.max_hr else "—" }}<small>bpm</small></div>
+            </div>
+          </div>
+          {% if run.has_hr_zones %}
+          <div class="tprd-zonebar">
+            {% for z in run.hr_zones %}
+              {% if z.seconds > 0 %}
+              <i style="width: {{ z.pct }}%; background: {{ z.color }};"></i>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <div class="tprd-ztable">
+            {% for z in run.hr_zones %}
+            <div class="tprd-zrow">
+              <div class="zz" style="color: {{ z.color }};">Z{{ z.n }}</div>
+              <div class="zl">{{ t(z.label.split(' ', 1)[1] if ' ' in z.label else z.label) }}</div>
+              <div class="ztime">{{ fmt_duration(z.seconds) }}</div>
+              <div class="zpct">{{ "%.0f"|format(z.pct) }}%</div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {# Fastest splits — fixed four slots; distances this run never
+           reached render as dimmed dashes rather than disappearing. #}
+        <div class="tprd-splits-h">
+          <span class="tprd-lbl">{{ t("Fastest splits") }}</span>
+        </div>
+        <div class="tprd-splits">
+          {% for label, secs in [("1K", run.fastest_1k_s), ("5K", run.fastest_5k_s), ("10K", run.fastest_10k_s), (t("HALF"), run.fastest_half_s)] %}
+          <div class="tprd-card tprd-split{{ '' if secs else ' empty' }}">
+            <div class="d">{{ t("BEST {label}", label=label) }}</div>
+            <div class="t">{{ fmt_duration(secs) if secs else "—" }}</div>
+          </div>
+          {% endfor %}
+        </div>
+
+        {# Deeper numbers #}
+        <p class="tprd-subhead">{{ t("Deeper numbers") }}</p>
+        <div class="tprd-te-grid">
+          <div class="tprd-card tprd-stripe tprd-te">
+            <div class="k">{{ t("AEROBIC TE") }}</div>
+            <div class="v">{{ "%.1f"|format(run.aerobic_te) if run.aerobic_te else "—" }}</div>
+            {% if run.te_label %}<span class="tag">{{ t(run.te_label)|upper }}</span>{% endif %}
+          </div>
+          <div class="tprd-card tprd-te">
+            <div class="k">{{ t("VO₂ MAX") }}</div>
+            <div class="v">{{ "%.0f"|format(run.vo2max) if run.vo2max else "—" }}{% if run.vo2max_delta %}<small>{{ "▲ +{n}".format(n=run.vo2max_delta) if run.vo2max_delta > 0 else "▼ {n}".format(n=run.vo2max_delta) }}</small>{% endif %}</div>
+            {% if run.vo2max %}<span class="tag">{{ t("MOVED THIS RUN") if run.vo2max_delta else t("HOLDING STEADY") }}</span>{% endif %}
+          </div>
+        </div>
+        <div class="tprd-card tprd-misc">
+          {% if run.calories %}<div><b>{{ "%.0f"|format(run.calories) }}</b> kcal</div>{% endif %}
+          {% if run.avg_cadence_spm %}<div>{{ t("Cadence") }} <b>{{ "%.0f"|format(run.avg_cadence_spm) }}</b> spm</div>{% endif %}
+          {% if run.elevation_gain_m %}<div>{{ t("Elev") }} <b>+{{ "%.0f"|format(run.elevation_gain_m) }}</b> m</div>{% endif %}
+          {% if run.avg_power_w %}<div>{{ t("Power") }} <b>{{ "%.0f"|format(run.avg_power_w) }}</b> W</div>{% endif %}
+          {% if run.anaerobic_te and run.anaerobic_te >= 1.0 %}<div>{{ t("Anaerobic TE") }} <b>{{ "%.1f"|format(run.anaerobic_te) }}</b></div>{% endif %}
+        </div>
+
+        <div class="tprd-slidenav">
+          {% if route %}
+          <label class="tprd-nav-btn" for="tprd-t-replay">← {{ t("Replay") }}</label>
+          {% else %}
+          <span class="tprd-nav-btn tprd-nav-ghost">←</span>
+          {% endif %}
+          <div class="dots">{% if route %}<span class="dot"></span>{% endif %}<span class="dot on"></span><span class="dot"></span></div>
+          <label class="tprd-nav-btn next" for="tprd-t-log">{{ t("Log") }} →</label>
+        </div>
+      </section>
+
+      {# ═════════ 03 · LOG ═════════
+         The watch's read-only reference (RPE + feel) leads — it's the
+         context you want in view *while* writing. The diary form mirrors
+         the `tp-diary-form` shape used on /diary. The body-map nudge
+         closes the panel. #}
+      <section class="tprd-panel" id="tprd-p-log">
+
+        {% if run.garmin_rpe or run.garmin_feel is not none %}
+        <div class="tprd-card tprd-ref-card">
+          <div class="tprd-ref-top">
+            <span class="tprd-lbl">{{ t("From your watch") }}</span>
+            {% if run.garmin_feel is not none %}
+            <span class="tprd-ref-feel">{{ t("Garmin feel") }} · <span class="f">{{ garmin_feel_label(run.garmin_feel)|upper }}</span></span>
+            {% endif %}
+          </div>
+          {% if run.garmin_rpe %}
+          {% set rpe_n = ((run.garmin_rpe + 5) // 10)|int %}
+          <div class="tprd-lbl" style="margin-bottom: 8px;">{{ t("Logged RPE · 1–10") }}</div>
+          <div class="tprd-rpe">
+            {% for n in range(1, 11) %}
+            <span class="tprd-rpe-cell {% if rpe_n == n %}on{% endif %}">{{ n }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <form id="run-diary-{{ run.activity_id }}"
+              class="tp-diary-form tprd-diary-form"
+              hx-post="/runs/{{ run.activity_id }}/diary"
+              hx-target="this"
+              hx-swap="outerHTML">
+
+          <div class="tprd-lbl tprd-moods-h">{{ t("How did it feel to you?") }}</div>
+          <div class="tp-diary-mood tprd-moods">
+            {% for v in [1, 2, 3, 4, 5] %}
+            <label class="tp-diary-mood-pill{% if diary_entry and diary_entry.mood == v %} selected{% endif %}"
+                   data-mood="{{ v }}" title="{{ t(mood_label(v)) }}">
+              <input type="radio" name="mood" value="{{ v }}"
+                     {% if diary_entry and diary_entry.mood == v %}checked{% endif %}>
+              {{ mood_emoji(v) }}<span class="ml">{{ t(mood_label(v))|upper }}</span>
+            </label>
+            {% endfor %}
+            <label class="tp-diary-mood-pill{% if not (diary_entry and diary_entry.mood) %} selected{% endif %}"
+                   data-mood="" title="{{ t('no rating') }}">
+              <input type="radio" name="mood" value=""
+                     {% if not (diary_entry and diary_entry.mood) %}checked{% endif %}>—
+            </label>
+          </div>
+
+          <textarea name="body" rows="5"
+                    placeholder="{{ t('What happened out there? The wind, the legs, the head…') }}">{{ diary_entry.body if diary_entry else '' }}</textarea>
+
+          <div class="tp-diary-form-footer">
+            <div class="tprd-notes-save">
+              {% if diary_entry %}
+              <span class="tprd-autosave">{{ t("LAST SAVED · {time}", time=(diary_entry.updated_at[11:16] if diary_entry.updated_at else '')) }}</span>
+              {% else %}
+              <span class="tprd-autosave">{{ t("NOT SAVED YET") }}</span>
+              {% endif %}
+              <button type="submit" class="tp-btn primary">{{ t("Save to diary") }}</button>
+            </div>
+          </div>
+        </form>
+
+        {% if body_suggest_after_run %}
+        <div class="tprd-body-suggest">
+            <div class="tprd-body-suggest-text">
+                <span class="tprd-body-suggest-eyebrow">{{ t("BODY CHECK-IN") }}</span>
+                <span class="tprd-body-suggest-q">{{ t("That felt harder than expected — anything bothering you?") }}</span>
+            </div>
+            <a href="/body" class="tprd-body-suggest-btn">{{ t("Log it →") }}</a>
+        </div>
+        {% endif %}
+
+        <div class="tprd-slidenav">
+          <label class="tprd-nav-btn" for="tprd-t-run">← {{ t("The Run") }}</label>
+          <div class="dots">{% if route %}<span class="dot"></span>{% endif %}<span class="dot"></span><span class="dot on"></span></div>
+          <span class="tprd-nav-btn tprd-nav-ghost">→</span>
+        </div>
+      </section>
+
+    </div>{# /panels #}
+  </div>{# /tabwrap #}
+</div>{# /tprd-root #}
+{% endif %}

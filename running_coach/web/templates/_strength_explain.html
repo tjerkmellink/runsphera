@@ -1,0 +1,28 @@
+{# "Explain more" affordance under each exercise card.
+
+   The static description in `pair.description` covers the form cue at a
+   glance; this partial adds an HTMX-driven button that fetches a richer
+   LLM-written breakdown (longer cues, common mistakes, modifications)
+   on demand. The response is cached per FIT exercise enum in
+   `llm_cache` so the second click is instant and free, and the cache
+   key stays stable across our display-name overrides.
+
+   Expects a `pair` variable (the exercise dict) — same name the modal
+   uses in both superset and solo branches. The "explain" endpoint is
+   `/strength/explain?name=<friendly>&id=<fit_enum>` and returns the
+   rendered prose wrapped in an element that replaces this whole
+   block. The `name` argument seeds the LLM prompt with a runner-
+   friendly label; `id` is the cache key. #}
+{% set _id = pair.exercise or pair.name %}
+{% set _label = pair.display_name or (pair.exercise|default('', true)).replace('_', ' ')|capitalize or pair.name %}
+<div class="tp-strength-ex-explain"
+     id="explain-{{ _id|replace(' ', '_')|replace('(', '')|replace(')', '')|replace('/', '_') }}">
+    <button type="button"
+            class="tp-strength-explain-btn"
+            hx-get="/strength/explain?id={{ _id|urlencode }}&name={{ _label|urlencode }}"
+            hx-target="closest .tp-strength-ex-explain"
+            hx-swap="innerHTML"
+            hx-indicator="this">
+        · Explain more
+    </button>
+</div>

@@ -1,0 +1,61 @@
+{# 48-h forecast modal. Native <dialog>; opened by clicking the chip. #}
+<dialog id="weather-modal" class="weather-modal" aria-labelledby="weather-modal-title">
+    <div class="weather-modal-head">
+        <h2 id="weather-modal-title">
+            48-hour forecast
+            {% if weather.display_name %}<span class="muted"> · {{ weather.display_name }}</span>{% endif %}
+        </h2>
+        <form method="dialog">
+            <button class="weather-modal-close" aria-label="Close">✕</button>
+        </form>
+    </div>
+
+    <div class="weather-modal-summary">
+        {% if weather.best_window %}
+        {% set bw = weather.best_window %}
+        <div>
+            <span class="weather-best-label">Best window today</span>
+            <strong>{{ bw.start }}–{{ bw.end }}</strong>
+            {% if bw.avg_temp_c is not none %} · {{ "%.0f"|format(bw.avg_temp_c) }}°C{% endif %}
+            {% if bw.weather_text and bw.weather_text != '—' %} · {{ bw.weather_text|lower }}{% endif %}
+            {% if bw.max_precip_pct is not none and bw.max_precip_pct >= 20 %} · {{ bw.max_precip_pct }}% rain{% endif %}
+            {% if bw.avg_wind_kmh is not none %} · {{ "%.0f"|format(bw.avg_wind_kmh) }} km/h wind{% endif %}
+            <span class="muted"> · score {{ bw.score }}/100</span>
+        </div>
+        {% endif %}
+        <div class="muted weather-modal-hint">
+            Score combines temperature, precipitation, wind, and daylight. Higher is better.
+            Scroll horizontally to see the next 48 hours.
+        </div>
+    </div>
+
+    <div class="weather-hours-scroller">
+        <div class="weather-hour-row">
+            {% for h in weather_hours %}
+            {% if h.day_label %}
+            <div class="weather-day-divider" aria-hidden="true">
+                <div class="weather-day-divider-label">{{ h.day_label }}</div>
+            </div>
+            {% endif %}
+            <div class="weather-hour-col {% if h.in_best_window %}is-best{% endif %} {% if h.is_sunrise %}is-sunrise{% endif %} {% if h.is_sunset %}is-sunset{% endif %}"
+                 title="{{ h.weather_text }} · score {{ h.score }}/100">
+                {% if h.in_best_window %}<div class="hour-best-tag">BEST</div>{% endif %}
+                <div class="hour-time">{{ h.time_short }}</div>
+                <div class="hour-icon">{{ h.icon }}</div>
+                <div class="hour-temp">{% if h.temp_c is not none %}{{ "%.0f"|format(h.temp_c) }}°{% else %}—{% endif %}</div>
+                <div class="hour-precip {% if h.precip_prob_pct is not none and h.precip_prob_pct >= 40 %}is-wet{% endif %}">
+                    {% if h.precip_prob_pct is not none %}{{ h.precip_prob_pct }}%{% else %}—{% endif %}
+                </div>
+                <div class="hour-wind">
+                    {% if h.wind_kmh is not none %}{{ "%.0f"|format(h.wind_kmh) }}<span class="unit">km/h</span>{% else %}—{% endif %}
+                </div>
+                <div class="hour-score-bar" aria-hidden="true">
+                    <div class="hour-score-fill" style="height: {{ h.score }}%;"></div>
+                </div>
+                {% if h.is_sunrise %}<div class="hour-sun-tag" title="Sunrise">↑ sunrise</div>{% endif %}
+                {% if h.is_sunset %}<div class="hour-sun-tag" title="Sunset">↓ sunset</div>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</dialog>

@@ -1,0 +1,12 @@
+garminconnect>=0.2.20
+python-dotenv>=1.0.0
+fastapi>=0.110
+uvicorn[standard]>=0.27
+jinja2>=3.1
+plotly>=5.18
+python-multipart>=0.0.9
+anthropic>=0.50
+openai>=1.50
+google-genai>=0.3
+garmin-fit-sdk>=21.0
+pywebview>=6.2

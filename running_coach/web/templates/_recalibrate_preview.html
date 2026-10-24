@@ -1,0 +1,66 @@
+{# Tempo recalibrate-paces preview. Loaded into the plan-settings modal by
+   HTMX when the runner clicks "Preview changes". Shows the new per-zone
+   paces + a sample of the workouts that would shift, then exposes a
+   confirm button that POSTs the actual recalibration. #}
+{% macro fmt_pace(s) -%}
+{%- if s -%}{{ '%d:%02d/km'|format(s // 60, s % 60) }}{%- else -%}—{%- endif -%}
+{%- endmacro %}
+{% set _total_changes = preview.n_to_update + preview.get('n_desc_only', 0) %}
+<div class="tp-pw-recal-preview">
+    {% if _total_changes == 0 %}
+    <p class="tp-pw-actions-desc">
+        {{ t("Every future workout already matches the current pace table — nothing to recalibrate.") }}
+    </p>
+    {% else %}
+    <p class="tp-pw-recal-headline">
+        {% if preview.n_to_update %}
+            <strong>{{ preview.n_to_update }}</strong> {{ plural(preview.n_to_update, "future workout would be re-paced.", "future workouts would be re-paced.") }}
+        {% endif %}
+        {% if preview.get('n_desc_only', 0) %}
+            {% if preview.n_to_update %}<br>{% endif %}
+            <strong>{{ preview.n_desc_only }}</strong> {{ plural(preview.n_desc_only, "has stale pace numbers in its notes that will be refreshed.", "have stale pace numbers in their notes that will be refreshed.") }}
+        {% endif %}
+    </p>
+    <p class="tp-pw-actions-desc">
+        {{ t("Past sessions ({past}) and already-completed runs ({done}) stay locked. Rest / cross days ({rest}) have no pace target.", past=preview.n_skip_past, done=preview.n_skip_done, rest=preview.n_skip_rest) }}
+    </p>
+
+    <table class="tp-pw-recal-table">
+        <thead>
+            <tr><th>{{ t("Zone") }}</th><th>{{ t("New pace") }}</th></tr>
+        </thead>
+        <tbody>
+            {% for zone, label in [('E','Easy'), ('M','Marathon'), ('T','Tempo'), ('I','Interval'), ('R','Repetition')] %}
+            <tr>
+                <td><span class="tp-pw-recal-zone">{{ zone }}</span> {{ t(label) }}</td>
+                <td class="num">{{ fmt_pace(preview.new_paces[zone]) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if preview.examples %}
+    <p class="tp-pw-actions-desc" style="margin-top: 0.85rem;">{{ t("Examples:") }}</p>
+    <ul class="tp-pw-recal-examples">
+        {% for ex in preview.examples %}
+        <li>
+            <span class="tp-pw-recal-ex-date">{{ ex.date }}</span>
+            <span class="tp-pw-recal-ex-title">{{ ex.title }}</span>
+            <span class="tp-pw-recal-ex-delta">
+                {{ fmt_pace(ex.old_pace_s) }} → <strong>{{ fmt_pace(ex.new_pace_s) }}</strong>
+            </span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <form method="post" action="/plans/{{ plan_id }}/recalibrate-paces"
+          data-confirm="{{ t('Recalibrate {n} future workouts? Any manual pace tweaks you made will be overwritten.', n=_total_changes) }}"
+          data-confirm-yes="{{ t('Yes, recalibrate') }}"
+          data-confirm-tone="primary">
+        <button type="submit" class="tp-btn primary" style="margin-top: 1rem;">
+            {{ t("Confirm & recalibrate") }} {{ _total_changes }} {{ plural(_total_changes, "workout", "workouts") }}
+        </button>
+    </form>
+    {% endif %}
+</div>

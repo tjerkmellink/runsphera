@@ -1,0 +1,194 @@
+{# Tempo strength-session detail modal.
+
+   Loaded via HTMX from the strength chip on a rest-day cell. Renders the
+   library workout's structure: blocks (Runna's "Deel 1 / 2 / 3" idea)
+   with their rounds + rest + exercises. Pairs marked `superset_id`
+   render as side-by-side superset cards. Mark complete / undo lives at
+   the bottom and POSTs back, which re-renders the modal body. #}
+<article class="tp-pw" id="plan-strength-{{ s.session_id }}">
+    <header class="tp-pw-head">
+        <div class="tp-pw-eyebrow">
+            {{ s.planned_date }} · {{ s.category|replace('_', ' ')|upper }}
+        </div>
+        <h2 class="tp-pw-title">{{ s.title }}</h2>
+        <div class="tp-pw-pills">
+            <span class="tp-pw-pill type-strength">{{ t("Strength") }} · {{ s.duration_min_lo }}–{{ s.duration_min_hi }} min</span>
+            <span class="tp-pw-pill">{{ t("Bodyweight") }}</span>
+            {% if s.completed_at %}
+            <span class="tp-pw-pill status-done">{{ t("✓ done") }}</span>
+            {% endif %}
+            {% if s.pushed_at %}
+            <span class="tp-pw-pill on-watch">{{ t("✓ on watch") }}</span>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if flash %}
+    <div class="tp-pw-flash">{{ flash }}</div>
+    {% endif %}
+
+    {# Actual stats — only rendered when a Garmin "strength_training"
+       activity matched back via the echoed workoutId. Mirrors the
+       running modal's actual-vs-prescribed treatment so the runner
+       sees what landed at a glance. #}
+    {% if s.actual_activity_id %}
+    <section class="tp-pw-section tp-strength-actuals">
+        <p class="tp-pw-section-label">{{ t("Actual") }}</p>
+        <div class="tp-strength-actuals-grid">
+            {% if s.actual_duration_s %}
+            <div>
+                <p class="tp-pw-stat-label">{{ t("Duration") }}</p>
+                <p class="tp-pw-stat-value">{{ fmt_duration(s.actual_duration_s) }}</p>
+                <p class="tp-pw-stat-sub">{{ t("prescribed {lo}–{hi} min", lo=s.duration_min_lo, hi=s.duration_min_hi) }}</p>
+            </div>
+            {% endif %}
+            {% if s.actual_avg_hr %}
+            <div>
+                <p class="tp-pw-stat-label">{{ t("Avg HR") }}</p>
+                <p class="tp-pw-stat-value">{{ "%.0f"|format(s.actual_avg_hr) }}<span class="tp-pw-stat-unit">bpm</span></p>
+                {% if s.actual_max_hr %}
+                <p class="tp-pw-stat-sub">{{ t("max {n}", n=s.actual_max_hr) }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% if s.actual_calories %}
+            <div>
+                <p class="tp-pw-stat-label">{{ t("Calories") }}</p>
+                <p class="tp-pw-stat-value">{{ "%.0f"|format(s.actual_calories) }}<span class="tp-pw-stat-unit">kcal</span></p>
+            </div>
+            {% endif %}
+            {% if s.actual_training_load %}
+            <div>
+                <p class="tp-pw-stat-label">{{ t("Load") }}</p>
+                <p class="tp-pw-stat-value">{{ "%.0f"|format(s.actual_training_load) }}</p>
+                <p class="tp-pw-stat-sub">{{ t("training") }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% if s.actual_start_local %}
+        <p class="tp-pw-actions-desc" style="margin: 0.65rem 0 0;">
+            {{ t("Logged {when} · matched via Garmin workout id {id}", when=s.actual_start_local[:16].replace('T', ' '), id=s.garmin_workout_id) }}
+        </p>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {% if s.notes %}
+    <div class="tp-pw-desc">{{ s.notes }}</div>
+    {% endif %}
+
+    {# Render each block. We walk the exercises with a small look-ahead
+       so consecutive same-superset_id pairs render as a paired card. #}
+    {% for block in s.structure.blocks %}
+    <section class="tp-pw-section">
+        <p class="tp-pw-section-label">
+            {{ block.name }} ·
+            {{ block.rounds }} {{ plural(block.rounds, "round", "rounds") }}
+            {% if block.rest_between_rounds_s %}
+                · {{ t("rest") }} {{ block.rest_between_rounds_s }} s
+            {% endif %}
+        </p>
+        <div class="tp-strength-block">
+            {% set ns = namespace(i=0) %}
+            {% set exs = block.exercises %}
+            {% for _ in exs %}{% set i = ns.i %}{% if i < exs|length %}
+                {% set ex = exs[i] %}
+                {% set ex_next = exs[i+1] if i+1 < exs|length else None %}
+                {% if ex.superset_id and ex_next and ex_next.superset_id == ex.superset_id %}
+                    {# Superset pair → side by side. #}
+                    <div class="tp-strength-superset">
+                        <div class="tp-strength-superset-tag">{{ t("Superset") }}</div>
+                        {% for pair in [ex, ex_next] %}
+                        <div class="tp-strength-ex">
+                            <div class="tp-strength-ex-name">{{ (pair.exercise|default('', true)).replace('_', ' ')|capitalize or pair.name }}</div>
+                            <div class="tp-strength-ex-meta">
+                                {% if pair.target %}<span class="tp-strength-ex-tag">{{ pair.target }}</span>{% endif %}
+                                <span class="tp-strength-ex-dose">
+                                    {% if pair.duration_s %}{{ pair.duration_s }} s{% if pair.per_side %}{{ t("/side") }}{% endif %}
+                                    {% elif pair.reps %}{{ pair.reps }} {{ t("reps") }}{% if pair.per_side %}{{ t("/side") }}{% endif %}{% endif %}
+                                </span>
+                            </div>
+                            {% if pair.description %}
+                            <p class="tp-strength-ex-desc">{{ pair.description }}</p>
+                            {% include "_strength_explain.html" %}
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% set ns.i = i + 2 %}
+                {% else %}
+                    <div class="tp-strength-ex tp-strength-ex-solo">
+                        <div class="tp-strength-ex-name">{{ (ex.exercise|default('', true)).replace('_', ' ')|capitalize or ex.name }}</div>
+                        <div class="tp-strength-ex-meta">
+                            {% if ex.target %}<span class="tp-strength-ex-tag">{{ ex.target }}</span>{% endif %}
+                            <span class="tp-strength-ex-dose">
+                                {% if ex.duration_s %}{{ ex.duration_s }} s{% if ex.per_side %}{{ t("/side") }}{% endif %}
+                                {% elif ex.reps %}{{ ex.reps }} {{ t("reps") }}{% if ex.per_side %}{{ t("/side") }}{% endif %}{% endif %}
+                            </span>
+                        </div>
+                        {% if ex.description %}
+                        <p class="tp-strength-ex-desc">{{ ex.description }}</p>
+                        {% with pair=ex %}{% include "_strength_explain.html" %}{% endwith %}
+                        {% endif %}
+                    </div>
+                    {% set ns.i = i + 1 %}
+                {% endif %}
+            {% endif %}{% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+
+    {# Completion + push controls. Two columns: complete/undo on the left,
+       push/unpush on the right. Each is an HTMX form that re-renders the
+       modal body so the pills + button states update in place. #}
+    <section class="tp-pw-section tp-pw-edit">
+        <div class="tp-pw-edit-actions">
+            {% if s.completed_at %}
+            <form method="post" action="/plan-strength/{{ s.session_id }}/undo"
+                  hx-post="/plan-strength/{{ s.session_id }}/undo"
+                  hx-target="#plan-strength-{{ s.session_id }}"
+                  hx-swap="outerHTML">
+                <button type="submit" class="tp-btn">{{ t("↺ Mark not done") }}</button>
+            </form>
+            <span class="tp-pw-actions-desc" style="margin: 0;">
+                {{ t("Completed {date}", date=s.completed_at[:10]) }}
+            </span>
+            {% else %}
+            <form method="post" action="/plan-strength/{{ s.session_id }}/complete"
+                  hx-post="/plan-strength/{{ s.session_id }}/complete"
+                  hx-target="#plan-strength-{{ s.session_id }}"
+                  hx-swap="outerHTML">
+                <button type="submit" class="tp-btn primary">{{ t("✓ Mark complete") }}</button>
+            </form>
+            {% endif %}
+
+            {# Push/unpush are Garmin features — hidden for Garmin-less runners
+               (a session can only be in the pushed state via a connected watch). #}
+            {% if s.pushed_at %}
+            <form method="post" action="/plan-strength/{{ s.session_id }}/unpush"
+                  hx-post="/plan-strength/{{ s.session_id }}/unpush"
+                  hx-target="#plan-strength-{{ s.session_id }}"
+                  hx-swap="outerHTML"
+                  style="margin-left: auto;">
+                <button type="submit" class="tp-btn"
+                        title="{{ t('Remove this strength session from your Garmin Connect calendar') }}">
+                    {{ t("↺ Unpush") }}
+                </button>
+            </form>
+            {% elif is_authenticated() %}
+            <form method="post" action="/plan-strength/{{ s.session_id }}/push"
+                  hx-post="/plan-strength/{{ s.session_id }}/push"
+                  hx-target="#plan-strength-{{ s.session_id }}"
+                  hx-swap="outerHTML"
+                  hx-disabled-elt="this"
+                  hx-indicator="this"
+                  style="margin-left: auto;">
+                <button type="submit" class="tp-btn"
+                        title="{{ t('Push to Garmin so the watch can guide you through the session') }}">
+                    {{ t("↗ Push to watch") }}
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </section>
+</article>

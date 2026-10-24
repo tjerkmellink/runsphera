@@ -1,0 +1,321 @@
+{# Getting-started wizard — one step at a time, swapped into #onboarding-body
+   inside the #onboarding-modal dialog. Every step is skippable and the flow
+   is resumable (the current step is persisted server-side). Rendered by
+   _render_onboarding() in web/app.py. See docs/onboarding.md. #}
+
+{% macro later_btn() %}
+<button type="button" class="ghost onb-later"
+        hx-post="/onboarding/dismiss"
+        hx-on::after-request="if(event.detail.successful) document.getElementById('onboarding-modal').close()">
+    {{ t("I'll finish later") }}
+</button>
+{% endmacro %}
+
+{% macro back_btn(prev) %}
+{% if prev %}<button type="button" class="ghost"
+        hx-get="/onboarding?step={{ prev }}" hx-target="#onboarding-body" hx-swap="innerHTML">{{ t('← Back') }}</button>{% endif %}
+{% endmacro %}
+
+{% macro skip_btn(next) %}
+{% if next %}<button type="button" class="ghost"
+        hx-get="/onboarding?step={{ next }}" hx-target="#onboarding-body" hx-swap="innerHTML">{{ t('Skip') }} →</button>{% endif %}
+{% endmacro %}
+
+<div class="onb">
+    <button class="modal-close onb-close" type="button"
+            onclick="document.getElementById('onboarding-modal').close()"
+            aria-label="{{ t('Close') }}">×</button>
+
+    <div class="onb-progress" aria-label="{{ t('Setup progress') }}">
+        {% for i in range(step_count) %}
+        <span class="onb-dot{% if i < step_number - 1 %} is-done{% endif %}{% if i == step_number - 1 %} is-current{% endif %}"></span>
+        {% endfor %}
+        <span class="onb-progress-label">{{ t('Step') }} {{ step_number }} / {{ step_count }}</span>
+    </div>
+
+    <div class="onb-body">
+    {% if step == 'welcome' %}
+        <h2 class="onb-title">{% if onb_first_name %}{{ t('Welcome, {name}!', name=onb_first_name) }}{% else %}{{ t('Welcome to your running coach') }}{% endif %}</h2>
+        <p class="onb-lead">{{ t("Let's get you set up in a couple of minutes. You can skip anything and finish later.") }}</p>
+        <ol class="onb-steplist">
+            <li>{{ t('Connect Garmin — or skip it and go manual') }}</li>
+            <li>{{ t('Tell the coach your current fitness') }}</li>
+            <li>{{ t('Optional: coach voice & weather') }}</li>
+            <li>{{ t('Set your first goal') }}</li>
+        </ol>
+        <div class="onb-actions">
+            {{ later_btn() }}
+            <span class="onb-spacer"></span>
+            <button type="button" class="primary"
+                    hx-get="/onboarding?step={{ next_step }}" hx-target="#onboarding-body" hx-swap="innerHTML">
+                {{ t("Let's go") }} →
+            </button>
+        </div>
+
+    {% elif step == 'garmin' %}
+        {% if garmin_connected %}
+        <h2 class="onb-title">{{ t('Garmin connected') }} ✓</h2>
+        <p class="onb-lead">{{ t('Your Garmin Connect session is active. Next, pull in your training history.') }}</p>
+        <div class="onb-actions">
+            {{ back_btn(prev_step) }}
+            {{ later_btn() }}
+            <span class="onb-spacer"></span>
+            <button type="button" class="primary"
+                    hx-get="/onboarding?step={{ next_step }}" hx-target="#onboarding-body" hx-swap="innerHTML">
+                {{ t('Continue') }} →
+            </button>
+        </div>
+
+        {% elif garmin_stage == 'mfa' %}
+        <h2 class="onb-title">{{ t('Enter verification code') }}</h2>
+        {% if info %}<div class="seed-banner">{{ info }}</div>{% endif %}
+        {% if error %}<div class="error">{{ error }}</div>{% endif %}
+        <form hx-post="/auth/mfa" hx-target="#onboarding-body" hx-swap="innerHTML">
+            <input type="hidden" name="onboarding" value="1">
+            <div class="form-block">
+                <label for="onb-code">{{ t('Verification code') }}</label>
+                <input type="text" id="onb-code" name="code" inputmode="numeric" pattern="[0-9]{4,8}"
+                       autocomplete="one-time-code" autofocus required
+                       style="font-size: 1.15rem; letter-spacing: 0.2em; text-align: center;">
+            </div>
+            <div class="onb-actions">
+                <button type="button" class="ghost"
+                        hx-get="/onboarding?step=garmin" hx-target="#onboarding-body" hx-swap="innerHTML">← {{ t('Start over') }}</button>
+                {{ later_btn() }}
+                <span class="onb-spacer"></span>
+                <button type="submit" class="primary">{{ t('Verify & connect') }}</button>
+            </div>
+        </form>
+
+        {% else %}
+        <h2 class="onb-title">{{ t('Connect Garmin Connect') }}</h2>
+        <p class="onb-lead">{{ t('Sign in once. Only a session token is stored — never your password.') }}</p>
+        {% if error %}<div class="error">{{ error }}</div>{% endif %}
+        <form hx-post="/auth/login" hx-target="#onboarding-body" hx-swap="innerHTML">
+            <input type="hidden" name="onboarding" value="1">
+            <div class="form-block">
+                <label for="onb-email">{{ t('Email') }}</label>
+                <input type="email" id="onb-email" name="email" autocomplete="username" value="{{ prefill_email }}" required autofocus>
+            </div>
+            <div class="form-block">
+                <label for="onb-password">{{ t('Password') }}</label>
+                <input type="password" id="onb-password" name="password" autocomplete="current-password" required>
+            </div>
+            <div class="onb-actions">
+                {{ back_btn(prev_step) }}
+                <button type="button" class="ghost"
+                        hx-post="/onboarding/skip-garmin" hx-target="#onboarding-body" hx-swap="innerHTML">
+                    {{ t("I don't use Garmin") }} →
+                </button>
+                <span class="onb-spacer"></span>
+                <button type="submit" class="primary">
+                    <span class="onb-btn-label">{{ t('Connect') }}</span>
+                    <span class="htmx-indicator">{{ t('Connecting…') }}</span>
+                </button>
+            </div>
+        </form>
+        {% endif %}
+
+    {% elif step == 'sync' %}
+        <h2 class="onb-title">{{ t('Sync your Garmin data') }}</h2>
+        {% if not garmin_connected and not sync_done %}
+        <div class="error">{{ t('Connect to Garmin first.') }}</div>
+        {% endif %}
+        {% if sync_error %}<div class="error">{{ sync_error }}</div>{% endif %}
+        {% if sync_done %}
+        <div class="seed-banner">
+            {{ t('Pulled {n} runs.', n=sync_summary.activity_count) }}
+            {% if sync_summary.vdot %} · {{ t('VO₂max ~{v}', v=sync_summary.vdot) }}{% endif %}
+        </div>
+        <p class="onb-lead">{{ t('Your history is in. You can re-sync anytime from the dashboard.') }}</p>
+        {% else %}
+        <p class="onb-lead">{{ t('Pull your recent runs and daily metrics so the coach has something to work with.') }}</p>
+        {% endif %}
+        <div class="onb-actions">
+            {{ back_btn(prev_step) }}
+            {{ later_btn() }}
+            <span class="onb-spacer"></span>
+            {% if sync_done %}
+            <button type="button" class="primary"
+                    hx-get="/onboarding?step={{ next_step }}" hx-target="#onboarding-body" hx-swap="innerHTML">
+                {{ t('Continue') }} →
+            </button>
+            {% elif garmin_connected %}
+            {{ skip_btn(next_step) }}
+            <button type="button" class="primary"
+                    hx-post="/onboarding/sync" hx-target="#onboarding-body" hx-swap="innerHTML">
+                <span class="onb-btn-label">{{ t('Sync now') }}</span>
+                <span class="htmx-indicator">{{ t('Syncing… this can take a moment.') }}</span>
+            </button>
+            {% else %}
+            {{ skip_btn(next_step) }}
+            <button type="button" class="primary"
+                    hx-get="/onboarding?step=garmin" hx-target="#onboarding-body" hx-swap="innerHTML">
+                {{ t('Connect Garmin') }} →
+            </button>
+            {% endif %}
+        </div>
+
+    {% elif step == 'fitness' %}
+        {# Fitness baseline. With a Garmin-measured VDOT this is a simple
+           confirmation; without one it's the manual path — name, a recent
+           race result (→ VDOT via Daniels' formula) and weekly volume, all
+           optional. Posting advances to the next step; the finale seedcard
+           shows the derived numbers. #}
+        <h2 class="onb-title">{{ t('Your fitness baseline') }}</h2>
+        {% if garmin_vdot %}
+        <div class="seed-banner">{{ t('Garmin has you at VO₂max ~{v} — your plan paces will be built from that.', v=garmin_vdot|round(1)) }}</div>
+        <p class="onb-lead">{{ t('Nothing to fill in here — your training history covers it.') }}</p>
+        <div class="onb-actions">
+            {{ back_btn(prev_step) }}
+            {{ later_btn() }}
+            <span class="onb-spacer"></span>
+            <button type="button" class="primary"
+                    hx-get="/onboarding?step={{ next_step }}" hx-target="#onboarding-body" hx-swap="innerHTML">
+                {{ t('Continue') }} →
+            </button>
+        </div>
+        {% else %}
+        <p class="onb-lead">{{ t('No Garmin data — no problem. Tell the coach a little about yourself so your training paces fit you instead of a default. Everything here is optional.') }}</p>
+        {% if fitness_error %}<div class="error">{{ fitness_error }}</div>{% endif %}
+        <form hx-post="/onboarding/fitness" hx-target="#onboarding-body" hx-swap="innerHTML">
+            <div class="form-block">
+                <label for="onb-name">{{ t('Your first name (for the greeting)') }}</label>
+                <input type="text" id="onb-name" name="name" value="{{ current_name or '' }}" autocomplete="given-name">
+            </div>
+            <div class="form-block">
+                <label>{{ t('A recent race or hard time-trial result') }}</label>
+                <p class="muted" style="font-size: 0.8rem; margin: 0.1rem 0 0.4rem;">{{ t('The single best predictor of your training paces.') }}</p>
+                <div class="field-row" style="align-items: center;">
+                    <select name="race_distance" style="min-width: 140px;">
+                        <option value="">{{ t('Distance…') }}</option>
+                        {% for did, (dlabel, _m) in fitness_distances.items() %}
+                        <option value="{{ did }}" {% if baseline.vdot_note and baseline.vdot_note.startswith(dlabel) %}selected{% endif %}>{{ t(dlabel) }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" name="race_hours" min="0" max="9" placeholder="{{ t('h') }}" style="width: 64px;">
+                    <input type="number" name="race_minutes" min="0" max="59" placeholder="{{ t('min') }}" style="width: 72px;">
+                    <input type="number" name="race_seconds" min="0" max="59" placeholder="{{ t('sec') }}" style="width: 72px;">
+                </div>
+                {% if baseline.vdot %}
+                <p class="muted" style="font-size: 0.8rem; margin-top: 0.35rem;">
+                    {{ t('Saved: VDOT {v}', v=baseline.vdot) }}{% if baseline.vdot_note %} · {{ baseline.vdot_note }}{% endif %}
+                </p>
+                {% endif %}
+            </div>
+            <div class="form-block">
+                <label for="onb-weekly-km">{{ t('How many km do you currently run per week?') }}</label>
+                <input type="number" id="onb-weekly-km" name="weekly_km" min="0" max="300" step="1"
+                       value="{{ baseline.weekly_km|round|int if baseline.weekly_km else '' }}"
+                       placeholder="{{ t('e.g. 20') }}" style="width: 120px;">
+            </div>
+            <div class="form-block">
+                <label>{{ t('Can you currently run 10 minutes non-stop?') }}</label>
+                <p class="muted" style="font-size: 0.8rem; margin: 0.1rem 0 0.4rem;">{{ t('Helps us point you at the right kind of plan — there is a great one either way.') }}</p>
+                <div class="day-picker">
+                    <label><input type="radio" name="can_run_10min" value="yes"
+                                  {% if can_run_10min is true %}checked{% endif %}>{{ t('Yes') }}</label>
+                    <label><input type="radio" name="can_run_10min" value="no"
+                                  {% if can_run_10min is false %}checked{% endif %}>{{ t('Not yet') }}</label>
+                </div>
+            </div>
+            <div class="onb-actions">
+                {{ back_btn(prev_step) }}
+                {{ skip_btn(next_step) }}
+                <span class="onb-spacer"></span>
+                <button type="submit" class="primary">{{ t('Save & continue') }} →</button>
+            </div>
+        </form>
+        {% endif %}
+
+    {% elif step == 'extras' %}
+        <h2 class="onb-title">{{ t('Optional extras') }}</h2>
+        <p class="onb-lead">{{ t('Both optional — you can add them later in Settings.') }}</p>
+
+        <div class="onb-extra">
+            <div class="onb-extra-head">
+                {{ t('Coach voice') }}
+                {% if coach_key_present %}<span class="onb-badge">{{ t('set') }} ✓</span>{% endif %}
+            </div>
+            <p class="muted">{{ t('Add an Anthropic API key so the coach writes your daily briefing. Rules-based coaching works without it.') }}</p>
+            {% if coach_saved %}<div class="seed-banner">{{ t('Coach voice enabled.') }}</div>{% endif %}
+            {% if not coach_key_present %}
+            <form hx-post="/onboarding/coach-key" hx-target="#onboarding-body" hx-swap="innerHTML" class="onb-inline">
+                <input type="password" name="api_key" placeholder="sk-ant-..." autocomplete="off">
+                <button type="submit" class="ghost">{{ t('Save key') }}</button>
+            </form>
+            {% endif %}
+        </div>
+
+        <div class="onb-extra">
+            <div class="onb-extra-head">
+                {{ t('Home location') }}
+                {% if home_location %}<span class="onb-badge">{{ home_location.display_name.split(',')[0] }} ✓</span>{% endif %}
+            </div>
+            <p class="muted">{{ t('Used for the weather chip and run-time context.') }}</p>
+            {% if location_saved %}<div class="seed-banner">{{ t('Location saved.') }}</div>{% endif %}
+            {% if location_error %}<div class="error">{{ location_error }}</div>{% endif %}
+            <form hx-post="/onboarding/location" hx-target="#onboarding-body" hx-swap="innerHTML" class="onb-inline">
+                <input type="text" name="query" placeholder="{{ t('City, Country') }}">
+                <button type="submit" class="ghost">{{ t('Save') }}</button>
+            </form>
+        </div>
+
+        <div class="onb-actions">
+            {{ back_btn(prev_step) }}
+            {{ later_btn() }}
+            <span class="onb-spacer"></span>
+            <button type="button" class="primary"
+                    hx-get="/onboarding?step={{ next_step }}" hx-target="#onboarding-body" hx-swap="innerHTML">
+                {{ t('Continue') }} →
+            </button>
+        </div>
+
+    {% elif step == 'goal' %}
+        {# Motivational finale — hands off to the full /plans builder. #}
+        <h2 class="onb-title">{% if onb_first_name %}{{ t("You're almost there, {name}!", name=onb_first_name) }}{% else %}{{ t("You're almost there!") }}{% endif %}</h2>
+        <p class="onb-lead">{{ t("Now the best part — let's find the training plan that fits your goal, whether that's your first 5K or a marathon PB.") }}</p>
+        {% if seed and seed.vdot_source != 'default' %}
+        <div class="onb-seedcard">
+            <div class="onb-seedcard-row">
+                <span class="onb-seedcard-num">{{ seed.current_vdot|round(1) }}</span>
+                <span class="onb-seedcard-lbl">{{ t('VO₂max / VDOT') }}</span>
+            </div>
+            <div class="onb-seedcard-row">
+                <span class="onb-seedcard-num">~{{ seed.weekly_km_baseline }}</span>
+                <span class="onb-seedcard-lbl">{{ t('km / week') }}</span>
+            </div>
+        </div>
+        {% if seed.vdot_source == 'garmin' %}
+        <p class="onb-lead onb-seedhint">{{ t("We've read your training — your plan's paces will be built from this.") }}</p>
+        {% else %}
+        <p class="onb-lead onb-seedhint">{{ t("Based on what you told us") }}{% if seed.vdot_note %} ({{ seed.vdot_note }}){% endif %} — {{ t("your plan's paces will be built from this.") }}</p>
+        {% endif %}
+        {% else %}
+        <p class="onb-lead onb-seedhint">
+            {{ t("We don't know your fitness yet, so plans will start from a cautious default (VDOT 45). Add a recent race result for paces that actually fit you.") }}
+            <button type="button" class="ghost" style="margin-left: 0.4rem;"
+                    hx-get="/onboarding?step=fitness" hx-target="#onboarding-body" hx-swap="innerHTML">
+                ← {{ t('Set my fitness') }}
+            </button>
+        </p>
+        {% endif %}
+        {% if has_plan %}
+        <p class="onb-lead"><span class="muted">{{ t('You already have an active plan — the builder lets you adjust or replace it.') }}</span></p>
+        {% endif %}
+        <div class="onb-actions">
+            {{ back_btn(prev_step) }}
+            <button type="button" class="ghost"
+                    hx-post="/onboarding/complete"
+                    hx-on::after-request="if(event.detail.successful) document.getElementById('onboarding-modal').close()">
+                {{ t('Not now') }}
+            </button>
+            <span class="onb-spacer"></span>
+            <button type="button" class="primary"
+                    hx-post="/onboarding/goto-plans">
+                {{ t('Find my plan') }} →
+            </button>
+        </div>
+    {% endif %}
+    </div>
+</div>

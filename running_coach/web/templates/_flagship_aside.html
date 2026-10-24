@@ -1,0 +1,292 @@
+{# Flagship right-hand aside: the daily bonus tip + the next saved race.
+   Shared by the running-workout flagship and the rest-day strength flagship
+   so both rest and training days surface the same supplementary cards. #}
+
+{# One row of the race-readiness breakdown panel. `comp` is a component dict
+   straight from plans/readiness.py — pts, max, estimated. The mini-bar shows
+   how much of the component's ceiling was actually earned, so the runner spots
+   the lever dragging the score without reading a single number. `%g` prints
+   32.0 as "32" but keeps 2.9 as "2.9".
+
+   `is-strong` / `is-mid` / `is-weak` recolor the row by earned fraction — same
+   green/amber/red reading as the headline band, applied per component so a
+   0/10 long-run base doesn't sit there in on-track green. #}
+{% macro readiness_row(label, comp, note) %}
+{% set _f = (comp.pts / comp.max) if comp.max else 0 %}
+<li class="tpcb-row {{ 'is-strong' if _f >= 0.8 else ('is-mid' if _f >= 0.5 else 'is-weak') }}{% if comp.estimated %} is-estimated{% endif %}">
+    <span class="tpcb-name">{{ label }}</span>
+    <span class="tpcb-pts">{{ '%g'|format(comp.pts) }}<span class="tpcb-max">/{{ '%g'|format(comp.max) }}</span></span>
+    <span class="tpcb-bar" aria-hidden="true">
+        <i style="width: {{ (100 * _f)|round(1) }}%;"></i>
+    </span>
+    <span class="tpcb-note">{{ note }}</span>
+</li>
+{% endmacro %}
+
+<div class="tp-flagship-aside">
+    {% if countdown %}
+    {# Race-day countdown — replaces the daily bonus tip while a real race
+       is on the horizon. Click opens the event detail modal. Phase classes
+       (`is-future` / `is-final-week` / `is-tomorrow` / `is-today` / `is-recap`)
+       drive the urgency styling — amber by default, red in the final week,
+       grey for the 48h post-race recap. #}
+    {% set _cd = countdown %}
+    {% set _ev = _cd.event %}
+    {# The card is a plain <div> wrapping two independent controls: the big
+       `tp-countdown-open` button (whole card body → event detail modal) and
+       the readiness disclosure below it. They can't nest — a <details> inside
+       a <button> is invalid HTML and swallows its own clicks. #}
+    <div class="tp-side-card race-countdown is-{{ _cd.phase }}">
+    <button type="button"
+            class="tp-countdown-open is-clickable"
+            hx-get="/calendar/events/{{ _ev.id }}/detail"
+            hx-target="#event-detail-body"
+            hx-swap="innerHTML"
+            hx-on::after-request="if(event.detail.successful) document.getElementById('event-detail-modal').showModal()"
+            title="{{ t('Open event details') }}">
+        {# Flag-banner kicker — small chip at the very top of the card. #}
+        <div class="tp-countdown-flag">
+            {% if _cd.phase == 'today' %}🏁 {{ t("RACE DAY") }}
+            {% elif _cd.phase == 'tomorrow' %}🏁 {{ t("RACE TOMORROW") }}
+            {% elif _cd.phase == 'recap' %}{{ t("RACE RECAP") }}
+            {% elif _cd.phase == 'final-week' %}{{ t("RACE WEEK") }}
+            {% else %}{{ t("COUNTDOWN") }}
+            {% endif %}
+        </div>
+        <div class="tp-countdown-body">
+            {% if _cd.phase == 'today' %}
+            <div class="tp-countdown-number">GO</div>
+            <p class="tp-countdown-label">{{ t("today's the day") }}</p>
+            {% elif _cd.phase == 'tomorrow' %}
+            <div class="tp-countdown-number">1</div>
+            <p class="tp-countdown-label">{{ t("day to go") }}</p>
+            {% elif _cd.phase == 'recap' %}
+            <div class="tp-countdown-number">✓</div>
+            <p class="tp-countdown-label">
+                {% if _cd.days_until == -1 %}{{ t("yesterday") }}
+                {% else %}{{ t("{n} days ago", n=(-_cd.days_until)) }}
+                {% endif %}
+            </p>
+            {% else %}
+            <div class="tp-countdown-number">{{ _cd.days_until }}</div>
+            <p class="tp-countdown-label">{{ t("days until") }}</p>
+            {% endif %}
+            <h3 class="tp-countdown-race">{{ _ev.name }}</h3>
+            <p class="tp-side-card-desc">
+                {{ fmt_date_long(_ev.race_date) }}
+                {% if _ev.chosen_distance_label %} · {{ _ev.chosen_distance_label }}{% endif %}
+                {% if _ev.city %} · {{ _ev.city }}{% endif %}
+            </p>
+            {# Race-time prediction. Daniels' formula maps VDOT → finish
+               time for the chosen distance. Suppressed in the recap
+               phase since the actual time is now the headline. #}
+            {% if _cd.predicted_time_s and _cd.phase != 'recap' %}
+            {% set _h = (_cd.predicted_time_s // 3600) %}
+            {% set _m = ((_cd.predicted_time_s % 3600) // 60) %}
+            {% set _s = (_cd.predicted_time_s % 60) %}
+            <p class="tp-countdown-prediction">
+                <span class="tp-countdown-prediction-label">{{ t("On pace for") }}</span>
+                <span class="tp-countdown-prediction-time">
+                    {% if _h %}{{ _h }}:{{ '%02d'|format(_m) }}:{{ '%02d'|format(_s) }}
+                    {% else %}{{ _m }}:{{ '%02d'|format(_s) }}{% endif %}
+                </span>
+                <span class="tp-countdown-prediction-meta">
+                    {% if _cd.predicted_source == 'garmin' %}{{ t("via Garmin") }}
+                    {% elif _cd.predicted_vdot %}{{ t("VDOT") }} {{ _cd.predicted_vdot }}
+                    {% endif %}
+                </span>
+            </p>
+            {% endif %}
+        </div>
+    </button>
+    {# Race-readiness bar — 0-100 score blending adherence, recent quality,
+       VDOT trend, ACWR band, long-run base. Hidden in the recap phase and
+       when readiness is None (plan too young / too few signals). Verdict
+       label ("ON TRACK" / "BUILDING" / "BEHIND") matches the band.
+
+       Click the bar and the breakdown pops up — five rows, one per
+       component, each printing its own points / ceiling plus the raw
+       numbers it was derived from. Every number comes from the scorer's
+       `components` payload, nothing is recomputed here.
+
+       The panel is a native `popover`, so it renders in the top layer and
+       escapes the card's `overflow: hidden` instead of pushing the card
+       taller. Free with that: light-dismiss on outside click, Esc to close,
+       focus handling — no JS. #}
+    {% if _cd.readiness and _cd.phase != 'recap' %}
+    {% set _r = _cd.readiness %}
+    {% set _c = _r.components %}
+    <div class="tp-countdown-readiness is-{{ _r.band }}">
+        <button type="button"
+                class="tp-countdown-readiness-trigger"
+                popovertarget="rdy-breakdown-{{ _ev.id }}"
+                title="{{ t('How is this score built up?') }}">
+            <span class="tp-countdown-readiness-head">
+                <span class="tp-countdown-readiness-label">{{ t("Race readiness") }}</span>
+                <span class="tp-countdown-readiness-score">{{ _r.score }}/100</span>
+            </span>
+            <span class="tp-countdown-readiness-bar">
+                <span class="tp-countdown-readiness-fill" style="width: {{ _r.score }}%;"></span>
+            </span>
+            <span class="tp-countdown-readiness-foot">
+                <span class="tp-countdown-readiness-verdict">
+                    {% if _r.band == 'on_track' %}{{ t("ON TRACK") }}
+                    {% elif _r.band == 'building' %}{{ t("BUILDING") }}
+                    {% else %}{{ t("BEHIND") }}
+                    {% endif %}
+                </span>
+                <span class="tp-countdown-readiness-hint">{{ t("why?") }}</span>
+            </span>
+        </button>
+        <div id="rdy-breakdown-{{ _ev.id }}" popover class="tp-countdown-breakdown">
+            {# Headline doubles as the total — no separate "Total" row in a
+               popup this size. #}
+            <p class="tp-countdown-breakdown-head">
+                <span>{{ t("Race readiness") }}</span>
+                <span class="tpcb-pts">{{ _r.score }}<span class="tpcb-max">/100</span></span>
+            </p>
+            <ul class="tp-countdown-breakdown-list">
+                {{ readiness_row(t("Plan adherence"), _c.adherence,
+                     t("{done} of {due} quality sessions done in {weeks} weeks",
+                       done=_c.adherence.done, due=_c.adherence.due, weeks=_c.adherence.weeks)
+                     if _c.adherence.due
+                     else t("no quality work was scheduled — neutral score")) }}
+
+                {{ readiness_row(t("Recent quality"), _c.quality,
+                     t("{n} sessions done in {weeks} weeks ({target} = full marks)",
+                       n=_c.quality.n, weeks=_c.quality.weeks, target=_c.quality.target)) }}
+
+                {{ readiness_row(t("VDOT trend"), _c.vdot_trend,
+                     t("{delta} VDOT vs {weeks} weeks ago",
+                       delta="%+.1f"|format(_c.vdot_trend.delta), weeks=_c.vdot_trend.weeks)
+                     if _c.vdot_trend.delta is not none
+                     else t("no VDOT history yet — half marks")) }}
+
+                {{ readiness_row(t("Load balance (ACWR)"), _c.acwr,
+                     t("ratio {ratio} — sweet spot is 0.8-1.5", ratio=_c.acwr.ratio)
+                     if _c.acwr.ratio is not none
+                     else t("no load data yet — half marks")) }}
+
+                {# Three numbers, because the score blends two yardsticks:
+                   what the plan asked for lately and what the race itself
+                   needs. Without a plan ask to compare against, the score is
+                   the absolute ramp alone — so name its zero point instead,
+                   otherwise "16.1 of 30" looks like it should score half. #}
+                {% if not _c.longrun_base.target_km %}
+                {% set _lb_note = t("no race distance set — neutral score") %}
+                {% elif _c.longrun_base.asked_km %}
+                {% set _lb_note = t("last {weeks} wks: longest {longest} km · plan asked {asked} km · race needs {target} km",
+                       weeks=_c.longrun_base.weeks,
+                       longest='%g'|format(_c.longrun_base.longest_km),
+                       asked='%g'|format(_c.longrun_base.asked_km),
+                       target='%g'|format(_c.longrun_base.target_km)) %}
+                {% else %}
+                {% set _lb_note = t("longest {longest} km in {weeks} wks · race needs {target} km, under {floor} km scores zero",
+                       longest='%g'|format(_c.longrun_base.longest_km),
+                       weeks=_c.longrun_base.weeks,
+                       target='%g'|format(_c.longrun_base.target_km),
+                       floor='%g'|format(_c.longrun_base.floor_km)) %}
+                {% endif %}
+                {{ readiness_row(t("Long-run base"), _c.longrun_base, _lb_note) }}
+            </ul>
+            <p class="tp-countdown-breakdown-note">
+                {{ t("{on_track}+ on track · {building}-{on_track_max} building · under {building} behind",
+                     on_track=_r.thresholds.on_track, building=_r.thresholds.building,
+                     on_track_max=(_r.thresholds.on_track - 1)) }}
+            </p>
+            {# Only worth explaining when a row actually fell back. #}
+            {% if _c.values()|selectattr('estimated')|first is defined %}
+            <p class="tp-countdown-breakdown-note">{{ t("Greyed rows score half marks — no data for them yet.") }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    </div>
+    {% elif daily_tip %}
+    <div class="tp-side-card tip">
+        <p class="tp-side-card-eyebrow">② {{ t("Bonus") }} · {{ tip_category_labels[daily_tip.category] }} · {{ daily_tip.duration_min }} min</p>
+        <h3 class="tp-side-card-title">{{ daily_tip.title }}</h3>
+        <p class="tp-side-card-desc">{{ daily_tip.body }}</p>
+    </div>
+    {% endif %}
+    {% if upcoming_races %}
+    {# Cap at 8 races in the dashboard carousel — beyond that the runner
+       should jump to /calendar for the full list. Tiny `tp-race-carousel`
+       JS at the bottom cycles slides on prev/next/dot clicks. With only
+       one race the controls auto-hide via CSS, so the card looks
+       identical to its pre-carousel form. #}
+    {% set _races = upcoming_races[:8] %}
+    <div class="tp-race-carousel" data-count="{{ _races|length }}">
+        <div class="tp-race-carousel-slides">
+            {% for r in _races %}
+            <button type="button"
+                    class="tp-side-card race is-clickable tp-race-carousel-slide{% if loop.index0 == 0 %} is-active{% endif %}"
+                    data-slide="{{ loop.index0 }}"
+                    hx-get="/calendar/events/{{ r.id }}/detail"
+                    hx-target="#event-detail-body"
+                    hx-swap="innerHTML"
+                    hx-on::after-request="if(event.detail.successful) document.getElementById('event-detail-modal').showModal()"
+                    title="{{ t('Open event details') }}">
+                <p class="tp-side-card-eyebrow">{{ t("Race day") }}{% if _races|length > 1 %} · {{ loop.index }}/{{ _races|length }}{% endif %}</p>
+                <h3 class="tp-side-card-title">{{ r.name }}</h3>
+                <p class="tp-side-card-desc">
+                    {{ fmt_date_long(r.race_date) }}
+                    {% if r.chosen_distance_label %} · {{ r.chosen_distance_label }}{% endif %}
+                    {% if r.city %} · {{ r.city }}{% endif %}
+                </p>
+            </button>
+            {% endfor %}
+        </div>
+        {% if _races|length > 1 %}
+        <div class="tp-race-carousel-controls">
+            <button type="button" class="tp-race-carousel-arrow"
+                    data-direction="prev" aria-label="{{ t('Previous race') }}">‹</button>
+            <div class="tp-race-carousel-dots">
+                {% for r in _races %}
+                <button type="button"
+                        class="tp-race-carousel-dot{% if loop.index0 == 0 %} is-active{% endif %}"
+                        data-slide="{{ loop.index0 }}"
+                        aria-label="{{ t('Go to race') }} {{ loop.index }}"></button>
+                {% endfor %}
+            </div>
+            <button type="button" class="tp-race-carousel-arrow"
+                    data-direction="next" aria-label="{{ t('Next race') }}">›</button>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+{# Carousel JS — initialized for every `.tp-race-carousel` on the page.
+   No external deps, no auto-advance (we picked manual cycling so the
+   dashboard stays calm on a daily check-in). Idempotent if the partial
+   re-renders via HTMX. #}
+<script>
+(() => {
+    document.querySelectorAll('.tp-race-carousel:not([data-carousel-bound])').forEach(carousel => {
+        carousel.dataset.carouselBound = '1';
+        const slides = carousel.querySelectorAll('.tp-race-carousel-slide');
+        const dots   = carousel.querySelectorAll('.tp-race-carousel-dot');
+        const count  = slides.length;
+        if (count <= 1) return;
+        let current = 0;
+        const show = (i) => {
+            current = (i + count) % count;
+            slides.forEach((s, idx) => s.classList.toggle('is-active', idx === current));
+            dots.forEach((d, idx) => d.classList.toggle('is-active', idx === current));
+        };
+        carousel.querySelector('[data-direction="prev"]')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            show(current - 1);
+        });
+        carousel.querySelector('[data-direction="next"]')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            show(current + 1);
+        });
+        dots.forEach((d, idx) => d.addEventListener('click', (e) => {
+            e.stopPropagation();
+            show(idx);
+        }));
+    });
+})();
+</script>

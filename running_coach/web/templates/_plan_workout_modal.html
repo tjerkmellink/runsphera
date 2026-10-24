@@ -1,0 +1,574 @@
+{# Tempo planned-workout modal. Lazy-loaded into the dialog on the plans page
+   when the user clicks a day cell. Shows full target + actual stats, plus
+   mutation hooks (push-to-watch, apply-coach-swap, manual edit, move/swap). #}
+{% set _status = workout_status(w, today_iso) %}
+{% set _is_rest = w.workout_type in ('rest', 'cross') %}
+<article class="tp-pw" id="plan-workout-{{ w.id }}">
+    <header class="tp-pw-head">
+        <div class="tp-pw-eyebrow">
+            {{ day_label(w.day_of_week)|upper }} · {{ w.planned_date }}
+            {% if w.plan_title %} · {{ w.plan_title|upper }}{% endif %}
+        </div>
+        <h2 class="tp-pw-title">{{ w.title }}</h2>
+        <div class="tp-pw-pills">
+            <span class="tp-pw-pill type-{{ w.workout_type }}">{{ t(w.workout_type|capitalize) }}</span>
+            {% if _status == 'done' %}
+            <span class="tp-pw-pill status-done">{{ t("✓ done") }}</span>
+            {% elif _status == 'missed' %}
+            <span class="tp-pw-pill status-missed">{{ t("missed") }}</span>
+            {% elif _status == 'today' %}
+            <span class="tp-pw-pill status-today">{{ t("today") }}</span>
+            {% endif %}
+            {% if w.pushed_at %}
+            <span class="tp-pw-pill on-watch">{{ t("✓ on watch") }}</span>
+            {% endif %}
+        </div>
+        {# Execution score ring — larger version, top-right of the modal
+           header so the runner sees how the session was executed at a
+           glance. Same partial as the plan-day cell. #}
+        {% with es=w.execution_score, size=52 %}
+            {% include "_exec_score_ring.html" %}
+        {% endwith %}
+    </header>
+
+    {# Coach-voice walkthrough: warm-up → main set → cool-down → why. Derived
+       from the workout's structure on every render (never stored), so it
+       tracks recalibrated paces and manual edits for free. Falls back to the
+       engine's shorthand description when a session can't be safely narrated
+       — see running_coach/plans/narrative.py. #}
+    {% set _narrative = workout_narrative(w) %}
+    {% if _narrative %}
+    <div class="tp-pw-desc">
+        {% for para in _narrative %}
+        <p>{{ para }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {# Calendar-event swap on this row — either the race placed here, or the
+       session that was freed up for it. Reverting restores both rows from
+       the snapshots in plan_event_swaps. Two-step inline confirm, no native
+       popups. #}
+    {% if event_swap %}
+    <section class="tp-pw-section tp-pw-event-swap">
+        <p class="tp-pw-section-label">{{ t("Race event") }}</p>
+        {% if event_swap.role == 'race' %}
+        <p class="tp-pw-actions-desc">
+            {{ t('Swapped in from your race calendar. It replaced "{title}".', title=event_swap.race_original.title) }}
+            {% if event_swap.displaced_original %}
+            {{ t('"{title}" was turned into a rest day for it.', title=event_swap.displaced_original.title) }}
+            {% endif %}
+        </p>
+        {% if _status != 'done' %}
+        <div class="tp-pw-edit-actions" id="es-actions-{{ w.id }}">
+            <button type="button" class="tp-btn"
+                    onclick="document.getElementById('es-actions-{{ w.id }}').style.display='none';
+                             document.getElementById('es-confirm-{{ w.id }}').style.display='';">
+                {{ t("Remove race & restore training") }}
+            </button>
+        </div>
+        <div id="es-confirm-{{ w.id }}"
+             style="display: none; margin-top: 0.75rem; padding: 0.75rem 0.9rem;
+                    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+                    border-radius: 8px; background: color-mix(in srgb, var(--accent) 7%, var(--card));">
+            <p class="tp-pw-actions-desc" style="margin: 0 0 0.6rem 0;">
+                {{ t("Remove this race from the plan and restore the original workout(s)?") }}
+            </p>
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button type="button" class="tp-btn"
+                        onclick="document.getElementById('es-confirm-{{ w.id }}').style.display='none';
+                                 document.getElementById('es-actions-{{ w.id }}').style.display='';">
+                    {{ t("Cancel") }}
+                </button>
+                <form method="post" action="/plan-workouts/{{ w.id }}/revert-event-swap" style="margin: 0;">
+                    <button type="submit" class="tp-btn primary">{{ t("Yes, restore") }}</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <p class="tp-pw-actions-desc">
+            {{ t("This day was freed up for {name}. Removing that race from the plan restores it.", name=event_swap.event_name) }}
+        </p>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {# Parsed structure — used by the step breakdown below and the edit form. #}
+    {% set _structure = w.structure_parsed %}
+    {% set _steps = (_structure.steps if _structure and _structure.steps else []) %}
+
+    {% if not _is_rest and (w.target_distance_km or w.target_pace_s_per_km or w.target_duration_s) %}
+    <section class="tp-pw-section">
+        <p class="tp-pw-section-label">{{ t("Target") }}</p>
+        <div class="tp-pw-stats">
+            {% if w.target_distance_km %}
+            <div>
+                <p class="tp-pw-stat-label">{{ t("Distance") }}</p>
+                <p class="tp-pw-stat-value">{{ '%.1f'|format(w.target_distance_km) }}<span class="tp-pw-stat-unit">km</span></p>
+            </div>
+            {% endif %}
+            {% if w.target_pace_s_per_km %}
+            <div>
+                <p class="tp-pw-stat-label">{{ t("Pace") }}</p>
+                <p class="tp-pw-stat-value">{{ fmt_pace_s(w.target_pace_s_per_km) }}</p>
+            </div>
+            {% endif %}
+            {% if w.target_duration_s %}
+            <div>
+                <p class="tp-pw-stat-label">{{ t("Target time") }}</p>
+                <p class="tp-pw-stat-value">{{ fmt_duration(w.target_duration_s) }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+
+    {# Structured step breakdown — makes multi-pace sessions (tempo, intervals,
+       peak long runs with an M-pace finish) visible at a glance instead of
+       burying the shape in the description text. #}
+    {% if _steps and not _is_rest %}
+    <section class="tp-pw-section">
+        <p class="tp-pw-section-label">{{ t("Steps") }}</p>
+        <div class="tp-pw-structure">
+            {% for s in _steps %}
+                {% if s.type == 'repeat' %}
+                    {% set rns = namespace(work_km=0.0, work_pace=0, work_s=0, rec_s=0) %}
+                    {% for inner in s.steps %}
+                        {% if inner.type == 'active' and inner.end and inner.end.distance_m %}
+                            {% set rns.work_km = inner.end.distance_m / 1000.0 %}
+                            {% if inner.pace_s_per_km %}{% set rns.work_pace = inner.pace_s_per_km %}{% endif %}
+                        {% elif inner.type == 'active' and inner.end and inner.end.duration_s %}
+                            {% set rns.work_s = inner.end.duration_s %}
+                        {% elif inner.type == 'recovery' and inner.end and inner.end.duration_s %}
+                            {% set rns.rec_s = inner.end.duration_s %}
+                        {% endif %}
+                    {% endfor %}
+                    {# Distance-based reps (Daniels) show km @ pace; time-based
+                       reps (run/walk sessions) show the work duration. #}
+                    <span class="tp-pw-structure-step accent">{{ s.iterations }}× {% if rns.work_km %}{{ '%g'|format(rns.work_km) }} km{% elif rns.work_s %}{{ '%d:%02d'|format(rns.work_s // 60, rns.work_s % 60) }}{% endif %}{% if rns.work_pace %} @ {{ fmt_pace_s(rns.work_pace) }}{% endif %}{% if rns.rec_s %} + {{ '%d:%02d'|format(rns.rec_s // 60, rns.rec_s % 60) }} {{ t("recovery") }}{% endif %}</span>
+                {% else %}
+                    {% set _step_km = (s.end.distance_m / 1000.0) if s.end and s.end.distance_m else None %}
+                    {% set _step_s = (s.end.duration_s) if s.end and s.end.duration_s and not _step_km else None %}
+                    <span class="tp-pw-structure-step {% if s.type == 'active' %}accent{% endif %}">{% if s.type == 'warmup' %}WU {% elif s.type == 'cooldown' %}CD {% elif s.zone %}{{ s.zone }} {{ t("pace") }} · {% endif %}{% if _step_km %}{{ '%g'|format(_step_km) }} km{% elif _step_s %}{{ '%d:%02d'|format(_step_s // 60, _step_s % 60) }}{% endif %}{% if s.pace_s_per_km %} @ {{ fmt_pace_s(s.pace_s_per_km) }}{% endif %}</span>
+                {% endif %}
+                {% if not loop.last %}<span class="tp-pw-structure-arrow">→</span>{% endif %}
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if _status == 'done' and w.actual_distance_m %}
+    {% set _actual_km = w.actual_distance_m / 1000.0 %}
+    {% set _actual_pace_min = (w.actual_duration_s / 60.0) / _actual_km if _actual_km > 0 else None %}
+    <section class="tp-pw-section">
+        <p class="tp-pw-section-label">{{ t("Actual") }}</p>
+        <div class="tp-pw-stats">
+            <div>
+                <p class="tp-pw-stat-label">{{ t("Distance") }}</p>
+                <p class="tp-pw-stat-value">{{ '%.2f'|format(_actual_km) }}<span class="tp-pw-stat-unit">km</span></p>
+            </div>
+            {% if _actual_pace_min %}
+            <div>
+                <p class="tp-pw-stat-label">{{ t("Pace") }}</p>
+                <p class="tp-pw-stat-value">{{ fmt_pace(_actual_pace_min) }}</p>
+            </div>
+            {% endif %}
+            {% if w.actual_duration_s %}
+            <div>
+                <p class="tp-pw-stat-label">{{ t("Time") }}</p>
+                <p class="tp-pw-stat-value">{{ fmt_duration(w.actual_duration_s) }}</p>
+            </div>
+            {% endif %}
+            {% if w.actual_avg_hr %}
+            <div>
+                <p class="tp-pw-stat-label">{{ t("Avg HR") }}</p>
+                <p class="tp-pw-stat-value">{{ '%.0f'|format(w.actual_avg_hr) }}<span class="tp-pw-stat-unit">bpm</span></p>
+            </div>
+            {% endif %}
+            {% if w.actual_training_load %}
+            <div>
+                <p class="tp-pw-stat-label">{{ t("Load") }}</p>
+                <p class="tp-pw-stat-value">{{ '%.0f'|format(w.actual_training_load) }}<span class="tp-pw-stat-unit">TL</span></p>
+            </div>
+            {% endif %}
+        </div>
+        {% if w.actual_name %}
+        <p class="tp-pw-actual-name">{{ w.actual_name }} · {{ w.actual_start_local[:16].replace('T', ' ') if w.actual_start_local else '' }}</p>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {# Coach-suggested swap — only when today's recommendation flagged it. #}
+    {% if swap_available and recommendation and recommendation.suggestion %}
+    <section class="tp-pw-section tp-pw-swap">
+        <p class="tp-pw-section-label">{{ t("Coach suggests") }}</p>
+        <p class="tp-pw-swap-body">{{ recommendation.suggestion }}</p>
+        <form method="post" action="/plan-workouts/{{ w.id }}/apply-swap">
+            <button type="submit" class="tp-btn primary">{{ t("Apply swap →") }}</button>
+        </form>
+    </section>
+    {% endif %}
+
+    {# Actions: push-to-watch when this is a pushable future/today workout.
+       Garmin-only — the whole section is hidden for Garmin-less runners. #}
+    {% if is_authenticated() and is_pushable_row(w) and not w.pushed_at and _status in ('future', 'today') %}
+    <section class="tp-pw-section tp-pw-actions">
+        <p class="tp-pw-section-label">{{ t("Send to Garmin") }}</p>
+        <p class="tp-pw-actions-desc">
+            {{ t("Uploads this workout to Garmin Connect and schedules it on {date} so it appears on your watch.", date=w.planned_date) }}
+        </p>
+        <form method="post" action="/plan-workouts/{{ w.id }}/push"
+              hx-post="/plan-workouts/{{ w.id }}/push"
+              hx-target="#day-{{ w.id }}"
+              hx-swap="outerHTML"
+              hx-disabled-elt="find button"
+              hx-on::after-request="if(event.detail.successful) { document.getElementById('plan-workout-modal').close(); window.location.reload(); }">
+            <button type="submit" class="tp-btn primary">{{ t("Send to watch →") }}</button>
+        </form>
+    </section>
+    {% elif w.pushed_at %}
+    <section class="tp-pw-section">
+        <p class="tp-pw-section-label">{{ t("On watch") }}</p>
+        <p class="tp-pw-actions-desc">{{ t("Pushed {date}. The session is on your Garmin device.", date=w.pushed_at[:10]) }}</p>
+    </section>
+    {% endif %}
+
+    {# ── Manual edit + move (phase 2) ────────────────────────────────
+       Done workouts are read-only — the actual activity is locked in.
+       Pushed-to-Garmin workouts surface a "Save & re-push" banner so the
+       watch stays in sync.
+
+       Form branches by workout_type:
+       - Simple (easy/long/recovery/race) → distance + pace
+       - Tempo → 3 rows: warmup · active (km + pace) · cooldown
+       - Intervals → warmup · iterations + work (km + pace) · recovery · cooldown
+       - Rest/cross → type select only (no quantitative targets)
+
+       Duration is derived server-side (`distance × pace`, or the sum of
+       per-step durations for structured workouts) so it's not in the form. #}
+
+    {# Pull each step's km/pace out of the parsed structure so the form can
+       seed the inputs. Uses a `namespace` because Jinja's `{% set %}` inside
+       a for-loop only scopes to the iteration. #}
+    {% set ns = namespace(
+        wu_km=0.0, cd_km=0.0,
+        active_km=0.0, active_pace=0,
+        repeat_iters=0, repeat_work_km=0.0, repeat_work_pace=0, repeat_recovery_s=0,
+        wu_s=0, cd_s=0, active_s=0, active_count=0, repeat_work_s=0,
+        active_segs=[],
+    ) %}
+    {% for s in _steps %}
+        {% if s.type == 'warmup' and s.end and s.end.distance_m %}
+            {% set ns.wu_km = s.end.distance_m / 1000.0 %}
+        {% elif s.type == 'warmup' and s.end and s.end.duration_s %}
+            {% set ns.wu_s = s.end.duration_s %}
+        {% elif s.type == 'cooldown' and s.end and s.end.distance_m %}
+            {% set ns.cd_km = s.end.distance_m / 1000.0 %}
+        {% elif s.type == 'cooldown' and s.end and s.end.duration_s %}
+            {% set ns.cd_s = s.end.duration_s %}
+        {% elif s.type == 'active' and s.end and s.end.distance_m %}
+            {% set ns.active_count = ns.active_count + 1 %}
+            {% set ns.active_km = s.end.distance_m / 1000.0 %}
+            {% if s.pace_s_per_km %}{% set ns.active_pace = s.pace_s_per_km %}{% endif %}
+            {% set ns.active_segs = ns.active_segs + [{'km': s.end.distance_m / 1000.0, 'pace': s.pace_s_per_km or 0, 'zone': s.zone or ''}] %}
+        {% elif s.type == 'active' and s.end and s.end.duration_s %}
+            {% set ns.active_count = ns.active_count + 1 %}
+            {% set ns.active_s = s.end.duration_s %}
+        {% elif s.type == 'repeat' %}
+            {% set ns.repeat_iters = s.iterations or 0 %}
+            {% for inner in s.steps %}
+                {% if inner.type == 'active' and inner.end and inner.end.distance_m %}
+                    {% set ns.repeat_work_km = inner.end.distance_m / 1000.0 %}
+                    {% if inner.pace_s_per_km %}{% set ns.repeat_work_pace = inner.pace_s_per_km %}{% endif %}
+                {% elif inner.type == 'active' and inner.end and inner.end.duration_s %}
+                    {% set ns.repeat_work_s = inner.end.duration_s %}
+                {% elif inner.type == 'recovery' and inner.end and inner.end.duration_s %}
+                    {% set ns.repeat_recovery_s = inner.end.duration_s %}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+    {# Time-based shapes (paceless run/walk plans): the form must edit
+       durations, never invent distances or paces. #}
+    {% set _time_intervals = ns.repeat_iters and ns.repeat_work_s and not ns.repeat_work_km %}
+    {% set _time_mix = w.workout_type == 'intervals' and not ns.repeat_iters and ns.active_s and not ns.active_km %}
+    {% set _time_simple = w.workout_type in ('easy', 'long', 'recovery') and ns.active_count == 1 and ns.active_s and not w.target_distance_km %}
+    {# Multi-pace continuous run (Daniels peak marathon long run: an easy block
+       then an M-pace finish). Two or more distance-based active segments, each
+       at its own pace — the edit form renders one editable row per segment. #}
+    {% set _is_progression = w.workout_type in ('easy', 'long', 'recovery') and ns.active_segs|length >= 2 %}
+    {% set _zone_labels = {'E': 'Easy', 'M': 'Marathon pace', 'T': 'Threshold', 'HM': 'Half-marathon pace', 'I': 'Interval', 'R': 'Repetition'} %}
+
+    {% if _status != 'done' %}
+    <section class="tp-pw-section tp-pw-edit">
+        <p class="tp-pw-section-label">{{ t("Manual edit") }}</p>
+        {% if w.pushed_at %}
+        <p class="tp-pw-edit-warning">
+            {{ t("This workout is on your watch. Saving will delete the Garmin copy and re-upload the new shape.") }}
+        </p>
+        {% endif %}
+        <form method="post" action="/plan-workouts/{{ w.id }}/edit" class="tp-pw-edit-form">
+            <label class="tp-pw-field-full">
+                <span class="tp-pw-field-label">{{ t("Type") }}</span>
+                <select name="workout_type" class="tp-pw-input">
+                    {% for opt in ['easy','tempo','intervals','long','recovery','rest','cross','race'] %}
+                    <option value="{{ opt }}" {% if w.workout_type == opt %}selected{% endif %}>{{ t(opt|capitalize) }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            {% if w.workout_type == 'tempo' %}
+            <div class="tp-pw-steps">
+                <div class="tp-pw-step">
+                    <div class="tp-pw-step-label">{{ t("Warm-up") }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Distance (km)") }}</span>
+                        <input type="number" step="0.1" min="0" name="tempo_warmup_km"
+                               value="{{ '%.1f'|format(ns.wu_km) if ns.wu_km else '' }}"
+                               class="tp-pw-input" placeholder="1.5">
+                    </label>
+                </div>
+                <div class="tp-pw-step accent">
+                    <div class="tp-pw-step-label">{{ t("Tempo") }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Distance (km)") }}</span>
+                        <input type="number" step="0.1" min="0" name="tempo_active_km"
+                               value="{{ '%.1f'|format(ns.active_km) if ns.active_km else '' }}"
+                               class="tp-pw-input" placeholder="3.0" required>
+                    </label>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Pace (mm:ss/km)") }}</span>
+                        <input type="text" name="tempo_active_pace"
+                               value="{{ ('%d:%02d'|format(ns.active_pace // 60, ns.active_pace % 60)) if ns.active_pace else '' }}"
+                               pattern="^[0-9]{1,2}:[0-5][0-9]$"
+                               class="tp-pw-input" placeholder="4:35" required>
+                    </label>
+                </div>
+                <div class="tp-pw-step">
+                    <div class="tp-pw-step-label">{{ t("Cool-down") }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Distance (km)") }}</span>
+                        <input type="number" step="0.1" min="0" name="tempo_cooldown_km"
+                               value="{{ '%.1f'|format(ns.cd_km) if ns.cd_km else '' }}"
+                               class="tp-pw-input" placeholder="1.5">
+                    </label>
+                </div>
+            </div>
+            {% elif w.workout_type == 'intervals' and _time_intervals %}
+            {# Time-based run/walk repeats (Couch to 5K) — everything is a
+               duration; no distance or pace fields, on purpose. #}
+            <div class="tp-pw-steps">
+                <div class="tp-pw-step">
+                    <div class="tp-pw-step-label">{{ t("Warm-up walk") }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Time (mm:ss)") }}</span>
+                        <input type="text" name="intervals_warmup_time"
+                               value="{{ '%d:%02d'|format(ns.wu_s // 60, ns.wu_s % 60) if ns.wu_s else '' }}"
+                               pattern="^([0-9]{1,2}:[0-5][0-9])?$"
+                               class="tp-pw-input" placeholder="5:00">
+                    </label>
+                </div>
+                <div class="tp-pw-step accent">
+                    <div class="tp-pw-step-label">{{ t("Run") }} × {{ ns.repeat_iters }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Reps") }}</span>
+                        <input type="number" step="1" min="1" name="intervals_iterations"
+                               value="{{ ns.repeat_iters }}"
+                               class="tp-pw-input" required>
+                    </label>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Time (mm:ss)") }}</span>
+                        <input type="text" name="intervals_work_time"
+                               value="{{ '%d:%02d'|format(ns.repeat_work_s // 60, ns.repeat_work_s % 60) }}"
+                               pattern="^[0-9]{1,2}:[0-5][0-9]$"
+                               class="tp-pw-input" required>
+                    </label>
+                </div>
+                <div class="tp-pw-step">
+                    <div class="tp-pw-step-label">{{ t("Recovery walk") }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Per rep (mm:ss)") }}</span>
+                        <input type="text" name="intervals_recovery"
+                               value="{{ ('%d:%02d'|format(ns.repeat_recovery_s // 60, ns.repeat_recovery_s % 60)) if ns.repeat_recovery_s else '' }}"
+                               pattern="^([0-9]{1,2}:[0-5][0-9])?$"
+                               class="tp-pw-input" placeholder="1:30">
+                    </label>
+                </div>
+                <div class="tp-pw-step">
+                    <div class="tp-pw-step-label">{{ t("Cool-down walk") }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Time (mm:ss)") }}</span>
+                        <input type="text" name="intervals_cooldown_time"
+                               value="{{ '%d:%02d'|format(ns.cd_s // 60, ns.cd_s % 60) if ns.cd_s else '' }}"
+                               pattern="^([0-9]{1,2}:[0-5][0-9])?$"
+                               class="tp-pw-input" placeholder="5:00">
+                    </label>
+                </div>
+            </div>
+            {% elif w.workout_type == 'intervals' and _time_mix %}
+            {# Hand-crafted run/walk ladder (uneven blocks) — a reps form can't
+               represent it, so no quantitative fields. #}
+            <p class="tp-pw-actions-desc">
+                {{ t("This session is a hand-crafted run/walk ladder — field-by-field editing can't represent it. Move it to another day, or simply adjust the blocks by feel on the run.") }}
+            </p>
+            {% elif w.workout_type == 'intervals' %}
+            <div class="tp-pw-steps">
+                <div class="tp-pw-step">
+                    <div class="tp-pw-step-label">{{ t("Warm-up") }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Distance (km)") }}</span>
+                        <input type="number" step="0.1" min="0" name="intervals_warmup_km"
+                               value="{{ '%.1f'|format(ns.wu_km) if ns.wu_km else '' }}"
+                               class="tp-pw-input" placeholder="2.0">
+                    </label>
+                </div>
+                <div class="tp-pw-step accent">
+                    <div class="tp-pw-step-label">{{ t("Work") }} × {{ ns.repeat_iters or 'N' }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Reps") }}</span>
+                        <input type="number" step="1" min="1" name="intervals_iterations"
+                               value="{{ ns.repeat_iters if ns.repeat_iters else '' }}"
+                               class="tp-pw-input" placeholder="5" required>
+                    </label>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Distance (km)") }}</span>
+                        <input type="number" step="0.1" min="0" name="intervals_work_km"
+                               value="{{ '%.1f'|format(ns.repeat_work_km) if ns.repeat_work_km else '' }}"
+                               class="tp-pw-input" placeholder="1.0" required>
+                    </label>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Pace (mm:ss/km)") }}</span>
+                        <input type="text" name="intervals_work_pace"
+                               value="{{ ('%d:%02d'|format(ns.repeat_work_pace // 60, ns.repeat_work_pace % 60)) if ns.repeat_work_pace else '' }}"
+                               pattern="^[0-9]{1,2}:[0-5][0-9]$"
+                               class="tp-pw-input" placeholder="3:50" required>
+                    </label>
+                </div>
+                <div class="tp-pw-step">
+                    <div class="tp-pw-step-label">{{ t("Recovery") }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Per rep (mm:ss)") }}</span>
+                        <input type="text" name="intervals_recovery"
+                               value="{{ ('%d:%02d'|format(ns.repeat_recovery_s // 60, ns.repeat_recovery_s % 60)) if ns.repeat_recovery_s else '' }}"
+                               class="tp-pw-input" placeholder="2:00">
+                    </label>
+                </div>
+                <div class="tp-pw-step">
+                    <div class="tp-pw-step-label">{{ t("Cool-down") }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Distance (km)") }}</span>
+                        <input type="number" step="0.1" min="0" name="intervals_cooldown_km"
+                               value="{{ '%.1f'|format(ns.cd_km) if ns.cd_km else '' }}"
+                               class="tp-pw-input" placeholder="2.0">
+                    </label>
+                </div>
+            </div>
+            {% elif w.workout_type in ('easy','long','recovery') and _time_simple %}
+            {# Time-based continuous run (Couch to 5K) — durations only. #}
+            <div class="tp-pw-steps">
+                <div class="tp-pw-step">
+                    <div class="tp-pw-step-label">{{ t("Warm-up walk") }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Time (mm:ss)") }}</span>
+                        <input type="text" name="simple_warmup_time"
+                               value="{{ '%d:%02d'|format(ns.wu_s // 60, ns.wu_s % 60) if ns.wu_s else '' }}"
+                               pattern="^([0-9]{1,2}:[0-5][0-9])?$"
+                               class="tp-pw-input" placeholder="5:00">
+                    </label>
+                </div>
+                <div class="tp-pw-step accent">
+                    <div class="tp-pw-step-label">{{ t("Run") }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Time (mm:ss)") }}</span>
+                        <input type="text" name="simple_run_time"
+                               value="{{ '%d:%02d'|format(ns.active_s // 60, ns.active_s % 60) }}"
+                               pattern="^[0-9]{1,2}:[0-5][0-9]$"
+                               class="tp-pw-input" required>
+                    </label>
+                </div>
+                <div class="tp-pw-step">
+                    <div class="tp-pw-step-label">{{ t("Cool-down walk") }}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Time (mm:ss)") }}</span>
+                        <input type="text" name="simple_cooldown_time"
+                               value="{{ '%d:%02d'|format(ns.cd_s // 60, ns.cd_s % 60) if ns.cd_s else '' }}"
+                               pattern="^([0-9]{1,2}:[0-5][0-9])?$"
+                               class="tp-pw-input" placeholder="5:00">
+                    </label>
+                </div>
+            </div>
+            {% elif _is_progression %}
+            {# One editable row per pace segment. Distance + pace are editable;
+               the zone tag rides along as a hidden field so the pace
+               recalibrator keeps rewriting each segment against its own zone.
+               The three arrays (seg_km / seg_pace / seg_zone) stay index-aligned
+               because every row emits exactly one of each. #}
+            <div class="tp-pw-steps">
+                {% for seg in ns.active_segs %}
+                <div class="tp-pw-step {% if seg.zone and seg.zone != 'E' %}accent{% endif %}">
+                    <div class="tp-pw-step-label">{{ t(_zone_labels.get(seg.zone, 'Segment')) }}{% if not seg.zone %} {{ loop.index }}{% endif %}</div>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Distance (km)") }}</span>
+                        <input type="number" step="0.1" min="0" name="seg_km"
+                               value="{{ '%.1f'|format(seg.km) if seg.km else '' }}"
+                               class="tp-pw-input" required>
+                    </label>
+                    <label>
+                        <span class="tp-pw-field-label">{{ t("Pace (mm:ss/km)") }}</span>
+                        <input type="text" name="seg_pace"
+                               value="{{ ('%d:%02d'|format(seg.pace // 60, seg.pace % 60)) if seg.pace else '' }}"
+                               pattern="^([0-9]{1,2}:[0-5][0-9])?$"
+                               class="tp-pw-input" placeholder="5:30">
+                    </label>
+                    <input type="hidden" name="seg_zone" value="{{ seg.zone }}">
+                </div>
+                {% endfor %}
+            </div>
+            {% elif w.workout_type in ('easy','long','recovery','race') %}
+            <label>
+                <span class="tp-pw-field-label">{{ t("Distance (km)") }}</span>
+                <input type="number" step="0.1" min="0" name="target_distance_km"
+                       value="{{ '%.1f'|format(w.target_distance_km) if w.target_distance_km else '' }}"
+                       class="tp-pw-input" placeholder="—">
+            </label>
+            <label>
+                <span class="tp-pw-field-label">{{ t("Pace (mm:ss/km)") }}</span>
+                <input type="text" name="target_pace_s_per_km"
+                       value="{{ fmt_pace_s(w.target_pace_s_per_km)|replace('/km', '') if w.target_pace_s_per_km else '' }}"
+                       pattern="^([0-9]{1,2}:[0-5][0-9])?$"
+                       class="tp-pw-input" placeholder="5:30">
+            </label>
+            {% endif %}
+            {# Rest / cross intentionally have no quantitative fields. #}
+
+            <div class="tp-pw-edit-actions">
+                <button type="submit" class="tp-btn primary">
+                    {% if w.pushed_at %}{{ t("Save & re-push →") }}{% else %}{{ t("Save changes") }}{% endif %}
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="tp-pw-section tp-pw-move">
+        <p class="tp-pw-section-label">{{ t("Move to a different day") }}</p>
+        <p class="tp-pw-actions-desc">
+            {{ t("If the target day already has a workout, the two will swap. Stays within the plan window.") }}
+        </p>
+        <form method="post" action="/plan-workouts/{{ w.id }}/move" class="tp-pw-move-form">
+            <label>
+                <span class="tp-pw-field-label">{{ t("New date") }}</span>
+                <input type="date" name="new_date" value="{{ w.planned_date }}" required class="tp-pw-input">
+            </label>
+            <button type="submit" class="tp-btn">{{ t("Move →") }}</button>
+        </form>
+    </section>
+    {% else %}
+    <section class="tp-pw-section tp-pw-stub">
+        <p class="tp-pw-section-label">{{ t("Manual edit") }}</p>
+        <p class="tp-pw-actions-desc">
+            {{ t("This workout is already completed — edits are locked. The matched activity is the source of truth.") }}
+        </p>
+    </section>
+    {% endif %}
+</article>

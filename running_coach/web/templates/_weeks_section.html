@@ -1,0 +1,49 @@
+{# Weeks list with collapsible past weeks.
+
+   On an ACTIVE plan, weeks whose span ends before today are tucked behind a
+   "Show N previous weeks" toggle so the page opens on the current + upcoming
+   weeks. Archived plans (and any plan that has fully elapsed) show every week.
+
+   Inputs (pass via {% with %}):
+     weeks       — list of week dicts (each with workouts, week_start/end, …)
+     plan_id     — id of the owning plan (forwarded to _week_card)
+     plan_status — 'active' / 'archived' (gates the collapse + push buttons)
+     eyebrow     — optional section heading text (e.g. "↓ Weeks"); omitted = no heading
+#}
+{% set ns = namespace(past=[], visible=[]) %}
+{% for week in weeks %}
+    {% set _wend = week.week_end or (week.workouts[-1].planned_date if week.workouts else week.week_start) %}
+    {% if plan_status == 'active' and _wend and _wend < today_iso %}
+        {% set ns.past = ns.past + [week] %}
+    {% else %}
+        {% set ns.visible = ns.visible + [week] %}
+    {% endif %}
+{% endfor %}
+{# Guard: if an active plan has fully elapsed every week would be "past" —
+   don't collapse the whole thing into an empty list, just show them all. #}
+{% if not ns.visible %}
+    {% set ns.visible = ns.past %}
+    {% set ns.past = [] %}
+{% endif %}
+
+{% if eyebrow %}<p class="tp-plan-section-eyebrow">{{ eyebrow }}</p>{% endif %}
+<section>
+    {% if ns.past %}
+    <details class="tp-plan-prev-weeks">
+        <summary class="tp-plan-prev-toggle">
+            <span class="when-closed">↑ {{ plural(ns.past|length, "Show {n} previous week", "Show {n} previous weeks") }}</span>
+            <span class="when-open">↓ {{ t("Hide previous weeks") }}</span>
+        </summary>
+        {% for week in ns.past %}
+            {% with plan_id=plan_id, plan_status=plan_status %}
+                {% include "_week_card.html" %}
+            {% endwith %}
+        {% endfor %}
+    </details>
+    {% endif %}
+    {% for week in ns.visible %}
+        {% with plan_id=plan_id, plan_status=plan_status %}
+            {% include "_week_card.html" %}
+        {% endwith %}
+    {% endfor %}
+</section>

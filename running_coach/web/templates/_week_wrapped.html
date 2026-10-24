@@ -1,0 +1,96 @@
+{# "This week, wrapped" — a stats-wall-style strip for the active plan's
+   current training week. Lives on the dashboard all week and updates as
+   sessions complete; flips to a celebratory DONE state at 4/4. Four big
+   italic numbers (Distance · Time · Plan total · Streak) share the exact
+   treatment as the ③ THE NUMBERS wall (see index.html + .tp-stats-wall-* in
+   app.css). The coach line below is the LLM celebration when the week is
+   complete and the model is available, else an instant rules-based line.
+   Swapped in via HTMX on ↻ refresh, so the whole section carries #week-wrapped. #}
+{% if week_wrapped %}
+{% set s = week_wrapped.stats %}
+{% set remaining = s.sessions_planned - s.sessions_done %}
+<div class="tp-stats-wall-section tp-week-wrapped {% if s.complete %}is-complete{% endif %}" id="week-wrapped">
+    <div class="tp-section-head">
+        <div>
+            <p class="tp-section-head-eyebrow{% if s.complete %} is-done{% endif %}">
+                ④ {{ t("This week") }} · {{ t(s.week_phase)|upper }}
+                {% if s.complete %} · {{ t("Done ✓") }}{% endif %}
+            </p>
+            <h2 class="tp-section-head-title">
+                {% if s.complete %}{{ t("Week {n}, wrapped", n=s.week_number) }}{% else %}{{ t("Week {n} so far", n=s.week_number) }}{% endif %}
+            </h2>
+        </div>
+        <span class="tp-section-head-meta">{{ fmt_date_range(s.week_start, s.week_end) }}</span>
+    </div>
+
+    <div class="tp-stats-wall">
+        <div class="tp-stats-wall-cell">
+            <p class="tp-stats-wall-label">{{ t("Distance") }}</p>
+            <p class="tp-stats-wall-value">{{ "%.1f"|format(s.distance_km) }}</p>
+            <p class="tp-stats-wall-unit">{{ t("km this week") }}</p>
+            <p class="tp-stats-wall-sub">{{ s.sessions_done }}/{{ s.sessions_planned }} {{ t("sessions") }}{% if s.load %} · {{ s.load }} {{ t("load") }}{% endif %}</p>
+        </div>
+        <div class="tp-stats-wall-cell">
+            <p class="tp-stats-wall-label">{{ t("Time on feet") }}</p>
+            <p class="tp-stats-wall-value" style="font-size: clamp(1.4rem, 3vw, 2.2rem);">{{ fmt_duration(s.moving_time_s) if s.moving_time_s else "—" }}</p>
+            <p class="tp-stats-wall-unit">{{ t("moving time") }}</p>
+            <p class="tp-stats-wall-sub">{% if s.longest_run_km %}{{ t("longest {km} km", km="%.1f"|format(s.longest_run_km)) }}{% else %}—{% endif %}</p>
+        </div>
+        <div class="tp-stats-wall-cell">
+            <p class="tp-stats-wall-label">{{ t("Plan total") }}</p>
+            <p class="tp-stats-wall-value">{{ "%.0f"|format(s.plan_distance_km) }}</p>
+            <p class="tp-stats-wall-unit">{{ t("km banked") }}</p>
+            <p class="tp-stats-wall-sub">{{ plural(s.plan_runs_done, "{n} run", "{n} runs") }} {{ t("since day one") }}</p>
+        </div>
+        <div class="tp-stats-wall-cell tp-week-wrapped-streak">
+            <p class="tp-stats-wall-label">{{ t("Streak") }}</p>
+            <p class="tp-stats-wall-value">{{ s.streak_weeks }}{% if s.streak_weeks >= 2 %}<span class="tp-week-wrapped-flame" aria-hidden="true">🔥</span>{% endif %}</p>
+            <p class="tp-stats-wall-unit">{{ plural(s.streak_weeks, "week", "weeks") }}</p>
+            <p class="tp-stats-wall-sub">{{ t("80%+ adherence") }}</p>
+        </div>
+    </div>
+
+    {# Coach line — LLM celebration on a complete week (with ↻), else an
+       instant rules-based line that also carries the in-progress nudge. #}
+    <div class="tp-week-wrapped-note">
+        {% if week_wrapped.celebration %}
+        <p class="tp-week-wrapped-quote"><span class="q">“</span>{{ week_wrapped.celebration }}<span class="q">”</span></p>
+        <div class="tp-coach-attr">
+            <span>— {{ t("Coach") }}</span>
+            {% if week_wrapped.celebration_generated_at %}<span>·</span><span>{{ week_wrapped.celebration_generated_at }}</span>{% endif %}
+            {% if llm_available %}
+            <span>·</span>
+            <button type="button"
+                    class="coach-refresh"
+                    title="{{ t('Regenerate this week\'s celebration') }}"
+                    hx-post="/week-wrapped/refresh"
+                    hx-target="#week-wrapped"
+                    hx-swap="outerHTML"
+                    hx-disabled-elt="this"
+                    hx-indicator="this"><span class="coach-refresh-icon">↻</span> {{ t("Regenerate") }}</button>
+            {% endif %}
+        </div>
+        {% elif s.complete %}
+        <p class="tp-week-wrapped-quote">
+            {% if s.streak_weeks >= 3 %}
+                {{ t("That's {n} weeks in a row. This is what consistency looks like.", n=s.streak_weeks) }}
+            {% elif s.targets_total and s.targets_hit == s.targets_total %}
+                {{ t("Every session done — and every target hit. Textbook week.") }}
+            {% elif s.longest_run_km >= 15 %}
+                {{ t("Week complete, capped by a {km} km long run. Money in the bank.", km="%.0f"|format(s.longest_run_km)) }}
+            {% else %}
+                {{ t("Every planned session, done. That's the week — well run.") }}
+            {% endif %}
+        </p>
+        {% else %}
+        <p class="tp-week-wrapped-quote tp-week-wrapped-progress">
+            {% if remaining == 1 %}
+                {{ t("{done} of {planned} done — one more to close out the week.", done=s.sessions_done, planned=s.sessions_planned) }}
+            {% else %}
+                {{ t("{done} of {planned} done — {left} to go this week. Keep it rolling.", done=s.sessions_done, planned=s.sessions_planned, left=remaining) }}
+            {% endif %}
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

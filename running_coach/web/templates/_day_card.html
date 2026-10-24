@@ -1,0 +1,44 @@
+{% set status = workout_status(w, today_iso) %}
+<div class="day wtype-{{ w.workout_type }} {{ 'today' if w.planned_date == today_iso else '' }} {{ 'rest' if w.workout_type == 'rest' else '' }} status-{{ status }}"
+     id="day-{{ w.id }}">
+    <div class="dow">
+        {{ day_label(w.day_of_week) }} {{ w.planned_date[5:10] }}
+        {% if status == 'done' %}<span class="status-pill done">✓ done</span>
+        {% elif status == 'missed' %}<span class="status-pill missed">missed</span>
+        {% elif status == 'today' %}<span class="status-pill today">today</span>
+        {% elif w.pushed_at %}<span class="watch-pill on">✓ on watch</span>
+        {% endif %}
+    </div>
+    <div class="wtitle">{{ w.title }}</div>
+    {% if w.target_distance_km and w.target_pace_s_per_km and w.workout_type != 'rest' %}
+    <div class="wstat">{{ fmt_pace_s(w.target_pace_s_per_km) }}{% if w.target_duration_s %} · {{ fmt_duration(w.target_duration_s) }}{% endif %}</div>
+    {% endif %}
+    {% if w.description and w.workout_type != 'rest' %}
+    <div class="wdesc">{{ w.description }}</div>
+    {% endif %}
+
+    {% if status == 'done' and w.actual_distance_m %}
+    {% set actual_km = w.actual_distance_m / 1000.0 %}
+    {% set actual_pace_min_per_km = (w.actual_duration_s / 60.0) / actual_km if actual_km > 0 else None %}
+    <div class="actual-block">
+        <div class="actual-label">Actual</div>
+        <div class="actual-stats">
+            {{ "%.2f"|format(actual_km) }} km
+            {% if actual_pace_min_per_km %} · {{ fmt_pace(actual_pace_min_per_km) }}{% endif %}
+            {% if w.actual_avg_hr %} · HR {{ "%.0f"|format(w.actual_avg_hr) }}{% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Push is a Garmin feature — hidden entirely for Garmin-less runners. #}
+    {% if is_authenticated() and is_pushable_row(w) and not w.pushed_at and status in ('future', 'today') %}
+    <button class="day-push"
+            hx-post="/plan-workouts/{{ w.id }}/push"
+            hx-target="#day-{{ w.id }}"
+            hx-swap="outerHTML"
+            hx-disabled-elt="this"
+            title="Upload to Garmin Connect and schedule on the watch">
+        Send to watch
+    </button>
+    {% endif %}
+</div>

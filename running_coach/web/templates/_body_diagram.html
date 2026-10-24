@@ -1,0 +1,146 @@
+{# Body diagram — front + back, three-layer SVG per side.
+
+   Architecture (ported from Claude Design's handoff):
+     <defs>: severity radial-gradient stops + heatmap-bucket stops
+             + clipPath using the silhouette outline path
+     <g class="body-art">: a single <path class="body-line"> = the
+             traced silhouette. Head is part of the path.
+     <g class="muscles" clip-path>: schematic muscle GROUPS, only
+             shown when body[data-anatomy="on"].
+     <g class="glow" clip-path>: radial-gradient ellipses, one per
+             active issue (active mode) or per heatmap entry
+             (heatmap mode). Clipped to the body outline.
+     <g class="regions">: 27 invisible rounded-rect hitboxes — click
+             loads the entry panel via HTMX. Hidden in heatmap mode.
+
+   Required context vars:
+     - body_svg: the body_svg module (silhouette path, REGIONS, etc.)
+     - mode: 'active' (default) or 'heatmap'
+     - active_map: dict[design_key, severity_band_num] — paints glows
+                   in active mode
+     - heatmap: dict[design_key, intensity_0_to_1] — paints glows in
+                heatmap mode
+     - pulse_key: optional design_key whose glow should animate once
+#}
+
+{%- macro figure(face, prefix) -%}
+{%- set regions = body_svg.REGIONS[face] -%}
+<svg viewBox="0 0 {{ body_svg.VIEWBOX_W }} {{ body_svg.VIEWBOX_H }}"
+     role="img"
+     aria-label="{{ t(face|capitalize) }} {{ t('body diagram') }}"
+     class="tp-body-fig">
+    <defs>
+        {# Severity glows — one radial gradient per band #}
+        <radialGradient id="{{ prefix }}-sev1">
+            <stop offset="0%" stop-color="#86efac" stop-opacity="0.6"/>
+            <stop offset="55%" stop-color="#86efac" stop-opacity="0.26"/>
+            <stop offset="100%" stop-color="#86efac" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="{{ prefix }}-sev2">
+            <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.6"/>
+            <stop offset="55%" stop-color="#fbbf24" stop-opacity="0.26"/>
+            <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="{{ prefix }}-sev3">
+            <stop offset="0%" stop-color="#ef4444" stop-opacity="0.6"/>
+            <stop offset="55%" stop-color="#ef4444" stop-opacity="0.26"/>
+            <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+        </radialGradient>
+        {# Heatmap buckets — cool yellow to deep red #}
+        {% for stop_color in ['#fde68a', '#fcd34d', '#fb923c', '#ef4444', '#b91c1c'] %}
+        <radialGradient id="{{ prefix }}-h{{ loop.index0 }}">
+            <stop offset="0%" stop-color="{{ stop_color }}" stop-opacity="0.6"/>
+            <stop offset="55%" stop-color="{{ stop_color }}" stop-opacity="0.26"/>
+            <stop offset="100%" stop-color="{{ stop_color }}" stop-opacity="0"/>
+        </radialGradient>
+        {% endfor %}
+        <clipPath id="{{ prefix }}-clip">
+            <path d="{{ body_svg.SILHOUETTE_D }}"/>
+        </clipPath>
+    </defs>
+
+    {# Layer 1: silhouette (always visible) #}
+    <g class="body-art">
+        <path class="body-line" d="{{ body_svg.SILHOUETTE_D }}"/>
+    </g>
+
+    {# Layer 2: anatomy muscle groups (visible only when [data-anatomy="on"]) #}
+    <g class="muscles" clip-path="url(#{{ prefix }}-clip)">
+        {{ body_svg.build_muscles_svg(face)|safe }}
+    </g>
+
+    {# Layer 3: glow ellipses #}
+    <g class="glow" clip-path="url(#{{ prefix }}-clip)">
+        {%- if mode == 'heatmap' -%}
+            {%- for r in regions -%}
+                {%- set dk = face ~ ':' ~ r.key -%}
+                {%- set v = heatmap.get(dk) if heatmap else None -%}
+                {%- if v -%}
+                    {%- set bucket = (v * 5)|int -%}
+                    {%- if bucket > 4 %}{% set bucket = 4 %}{% endif -%}
+                    {%- set scale = 1.7 + v * 1.1 -%}
+                    {%- set opacity = 0.55 + v * 0.45 -%}
+                    <ellipse cx="{{ r.cx }}" cy="{{ r.cy }}"
+                             rx="{{ "%.1f"|format(r.rx * scale) }}"
+                             ry="{{ "%.1f"|format(r.ry * scale) }}"
+                             fill="url(#{{ prefix }}-h{{ bucket }})"
+                             opacity="{{ "%.2f"|format(opacity) }}">
+                        <title>{% if r.side %}{{ t(r.side) }} · {% endif %}{{ t(r.region) }} — {{ (v * 100)|round|int }}%</title>
+                    </ellipse>
+                {%- endif -%}
+            {%- endfor -%}
+        {%- else -%}
+            {%- for r in regions -%}
+                {%- set dk = face ~ ':' ~ r.key -%}
+                {%- set band = active_map.get(dk) if active_map else None -%}
+                {%- if band and band > 0 -%}
+                    <ellipse data-glow="{{ dk }}"
+                             {% if pulse_key == dk %}class="pulse"{% endif %}
+                             cx="{{ r.cx }}" cy="{{ r.cy }}"
+                             rx="{{ "%.1f"|format(r.rx * 2.1) }}"
+                             ry="{{ "%.1f"|format(r.ry * 2.1) }}"
+                             fill="url(#{{ prefix }}-sev{{ band }})"/>
+                {%- endif -%}
+            {%- endfor -%}
+        {%- endif -%}
+    </g>
+
+    {# Layer 4: hitboxes (hidden in heatmap mode via .heat-fig .region rule) #}
+    {%- if mode != 'heatmap' -%}
+    <g class="regions">
+        {%- for r in regions -%}
+            {%- set dk = face ~ ':' ~ r.key -%}
+            <rect class="region {% if selected_key == dk %}selected{% endif %}"
+                  data-region="{{ dk }}"
+                  x="{{ "%.1f"|format(r.cx - r.rx) }}"
+                  y="{{ "%.1f"|format(r.cy - r.ry) }}"
+                  width="{{ "%.1f"|format(r.rx * 2) }}"
+                  height="{{ "%.1f"|format(r.ry * 2) }}"
+                  rx="{{ "%.1f"|format([r.rx, r.ry]|min) }}"
+                  hx-get="/body/region/{{ r.region|replace(' ', '_')|lower }}/{% if r.side %}{{ r.side|lower }}{% else %}midline{% endif %}"
+                  hx-target="#entrySlot"
+                  hx-swap="innerHTML"
+                  tabindex="0"
+                  role="button">
+                <title>{% if r.side %}{{ t(r.side) }} · {% endif %}{{ t(r.region) }}</title>
+            </rect>
+        {%- endfor -%}
+    </g>
+    {%- endif -%}
+</svg>
+{%- endmacro -%}
+
+<div class="figs">
+    <div class="fig-col fig-front">
+        <div class="fig-label">{{ t("Front") }}</div>
+        <div class="fig-slot" data-side="front">
+            {{ figure('front', prefix ~ 'F') }}
+        </div>
+    </div>
+    <div class="fig-col fig-back">
+        <div class="fig-label">{{ t("Back") }}</div>
+        <div class="fig-slot" data-side="back">
+            {{ figure('back', prefix ~ 'B') }}
+        </div>
+    </div>
+</div>

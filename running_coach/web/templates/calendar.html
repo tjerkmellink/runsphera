@@ -1,0 +1,245 @@
+{# Tempo calendar — editorial reskin.
+   Mirrors the data contract from running_coach/web/templates/calendar.html:
+   {months, month_grids, favorites, favorited_ids, distance_filter, view_mode,
+    n_events, today_iso}. #}
+{% extends "base.html" %}
+
+{# Map the fine-grained primary_category buckets ("5k", "10k", ...) to the
+   four Tempo distance bands used in the design (short < 10K, mid 10-15K,
+   long HM-30K, marathon 42K+). #}
+{% set _CAT_TO_BAND = {
+    'short':    'short',
+    '5k':       'short',
+    '10k':      'mid',
+    '15k':      'mid',
+    'half':     'long',
+    'marathon': 'marathon',
+    'ultra':    'marathon',
+    'other':    'mid',
+} %}
+{% set _BAND_LABELS = {
+    'short':    '< 10K',
+    'mid':      '10-15K',
+    'long':     '½M - 30K',
+    'marathon': 'Marathon',
+} %}
+
+{% block subhead %}
+    {% if n_events %}
+        {{ n_events }} upcoming event{{ "s" if n_events != 1 else "" }}. Save races, plan toward them.
+    {% else %}
+        No events loaded yet — import below.
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+{% if saved == 'favorited' %}
+<div class="tp-plan-notes">Saved to your calendar.</div>
+{% elif saved == 'removed' %}
+<div class="tp-plan-notes">Removed from your calendar.</div>
+{% elif saved == 'added' %}
+<div class="tp-plan-notes">Custom event added.</div>
+{% elif saved == 'deleted' %}
+<div class="tp-plan-notes">Event deleted.</div>
+{% endif %}
+
+{% if error == 'add_bad_data' %}
+<div class="error" style="margin-bottom: 1rem;">Couldn't add the event — check the date and distance fields.</div>
+{% elif error == 'delete_blocked' %}
+<div class="error" style="margin-bottom: 1rem;">{{ request.query_params.get('detail', 'Could not delete this event.') }}</div>
+{% endif %}
+
+{# ── HERO ────────────────────────────────────────────────────────── #}
+<section class="tp-cal-hero">
+    <div>
+        <div class="tp-cal-hero-eyebrow">
+            DUTCH ROAD &amp; TRAIL · {{ n_events }} EVENT{{ "S" if n_events != 1 else "" }}
+        </div>
+        <h1 class="tp-cal-hero-title">The calendar.</h1>
+        <p class="tp-cal-hero-lede">
+            Save what catches your eye. Click any saved race to start a plan toward it — the coach folds it into the build.
+        </p>
+    </div>
+    {% if favorites %}
+    <div class="tp-cal-hero-saved">
+        <p class="tp-cal-hero-saved-count">{{ favorites|length }}<span class="label">saved</span></p>
+        <p class="tp-cal-hero-saved-cities">
+            {% for f in favorites[:3] %}{{ (f.city or '—')|upper }}{% if not loop.last %} · {% endif %}{% endfor %}
+            {% if favorites|length > 3 %} · +{{ favorites|length - 3 }}{% endif %}
+        </p>
+    </div>
+    {% endif %}
+</section>
+
+{# ── TOOLBAR ─────────────────────────────────────────────────────── #}
+<section class="tp-cal-toolbar">
+    <div class="tp-cal-toolbar-left">
+        <div class="tp-cal-view-toggle" role="tablist" aria-label="View">
+            <a class="{% if view_mode == 'agenda' %}active{% endif %}"
+               href="/calendar?view=agenda&distance={{ distance_filter }}"
+               role="tab" aria-selected="{{ 'true' if view_mode == 'agenda' else 'false' }}">Agenda</a>
+            <a class="{% if view_mode == 'list' %}active{% endif %}"
+               href="/calendar?view=list&distance={{ distance_filter }}"
+               role="tab" aria-selected="{{ 'true' if view_mode == 'list' else 'false' }}">List</a>
+        </div>
+        <span class="tp-cal-toolbar-sep"></span>
+        <span class="tp-cal-filter-label">Filter</span>
+        {# Distance filter pills. The route's filter is single-value, so each pill
+           is a link that swaps the active filter; "All" clears it. #}
+        {% for slug, label, band in [
+            ('any',      'All',      'mid'),
+            ('10k',      '10K',      'mid'),
+            ('15k',      '15K',      'mid'),
+            ('half',     'Half',     'long'),
+            ('marathon', 'Marathon', 'marathon'),
+        ] %}
+        <a class="tp-cal-filter-pill band-{{ band }} {% if distance_filter == slug %}active{% endif %}"
+           href="/calendar?view={{ view_mode }}&distance={{ slug }}">
+            {% if slug != 'any' %}<span class="dot"></span>{% endif %}{{ label }}
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+{# ── AGENDA GRID ─────────────────────────────────────────────────── #}
+{% if view_mode == 'agenda' %}
+    {% for grid in month_grids %}
+    <section>
+        <div class="tp-cal-month-head">
+            <h2 class="tp-cal-month-label">{{ grid.label }}</h2>
+            <span class="tp-cal-month-key">{{ grid.key|upper }}</span>
+        </div>
+        <div class="tp-cal-grid">
+            {% for dow in ['MON','TUE','WED','THU','FRI','SAT','SUN'] %}
+            <div class="tp-cal-dow">{{ dow }}</div>
+            {% endfor %}
+            {% for week in grid.weeks %}
+                {% for cell in week %}
+                <div class="tp-cal-cell {% if not cell.in_month %}is-other-month{% endif %} {% if cell.is_today %}is-today{% endif %}">
+                    <div class="tp-cal-cell-head">
+                        <span class="tp-cal-day-num">{{ cell.day_num }}</span>
+                        {% if cell.is_today %}<span class="tp-cal-today-tag">TODAY</span>{% endif %}
+                    </div>
+                    {% for ev in cell.events[:3] %}
+                    {% set _cat = primary_category(ev) %}
+                    {% set _band = _CAT_TO_BAND.get(_cat, 'mid') %}
+                    {% set _km = (ev.distances[0].km if ev.distances else None) %}
+                    <button type="button"
+                            class="tp-cal-chip band-{{ _band }}"
+                            hx-get="/calendar/events/{{ ev.id }}/detail"
+                            hx-target="#event-detail-body"
+                            hx-swap="innerHTML"
+                            hx-on::after-request="document.getElementById('event-detail-modal').showModal()"
+                            title="{{ ev.name }}{% if ev.city %} · {{ ev.city }}{% endif %}">
+                        {% if ev.id in favorited_ids %}<span class="tp-cal-chip-saved">★</span>{% endif %}
+                        <div class="tp-cal-chip-name">{{ ev.name }}</div>
+                        <div class="tp-cal-chip-meta">
+                            {% if _km %}{{ '%.0f'|format(_km) }}K{% endif %}
+                            {% if ev.city %}{% if _km %} · {% endif %}{{ ev.city }}{% endif %}
+                        </div>
+                    </button>
+                    {% endfor %}
+                    {% if cell.events|length > 3 %}
+                    <a class="tp-cal-cell-more" href="/calendar?view=list&distance={{ distance_filter }}#month-{{ grid.key }}">
+                        +{{ cell.events|length - 3 }} more
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+    {% if not month_grids %}
+    <section class="tp-plan-empty">
+        <h2>Nothing scheduled.</h2>
+        <p>No upcoming events match this filter. {% if distance_filter != 'any' %}<a href="/calendar?view=agenda&distance=any">Show all distances →</a>{% endif %}</p>
+    </section>
+    {% endif %}
+{% else %}
+    {# ── LIST VIEW ─────────────────────────────────────────────── #}
+    {% for month in months %}
+    <section class="tp-cal-list-month" id="month-{{ month.key }}">
+        <div class="tp-cal-month-head">
+            <h2 class="tp-cal-month-label">{{ month.label }}</h2>
+            <span class="tp-cal-month-key">{{ month.events|length }} EVENT{{ "S" if month.events|length != 1 else "" }}</span>
+        </div>
+        <div class="tp-cal-list">
+            {% for event in month.events %}
+            {% set _cat = primary_category(event) %}
+            {% set _band = _CAT_TO_BAND.get(_cat, 'mid') %}
+            <article class="tp-cal-list-row band-{{ _band }} {% if event.id in favorited_ids %}is-favorited{% endif %}"
+                     id="event-{{ event.id }}"
+                     hx-get="/calendar/events/{{ event.id }}/detail"
+                     hx-target="#event-detail-body"
+                     hx-swap="innerHTML"
+                     hx-on::after-request="document.getElementById('event-detail-modal').showModal()">
+                <div class="tp-cal-list-date">
+                    <div class="tp-day">{{ event.race_date[8:10] }}</div>
+                    <div class="tp-mon">{{ fmt_month_short(event.race_date)|upper }}</div>
+                </div>
+                <div class="tp-cal-list-body">
+                    <h3 class="tp-cal-list-name">{{ event.name }}</h3>
+                    <div class="tp-cal-list-loc">
+                        {% if event.city %}{{ event.city|upper }}{% endif %}
+                        {% for d in event.distances %} · {{ d.label }}{% endfor %}
+                    </div>
+                </div>
+                <div class="tp-cal-list-actions" onclick="event.stopPropagation()">
+                    {% if event.id in favorited_ids %}
+                    <span class="tp-cal-race-pill">✓ Saved</span>
+                    {% else %}
+                    <form method="post" action="/calendar/events/{{ event.id }}/favorite" class="tp-btn-inline-form">
+                        <button type="submit" class="tp-btn">+ Save</button>
+                    </form>
+                    {# Strip mounts on the row, not the actions cluster: the
+                       cluster is a few icon-widths wide and the question
+                       would wrap to one word per line. #}
+                    <form method="post" action="/calendar/events/{{ event.id }}/delete"
+                          class="tp-btn-inline-form"
+                          data-confirm='{{ t("Delete “{name}” permanently? Cannot be undone.", name=event.name) }}'
+                          data-confirm-yes="{{ t('Yes, delete') }}"
+                          data-confirm-into=".tp-cal-list-row">
+                        <button type="submit" class="tp-btn danger" title="Delete this event from the dataset">×</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+    {% if not months %}
+    <section class="tp-plan-empty">
+        <h2>Nothing scheduled.</h2>
+        <p>No upcoming events match this filter. {% if distance_filter != 'any' %}<a href="/calendar?view=list&distance=any">Show all distances →</a>{% endif %}</p>
+    </section>
+    {% endif %}
+{% endif %}
+
+{# ── YOUR RACES — saved favorites in editorial cards ─────────────── #}
+{% include "_calendar_saved_races.html" %}
+
+{# ── Add your own event ─────────────────────────────────────────── #}
+<section class="tp-cal-extras">
+    <details>
+        <summary>＋ Add an event manually</summary>
+        <form method="post" action="/calendar/events" class="card calendar-add-form" style="margin-top: 0.6rem;">
+            <div class="form-grid">
+                <label>Name <input type="text" name="name" required></label>
+                <label>Date <input type="date" name="race_date" required></label>
+                <label>Distance (km) <input type="text" name="distance_km" placeholder="e.g. 21.0975" required></label>
+                <label>Distance label <input type="text" name="distance_label" placeholder="e.g. half marathon"></label>
+                <label>City <input type="text" name="city"></label>
+                <label>Country <input type="text" name="country_code" value="NL" maxlength="2"></label>
+                <label class="form-grid-wide">Organiser URL <input type="url" name="organizer_url"></label>
+            </div>
+            <button type="submit" class="tp-btn primary" style="margin-top: 0.75rem;">Add event</button>
+        </form>
+    </details>
+</section>
+
+<dialog id="event-detail-modal" class="event-modal">
+    <div id="event-detail-body"></div>
+</dialog>
+{% endblock %}

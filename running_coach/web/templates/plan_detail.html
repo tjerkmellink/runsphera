@@ -1,0 +1,120 @@
+{# Tempo plan-detail page — same hero / stats / phase-bar / weeks pattern
+   as plans.html, but for a single plan (active or archived). #}
+{% extends "base.html" %}
+
+{% block headline %}{{ plan.title }}{% endblock %}
+
+{% block subhead %}
+    {% set methodology = methodology_lookup.get(plan.methodology) %}
+    {{ t(goal_labels.get(plan.goal_type, plan.goal_type)) }}
+    · {{ methodology.name if methodology else plan.methodology }}
+    · {{ t(plan.status) }}
+{% endblock %}
+
+{% block header_actions %}
+    <button type="button" class="primary"
+            hx-get="/plans/{{ plan.id }}/edit"
+            hx-target="#plan-settings-content"
+            hx-swap="innerHTML"
+            hx-on::after-request="if(event.detail.successful) document.getElementById('plan-settings-modal').showModal()"
+            title="{{ t('Edit plan title and notes') }}">{{ t("Edit plan") }}</button>
+    <a href="/plans" class="button ghost">{{ t("← Back to plans") }}</a>
+{% endblock %}
+
+{% block content %}
+{% set methodology = methodology_lookup.get(plan.methodology) %}
+{% set total_km = weeks|sum(attribute='total_km') %}
+{% set n_weeks = weeks|length %}
+
+<section class="tp-plan-hero">
+    <div>
+        <div class="tp-plan-hero-eyebrow">
+            {{ t(plan.status)|upper }} {{ t("PLAN · {n} WEEKS", n=n_weeks) }}
+            {% if methodology %} · {{ methodology.name|upper }}{% endif %}
+        </div>
+        <h1 class="tp-plan-hero-title">{{ plan.title }}</h1>
+        <p class="tp-plan-hero-desc">
+            {{ t("{n} days/week, long run on {day}s.", n=plan.days_per_week, day=day_label(plan.long_run_day)) }}
+            {% if plan.deactivated_at %}{{ t("Created {date}, ended {end}.", date=plan.created_at[:10], end=plan.deactivated_at[:10]) }}{% else %}{{ t("Created {date}.", date=plan.created_at[:10]) }}{% endif %}
+            {% if plan.vdot_at_start %} {{ t("VDOT {vdot} at start.", vdot='%.0f'|format(plan.vdot_at_start)) }}{% endif %}
+        </p>
+    </div>
+</section>
+
+{% if plan.notes %}
+<div class="tp-plan-notes">{{ plan.notes }}</div>
+{% endif %}
+
+<section class="tp-plan-stats">
+    <div class="tp-plan-stat-cell">
+        <p class="tp-plan-stat-label">{{ t("Goal") }}</p>
+        <p class="tp-plan-stat-value">
+            {% if plan.target_time_s %}{{ fmt_duration(plan.target_time_s) }}{% else %}—{% endif %}
+        </p>
+        <p class="tp-plan-stat-sub">{{ t(goal_labels.get(plan.goal_type, plan.goal_type))|lower }}</p>
+    </div>
+    <div class="tp-plan-stat-cell">
+        <p class="tp-plan-stat-label">VDOT</p>
+        <p class="tp-plan-stat-value">{% if plan.vdot_at_start %}{{ '%.0f'|format(plan.vdot_at_start) }}{% else %}—{% endif %}</p>
+        <p class="tp-plan-stat-sub">{{ t("at start") }}</p>
+    </div>
+    <div class="tp-plan-stat-cell">
+        <p class="tp-plan-stat-label">{{ t("Total") }}</p>
+        <p class="tp-plan-stat-value">{{ '%.0f'|format(total_km) }}</p>
+        <p class="tp-plan-stat-sub">{{ t("km · {n} wks", n=n_weeks) }}</p>
+    </div>
+    <div class="tp-plan-stat-cell">
+        <p class="tp-plan-stat-label">{{ t("Adherence") }}</p>
+        <p class="tp-plan-stat-value">
+            {% if adherence and adherence.due_so_far > 0 %}{{ adherence.completion_pct }}%{% else %}—{% endif %}
+        </p>
+        <p class="tp-plan-stat-sub">
+            {% if adherence and adherence.due_so_far > 0 %}{{ t("{n}/{due} done", n=adherence.done, due=adherence.due_so_far) }}{% else %}{{ t("not yet") }}{% endif %}
+        </p>
+    </div>
+    <div class="tp-plan-stat-cell">
+        <p class="tp-plan-stat-label">{{ t("Race") }}</p>
+        <p class="tp-plan-stat-value">
+            {% if plan.race_date %}{{ plan.race_date[5:10]|replace('-', '/') }}{% else %}—{% endif %}
+        </p>
+        <p class="tp-plan-stat-sub">
+            {% if days_to_race is not none %}{% if days_to_race >= 0 %}{{ t("in {n} d", n=days_to_race) }}{% else %}{{ t("{n} d ago", n=-days_to_race) }}{% endif %}{% else %}{{ t("no date") }}{% endif %}
+        </p>
+    </div>
+</section>
+
+<section class="tp-plan-phasebar">
+    <div class="tp-plan-phasebar-head">
+        <span>{{ t("Block map · {n} weeks", n=n_weeks) }}</span>
+        <span>{{ '%.0f'|format(total_km) }} km</span>
+    </div>
+    <div class="tp-plan-phasebar-track">
+        {% for week in weeks %}
+        {% set _is_today = (week.workouts and week.workouts[0].planned_date <= today_iso and week.workouts[-1].planned_date >= today_iso) %}
+        <div class="tp-plan-phasebar-seg phase-{{ week.week_phase }} {% if _is_today %}is-today{% endif %}"
+             title="W{{ week.week_number }} · {{ t(week.week_phase)|capitalize }} · {{ '%.0f'|format(week.total_km) }} km"></div>
+        {% endfor %}
+    </div>
+    <div class="tp-plan-phasebar-legend">
+        {% for phase in ['base', 'build', 'peak', 'taper', 'race', 'maintain'] %}
+        <span><span class="swatch" style="background: var(--phase-{{ phase }});"></span>{{ t(phase) }}</span>
+        {% endfor %}
+    </div>
+</section>
+
+{% with weeks=weeks, plan_id=plan.id, plan_status=plan.status, eyebrow=t("↓ Weeks") %}
+    {% include "_weeks_section.html" %}
+{% endwith %}
+
+<dialog id="plan-workout-modal" class="modal"
+        onclick="if (event.target === this) this.close()">
+    <button class="modal-close" onclick="this.closest('dialog').close()" aria-label="{{ t('Close') }}">×</button>
+    <div id="plan-workout-content"></div>
+</dialog>
+
+<dialog id="plan-settings-modal" class="modal"
+        onclick="if (event.target === this) this.close()">
+    <button class="modal-close" onclick="this.closest('dialog').close()" aria-label="{{ t('Close') }}">×</button>
+    <div id="plan-settings-content"></div>
+</dialog>
+{% endblock %}

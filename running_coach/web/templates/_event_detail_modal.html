@@ -1,0 +1,167 @@
+{# Event detail modal body. Inserted into #event-detail-body via HTMX, then
+   the parent dialog is opened with .showModal(). Re-rendered on enrich/save
+   to update the view in place. #}
+{# Distance-band → modal accent. Kept in sync with calendar.html's
+   `_CAT_TO_BAND` so a "marathon"-chipped event reads marathon-red in
+   the modal too. Default 'mid' for events without a recognized
+   primary category. #}
+{% set _CAT_TO_BAND = {
+    'short': 'short', '5k': 'short',
+    '10k':   'mid',   '15k': 'mid',
+    'half':  'long',
+    'marathon': 'marathon', 'ultra': 'marathon',
+    'other': 'mid',
+} %}
+{% set _band = _CAT_TO_BAND.get(primary_category(event), 'mid') %}
+<div class="event-modal-inner band-{{ _band }}">
+    <header class="event-modal-head">
+        <div>
+            <h2 class="event-modal-title">{{ event.name }}</h2>
+            <div class="event-modal-meta muted">
+                <strong>{{ fmt_date_long(event.race_date) }}</strong>
+                {% if event.city %} · {{ event.city }}{% endif %}
+                {% if event.province %} <span class="event-prov">{{ event.province }}</span>{% endif %}
+            </div>
+        </div>
+        <form method="dialog">
+            <button class="weather-modal-close" aria-label="Close">✕</button>
+        </form>
+    </header>
+
+    {% if enrich_error == 'fetch_failed' %}
+    <div class="error" style="margin: 0.5rem 1.25rem;">Couldn't fetch that URL. Check it opens in your browser, then try again — or fill the fields manually below.</div>
+    {% elif enrich_error == 'no_url' %}
+    <div class="error" style="margin: 0.5rem 1.25rem;">Paste an organiser URL to scrape from.</div>
+    {% elif saved_msg == 'manual' %}
+    <div class="seed-banner" style="margin: 0.5rem 1.25rem;">Saved.</div>
+    {% elif saved_msg == 'enriched' %}
+    <div class="seed-banner" style="margin: 0.5rem 1.25rem;">Enriched from organiser site.</div>
+    {% elif saved_msg == 'favorited' %}
+    <div class="seed-banner" style="margin: 0.5rem 1.25rem;">Saved to your calendar.</div>
+    {% endif %}
+
+    {% if event.hero_image_url %}
+    <div class="event-modal-hero">
+        <img src="{{ event.hero_image_url }}" alt="{{ event.name }}"
+             onerror="this.parentElement.style.display='none'">
+    </div>
+    {% endif %}
+
+    <section class="event-modal-body">
+        {% if event.distances %}
+        <div class="event-distances" style="margin-bottom: 0.6rem;">
+            {% for d in event.distances %}
+            <span class="event-dist-pill">{{ d.label }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if event.description %}
+        <p class="event-modal-desc">{{ event.description }}</p>
+        {% endif %}
+
+        <div class="event-modal-links">
+            {% if event.organizer_url %}
+            <a href="{{ event.organizer_url }}" target="_blank" rel="noopener" class="button ghost">
+                ↗ Organiser site
+            </a>
+            {% endif %}
+        </div>
+
+        {# --- Save + Plan actions --- #}
+        <div class="event-modal-actions">
+            {% if event.id in favorited_ids %}
+            <span class="event-saved-pill">✓ saved</span>
+            {% else %}
+            <form method="post" action="/calendar/events/{{ event.id }}/favorite"
+                  hx-post="/calendar/events/{{ event.id }}/favorite"
+                  hx-target="#event-detail-body" hx-swap="innerHTML"
+                  hx-include="this">
+                <button type="submit" class="ghost">＋ Save to my calendar</button>
+            </form>
+            {% endif %}
+            {% for d in event.distances %}
+                {% if goal_type_for_distance(d.km) %}
+                <a href="/plans/new?from_event={{ event.id }}&distance_km={{ d.km }}&distance_label={{ d.label }}"
+                   class="button">Plan {{ d.label }}</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        {# --- Swap into the active plan ---
+           Only rendered when an active plan covers the event's date. Picking
+           a distance loads the inline confirm strip (no native popups) into
+           #event-swap-zone; the actual swap happens on its confirm submit. #}
+        {% if swap_ctx %}
+            {% if swap_ctx.swapped %}
+            <div class="event-modal-actions" style="margin-top: 0.5rem;">
+                <span class="event-saved-pill">🏁 {{ t("In your plan") }}</span>
+                <a href="/plans" class="button ghost">{{ t("View in plan →") }}</a>
+            </div>
+            {% elif swap_ctx.eligible and event.distances %}
+            <div style="margin-top: 0.9rem;">
+                <p class="muted" style="font-size: 0.8rem; margin: 0 0 0.35rem 0;">
+                    {{ t('Run this event as part of "{title}" — it takes the place of a training day.', title=active_plan.title) }}
+                </p>
+                <div class="event-modal-actions">
+                    {% for d in event.distances %}
+                    <button type="button" class="ghost"
+                            hx-get="/calendar/events/{{ event.id }}/swap-preview?distance_km={{ d.km }}&distance_label={{ d.label|urlencode }}"
+                            hx-target="#event-swap-zone" hx-swap="innerHTML">
+                        ⇄ {{ t("Swap into plan") }} · {{ d.label }}
+                    </button>
+                    {% endfor %}
+                </div>
+                <div id="event-swap-zone"></div>
+            </div>
+            {% endif %}
+        {% endif %}
+    </section>
+
+    {# --- Enrichment forms --- #}
+    <details class="event-modal-enrich" {% if not event.enriched_at %}open{% endif %}>
+        <summary>
+            <strong>{% if event.enriched_at %}Re-enrich{% else %}Enrich this event{% endif %}</strong>
+            <span class="muted">— scrape organiser site or fill manually</span>
+        </summary>
+
+        <form class="event-enrich-form"
+              hx-post="/calendar/events/{{ event.id }}/enrich"
+              hx-target="#event-detail-body" hx-swap="innerHTML"
+              hx-indicator="this">
+            <label>
+                <span class="muted" style="font-size: 0.8rem;">Organiser URL</span>
+                <input type="url" name="url"
+                       value="{{ event.organizer_url or '' }}"
+                       placeholder="https://www.vrijstadvianenloop.nl/"
+                       required>
+            </label>
+            <button type="submit" class="primary">Fetch + extract</button>
+            <span class="muted" style="font-size: 0.78rem;">
+                Pulls title, description, and hero image from the page's og:* meta tags
+                (with sensible fallbacks). Image is downloaded to <code>data/event_images/</code>.
+            </span>
+        </form>
+
+        <details class="event-modal-manual">
+            <summary><strong>Or edit manually</strong></summary>
+            <form class="event-manual-form"
+                  hx-post="/calendar/events/{{ event.id }}/manual"
+                  hx-target="#event-detail-body" hx-swap="innerHTML">
+                <label>
+                    <span class="muted" style="font-size: 0.8rem;">Organiser URL</span>
+                    <input type="url" name="organizer_url" value="{{ event.organizer_url or '' }}">
+                </label>
+                <label>
+                    <span class="muted" style="font-size: 0.8rem;">Hero image URL (external — won't be downloaded)</span>
+                    <input type="url" name="hero_image_url" value="{{ event.hero_image_url or '' }}">
+                </label>
+                <label>
+                    <span class="muted" style="font-size: 0.8rem;">Description</span>
+                    <textarea name="description" rows="3" maxlength="1000">{{ event.description or '' }}</textarea>
+                </label>
+                <button type="submit" class="ghost">Save manual edits</button>
+            </form>
+        </details>
+    </details>
+</div>

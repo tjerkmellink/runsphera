@@ -1,0 +1,151 @@
+{# Entry panel — region clicked. Two modes: 'new' (no active issue
+   for this region+side yet) and 'update' (active issue exists).
+   Severity slider live-updates the band pill colour + numeral. #}
+
+{# Defaults for new entry / inherit from existing for update #}
+{%- if existing -%}
+    {%- set _type = existing.issue_type -%}
+    {%- set _sev = existing.current_severity or 4 -%}
+    {%- set _structure = existing.structure_name or '' -%}
+    {%- set _note = existing.note or '' -%}
+    {%- set _is_update = True -%}
+{%- else -%}
+    {%- set _type = 'soreness' -%}
+    {%- set _sev = 4 -%}
+    {%- set _structure = '' -%}
+    {%- set _note = '' -%}
+    {%- set _is_update = False -%}
+{%- endif -%}
+
+{%- set _band = (0 if _sev <= 0 else (1 if _sev <= 3 else (2 if _sev <= 6 else 3))) -%}
+
+<div class="tp-body-entry sev-{{ _band }}">
+    <div class="tp-body-entry-eyebrow">
+        {% if side != 'midline' %}{{ t(side_label(side)) }} · {% endif %}{{ t(region_label) }}
+    </div>
+    <h2 class="tp-body-entry-title">
+        {% if _is_update %}{{ t("Update issue") }}{% else %}{{ t("Log how it feels") }}{% endif %}
+    </h2>
+    <p class="tp-body-entry-sub">
+        {% if _is_update %}
+            {{ _type|capitalize }}{% if _structure %} · {{ _structure }}{% endif %}
+        {% else %}
+            {{ t("New entry for this region") }}
+        {% endif %}
+    </p>
+
+    <form hx-post="/body/issues{% if _is_update %}/{{ existing.id }}/update{% endif %}"
+          hx-target="#body-active-issues"
+          hx-swap="outerHTML"
+          hx-on::after-request="if(event.detail.successful) window.tpBodyClearEntry()">
+        <input type="hidden" name="region" value="{{ region }}">
+        <input type="hidden" name="side" value="{{ side }}">
+
+        {# Issue-type chip grid (new only) #}
+        {% if not _is_update %}
+        <div class="tp-body-field">
+            <label>{{ t("Issue type") }}</label>
+            <div class="tp-body-type-grid">
+                {% for key, label in issue_types %}
+                <label class="tp-body-type-opt {% if key == _type %}on{% endif %}">
+                    <input type="radio" name="issue_type" value="{{ key }}"
+                           {% if key == _type %}checked{% endif %}
+                           onchange="this.closest('.tp-body-type-grid').querySelectorAll('label').forEach(l=>l.classList.toggle('on', l.contains(this)));">
+                    {{ t(label) }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# Severity slider with live band pill + big numeral #}
+        <div class="tp-body-field">
+            <div class="tp-body-sev-head">
+                <label>{{ t("Severity") }}</label>
+                <span class="tp-body-sev-band sev-{{ _band }}" data-sev-band>
+                    {% if _band == 1 %}{{ t("MONITOR") }}
+                    {% elif _band == 2 %}{{ t("MANAGE") }}
+                    {% elif _band == 3 %}{{ t("REST + PHYSIO") }}
+                    {% endif %}
+                </span>
+            </div>
+            <div class="tp-body-sev-val-row">
+                <span class="tp-body-sev-val sev-{{ _band }}" data-sev-val>{{ _sev }}<small>/ 10</small></span>
+            </div>
+            <input type="range" class="tp-body-sev-range sev-{{ _band }}"
+                   data-sev-range
+                   name="severity" min="0" max="10" value="{{ _sev }}"
+                   oninput="window.tpBodyOnSev(this)">
+            <div class="tp-body-scale-ticks">
+                <span>0 · {{ t("clear") }}</span><span>3</span><span>6</span><span>10</span>
+            </div>
+        </div>
+
+        {# Structure field (new only) #}
+        {% if not _is_update %}
+        <div class="tp-body-field">
+            <label>{{ t("Structure (optional)") }}</label>
+            <input type="text" name="structure_name"
+                   list="structures-{{ region }}"
+                   value="{{ _structure }}"
+                   placeholder="{{ t('e.g. IT band, plantar fascia') }}">
+            <datalist id="structures-{{ region }}">
+                {% for s in structures %}<option value="{{ s }}">{% endfor %}
+            </datalist>
+        </div>
+        {% endif %}
+
+        {# Note #}
+        <div class="tp-body-field">
+            <label>{{ t("Add a note (optional)") }}</label>
+            <textarea name="note" rows="2"
+                      placeholder="{{ t('e.g. sharp on the long run, fine on easy days') }}">{{ _note }}</textarea>
+        </div>
+
+        <div class="tp-body-entry-actions">
+            <button type="submit" class="tp-body-btn tp-body-btn-primary">
+                {% if _is_update %}{{ t("Save update") }}{% else %}{{ t("Save") }}{% endif %}
+            </button>
+            <button type="button" class="tp-body-btn tp-body-btn-ghost"
+                    onclick="window.tpBodyClearEntry()">
+                {{ t("Cancel") }}
+            </button>
+            {% if _is_update %}
+            <button type="button" class="tp-body-btn tp-body-btn-resolve"
+                    hx-post="/body/issues/{{ existing.id }}/resolve"
+                    hx-target="#body-active-issues"
+                    hx-swap="outerHTML"
+                    hx-on::after-request="if(event.detail.successful) window.tpBodyClearEntry()">
+                {{ t("Mark resolved") }}
+            </button>
+            {% endif %}
+        </div>
+    </form>
+
+    {# Live severity update logic — vanilla, single function reused.
+       Re-renders the band pill class, numeral colour, and slider
+       gradient as the user drags. #}
+    <script>
+    window.tpBodyOnSev = function(input) {
+        const v = +input.value;
+        const b = v <= 0 ? 0 : v <= 3 ? 1 : v <= 6 ? 2 : 3;
+        const panel = input.closest('.tp-body-entry');
+        if (!panel) return;
+        panel.className = panel.className.replace(/sev-\d/, 'sev-' + b);
+        panel.querySelectorAll('[data-sev-band]').forEach(el => {
+            el.className = el.className.replace(/sev-\d/, 'sev-' + b);
+            el.textContent = b === 1 ? 'MONITOR'
+                : b === 2 ? 'MANAGE'
+                : b === 3 ? 'REST + PHYSIO'
+                : '';
+        });
+        panel.querySelectorAll('[data-sev-val]').forEach(el => {
+            el.className = el.className.replace(/sev-\d/, 'sev-' + b);
+            el.innerHTML = v + '<small>/ 10</small>';
+        });
+        panel.querySelectorAll('[data-sev-range]').forEach(el => {
+            el.className = el.className.replace(/sev-\d/, 'sev-' + b);
+        });
+    };
+    </script>
+</div>

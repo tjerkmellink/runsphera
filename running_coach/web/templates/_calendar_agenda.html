@@ -1,0 +1,40 @@
+{# Monthly grid view: one table per month, Mon-Sun rows, event chips inside
+   the day cells. Each chip links to the list view scrolled to that event. #}
+{% for grid in month_grids %}
+<section class="agenda-month">
+    <h2 class="calendar-month-head">{{ grid.label }}</h2>
+    <div class="agenda-grid">
+        {% for dow in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+        <div class="agenda-dow">{{ dow }}</div>
+        {% endfor %}
+        {% for week in grid.weeks %}
+            {% for cell in week %}
+            <div class="agenda-cell
+                        {% if not cell.in_month %}is-other-month{% endif %}
+                        {% if cell.is_today %}is-today{% endif %}
+                        {% if cell.events %}has-events{% endif %}">
+                <div class="agenda-day-num">{{ cell.day_num }}</div>
+                {% for ev in cell.events[:3] %}
+                <button type="button"
+                        class="agenda-chip cat-{{ primary_category(ev) }}"
+                        hx-get="/calendar/events/{{ ev.id }}/detail"
+                        hx-target="#event-detail-body"
+                        hx-swap="innerHTML"
+                        hx-on::after-request="document.getElementById('event-detail-modal').showModal()"
+                        title="{{ ev.name }}{% if ev.city %} · {{ ev.city }}{% endif %}{% if ev.distances %} · {{ ev.distances | map(attribute='label') | join(' / ') }}{% endif %}">
+                    {{ ev.name }}
+                </button>
+                {% endfor %}
+                {% if cell.events|length > 3 %}
+                <a class="agenda-more"
+                   href="/calendar?view=list&distance={{ distance_filter }}#month-{{ grid.key }}"
+                   title="See all {{ cell.events|length }} events on this day">
+                    +{{ cell.events|length - 3 }} more
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+</section>
+{% endfor %}

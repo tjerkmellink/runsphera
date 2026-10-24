@@ -1,0 +1,14 @@
+{# Today's supplementary-activity tip card. Mirrors today-card styling
+   with its own category-coded swatch. #}
+<section class="tip-card tip-cat-{{ daily_tip.category }}">
+    <div class="swatch"></div>
+    <div class="grow">
+        <div class="label">
+            Today's bonus · {{ tip_category_labels[daily_tip.category] }}
+            <span class="tip-duration">{{ daily_tip.duration_min }} min</span>
+        </div>
+        <div class="title">{{ daily_tip.title }}</div>
+        <div class="desc">{{ daily_tip.body }}</div>
+        <div class="tip-rationale">{{ daily_tip.rationale }}</div>
+    </div>
+</section>

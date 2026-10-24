@@ -1,0 +1,6089 @@
+/* TEMPO theme — editorial performance.
+ *
+ * Strategy: override CSS variables under and restyle a
+ * few key surfaces (body type, header, coach banner, cards). Workout-type
+ * colors stay (load-bearing). Light + dark variants via prefers-color-scheme.
+ *
+ * Loaded after base.html's inline <style>, so these rules win on specificity
+ * via the selector.
+ *
+ * Font references (loaded from /static/fonts/tempo-fonts.css):
+ *   Inter            — body
+ *   JetBrains Mono   — captions, numbers
+ *   Archivo Black    — display headlines (italic-synthesised)
+ */
+
+/* ─── Tokens — light ──────────────────────────────────────────────────── */
+
+/* Loaded after base.html's inline `:root { --bg: #fafafa; ... }` block,
+   so these win on source-order tie. */
+:root {
+    --bg:     #f6f4ef;
+    --card:   #ffffff;
+    --border: #e3dfd3;
+    --text:   #0a0a0a;
+    --muted:  #7a756c;
+    --mute:   #7a756c;        /* alias used by body design */
+    --faint:  #a8a298;
+    --line:   #e3dfd3;        /* alias used by body design */
+    --line2:  #d8d3c6;
+    --accent: #ff3b1f;
+    --accentInk: #fffaf3;
+    --paper-alt: #eeebe2;
+    --paperAlt:  #efece4;     /* body design's slightly-warmer paperAlt */
+    --chip:      #eeebe2;
+    --rule:      #e3dfd3;
+    /* Severity palette — used by body-map regions, active-issue cards,
+       and any future "how is the runner doing" surface. */
+    --sev-mild:     #86efac;   /* 1-3 — monitor */
+    --sev-mod:      #fbbf24;   /* 4-6 — manage */
+    --sev-severe:   #ef4444;   /* 7-10 — rest + physio */
+    --sev-cleared:  #cbd5e1;   /* 0 — soft prompt to close */
+    --sev-inactive: #e3dfd3;   /* no issue — subtle outline */
+    /* Severity ink — darker variants used on big numerals for legibility on white */
+    --sev-mild-ink:   #15a34a;
+    --sev-mod-ink:    #c2820a;
+    --sev-severe-ink: #dc2626;
+    /* Body silhouette + muscle layer */
+    --silhouette:      #a89f8e;
+    --silhouette-soft: #efece2;
+    --muscle:          #e7ddca;
+    --muscle-line:     #ccbfa6;
+    /* Heatmap gradient — cool yellow to deep red */
+    --h1: #fde68a; --h2: #fcd34d; --h3: #fb923c; --h4: #ef4444; --h5: #b91c1c;
+}
+
+/* ─── Tokens — dark ───────────────────────────────────────────────────── */
+
+/* Triggered by `is-dark` class on <html> (set by base.html's inline script,
+   which combines data-mode + OS prefers-color-scheme into a single flag). */
+html.is-dark{
+    --bg:     #0a0a0a;
+    --card:   #151514;
+    --border: #272622;
+    --text:   #f6f4ef;
+    --muted:  #8b857c;
+    --mute:   #8b857c;
+    --faint:  #6c665d;
+    --line:   #272622;
+    --line2:  #322f2a;
+    --accent: #ff3b1f;
+    --accentInk: #0a0a0a;
+    --paper-alt: #1d1c1a;
+    --paperAlt:  #1d1c1a;
+    --chip:      #1d1c1a;
+    --rule:      #272622;
+    /* Severity palette — slightly muted in dark mode for less glow. */
+    --sev-mild:     #4ade80;
+    --sev-mod:      #f59e0b;
+    --sev-severe:   #ef4444;
+    --sev-cleared:  #475569;
+    --sev-inactive: #322f2a;
+    --sev-mild-ink:   #4ade80;
+    --sev-mod-ink:    #fbbf24;
+    --sev-severe-ink: #f87171;
+    --silhouette:      #5b574e;
+    --silhouette-soft: #1a1916;
+    --muscle:          #2c2823;
+    --muscle-line:     #433d34;
+}
+
+/* ─── Typography ──────────────────────────────────────────────────────── */
+
+body,
+button,
+input,
+textarea,
+select {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.num,
+.mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Editorial display class — sparingly used for magazine-style headlines. */
+.disp {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    letter-spacing: -0.025em;
+    line-height: 0.9;
+}
+
+h1,
+h2,
+h3 {
+    letter-spacing: -0.015em;
+}
+
+/* ─── Header / masthead ───────────────────────────────────────────────── */
+
+header {
+    padding: 1.4rem 2rem 1.1rem;
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg);
+}
+
+header h1 {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    margin: 0;
+}
+header h1::after {
+    content: ".";
+    color: var(--accent);
+}
+
+nav.top-nav {
+    gap: 1.5rem;
+    margin-top: 0.4rem;
+}
+
+nav.top-nav a {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom-width: 2px;
+    padding-bottom: 0.3rem;
+}
+nav.top-nav a.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+}
+
+nav.top-nav .account-chip {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+}
+
+nav.top-nav .account-chip .dot {
+    background: var(--ok);
+}
+
+/* ─── Page background + sub ──────────────────────────────────────────── */
+
+body { background: var(--bg); color: var(--text); }
+main { padding: 1.5rem 2rem; }
+header .sub {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+}
+
+/* ─── Coach banner → magazine pull-quote ─────────────────────────────── */
+
+.coach-banner {
+    border: none;
+    border-left: 4px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    background: color-mix(in srgb, var(--accent) 5%, var(--card));
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1.5rem;
+    display: flex; gap: 1.5rem; align-items: flex-start;
+}
+.coach-banner.coach-go      { border-left-color: var(--ok); background: color-mix(in srgb, var(--ok) 5%, var(--card)); }
+.coach-banner.coach-caution { border-left-color: var(--warn); background: color-mix(in srgb, var(--warn) 5%, var(--card)); }
+.coach-banner.coach-easy    { border-left-color: var(--bad); background: color-mix(in srgb, var(--bad) 5%, var(--card)); }
+.coach-banner.coach-rest    { border-left-color: var(--muted); background: var(--paper-alt); }
+
+.coach-banner .coach-icon {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--bg);
+}
+/* Filled icon chips carry light text, so they use the -solid variants.
+   GO was on --accent, which made the best possible verdict look like the
+   alarm state next to an amber CAUTION and a red EASY. */
+.coach-banner.coach-go      .coach-icon { background: var(--ok-solid); color: #ffffff; }
+.coach-banner.coach-caution .coach-icon { background: var(--warn-solid); color: #ffffff; }
+.coach-banner.coach-easy    .coach-icon { background: var(--bad-solid); color: #ffffff; }
+.coach-banner.coach-rest    .coach-icon { background: var(--muted); color: var(--card); }
+.coach-banner.coach-checkin .coach-icon { display: none; }
+
+.coach-banner .coach-body { flex: 1; }
+.coach-banner .coach-head {
+    font-size: 1.4rem;
+    font-weight: 300;
+    line-height: 1.35;
+    font-style: italic;
+    color: var(--text);
+}
+.coach-banner .coach-head::before {
+    content: "“";
+    color: var(--accent);
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: normal;
+    margin-right: 0.15em;
+}
+.coach-banner .coach-head::after {
+    content: "”";
+    color: var(--accent);
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: normal;
+    margin-left: 0.15em;
+}
+.coach-banner .coach-reasons {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.coach-banner .coach-suggestion {
+    background: var(--paper-alt);
+    border-radius: 8px;
+    font-style: normal;
+}
+.coach-refresh {
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 0.2rem 0.55rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    margin-left: 0.5rem;
+}
+
+/* ─── Weekly recap → editorial sidebar tone ──────────────────────────── */
+
+.weekly-recap {
+    background: var(--paper-alt);
+    border: none;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+}
+.weekly-recap-label {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    padding: 0;
+    letter-spacing: 0.16em;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+.weekly-recap-range {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: 0.08em;
+}
+.weekly-recap-body {
+    font-size: 1rem;
+    line-height: 1.55;
+}
+.weekly-recap-attr {
+    margin-top: 0.85rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid color-mix(in srgb, var(--accent) 25%, var(--rule));
+}
+
+/* ─── Today's workout card → less rounded, more editorial ────────────── */
+
+.today-card {
+    background: var(--card);
+    border-radius: 10px;
+    border: 1px solid var(--rule);
+}
+.today-card .label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: 0.16em;
+}
+.today-card .title {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.7rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+.today-card .stats .k {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: 0.1em;
+}
+.today-card .stats .v {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+/* ─── Pills (mood, status, distance) ────────────────────────────────── */
+
+.pill {
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+}
+
+/* ─── Status tiles (Training status / VO2 / Readiness / ACWR) ────────── */
+
+.grid.cols-4 .card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem;
+}
+.grid.cols-4 .card h2 {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+    font-weight: 600;
+}
+.stat-value {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.8rem;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-top: 0.45rem;
+}
+.stat-sub {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────── */
+
+button.primary,
+a.button {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.55rem 1.1rem;
+}
+button.primary:hover,
+a.button:hover { background: var(--accent); }
+button.ghost,
+a.button.ghost {
+    background: transparent;
+    border: 1px solid var(--rule);
+    color: var(--text);
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.78rem;
+}
+button.ghost:hover { background: var(--paper-alt); }
+
+/* ─── Weather chip ───────────────────────────────────────────────────── */
+
+.weather-chip {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+}
+.weather-chip .weather-temp {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.5rem;
+}
+.weather-chip .weather-best-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+}
+
+/* ─── Today's note (diary) ───────────────────────────────────────────── */
+
+.today-note { background: var(--card); border: 1px solid var(--rule); }
+.today-note-title {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+}
+.today-note-date {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+}
+
+/* ─── Recent runs table ──────────────────────────────────────────────── */
+
+table th {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+table td { font-size: 0.92rem; }
+
+/* The run reaction is styled with the modal's own coach classes
+   (.tprd-coach-quote / .tprd-coach-by) — see "The Run: coach intro" below. */
+
+/* ─── Settings cards ─────────────────────────────────────────────────── */
+
+.settings-card h2,
+.theme-picker h2 {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   Tempo page-level patterns — used by per-page reskins under
+   templates/. Generic classes prefixed `tp-` so they
+   don't accidentally collide with Base markup.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Hero: small mono eyebrow + huge italic display + muted lede paragraph. */
+.tp-hero {
+    padding: 2.5rem 0 1.25rem;
+}
+.tp-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.7rem;
+}
+.tp-display {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: clamp(3rem, 8vw, 6.5rem);
+    line-height: 0.92;
+    letter-spacing: -0.025em;
+    margin: 0 0 0.85rem;
+}
+.tp-lede {
+    font-size: 0.98rem;
+    color: var(--muted);
+    line-height: 1.55;
+    max-width: 36rem;
+    margin: 0;
+}
+
+/* Status strip: 4 cells separated by hairlines inside one rounded card. */
+.tp-status-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    overflow: hidden;
+    margin: 1.5rem 0 2.25rem;
+}
+@media (max-width: 760px) {
+    .tp-status-strip { grid-template-columns: repeat(2, 1fr); }
+}
+.tp-status-cell {
+    padding: 1.1rem 1.25rem;
+    background: var(--card);
+}
+.tp-status-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.55rem;
+}
+.tp-status-value {
+    display: flex; align-items: baseline; gap: 0.5rem;
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.3rem;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.3rem;
+}
+.tp-status-dot {
+    flex: 0 0 auto;
+    width: 0.5rem; height: 0.5rem; border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+}
+.tp-status-dot.dot-ok   { background: var(--ok); }
+.tp-status-dot.dot-warn { background: var(--warn); }
+.tp-status-dot.dot-off  { background: var(--muted); }
+.tp-status-sub {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0;
+}
+
+/* Section eyebrows + 2-up card grid */
+.tp-section-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 1rem;
+}
+.tp-card-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem;
+    margin-bottom: 2.25rem;
+}
+@media (max-width: 760px) {
+    .tp-card-grid { grid-template-columns: 1fr; }
+}
+
+/* Generic Tempo card (paper card with top-right corner status pill) */
+.tp-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    padding: 1.7rem 1.75rem;
+    position: relative;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+}
+.tp-card-corner-pill {
+    position: absolute; top: 0; right: 0;
+    padding: 0.4rem 0.85rem;
+    border-bottom-left-radius: 10px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+/* `pill-ok` (Garmin linked) and `pill-on` (coach voice active) say the same
+   thing — this integration is live — so they get the same green. `pill-on` is
+   kept as an alias rather than folded away because templates use both names. */
+.tp-card-corner-pill.pill-ok,
+.tp-card-corner-pill.pill-on {
+    background: color-mix(in srgb, var(--ok) 14%, var(--card));
+    color: var(--ok);
+}
+.tp-card-corner-pill.pill-off {
+    background: var(--paper-alt);
+    color: var(--muted);
+}
+.tp-card-icon {
+    width: 3.1rem; height: 3.1rem; border-radius: 12px;
+    background: var(--chip);
+    display: grid; place-items: center;
+    margin-bottom: 1rem;
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.45rem;
+}
+.tp-card-icon.is-accent {
+    background: color-mix(in srgb, var(--accent) 10%, var(--card));
+    color: var(--accent);
+}
+.tp-card-title {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.25rem;
+}
+.tp-card-desc {
+    font-size: 0.86rem;
+    color: var(--muted);
+    line-height: 1.55;
+    margin: 0 0 1.1rem;
+}
+.tp-card-rule {
+    height: 1px; background: var(--rule); border: none;
+    margin: 0.4rem 0 1rem;
+}
+
+/* Key-value field grid inside a Tempo card */
+.tp-field-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    row-gap: 1rem; column-gap: 1.4rem;
+    margin-bottom: 1.1rem;
+}
+.tp-field-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.3rem;
+}
+.tp-field-value {
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin: 0;
+}
+.tp-field-value.is-accent {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.85rem;
+    line-height: 0.95;
+    color: var(--accent);
+    font-weight: 400;
+}
+.tp-field-value.is-muted { color: var(--muted); font-weight: 400; }
+
+/* Pill button row (Sync now / Disconnect) */
+.tp-actions {
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+}
+.tp-btn {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.35rem;
+}
+.tp-btn:hover { color: var(--text); border-color: var(--text); }
+.tp-btn.primary {
+    background: var(--text); color: var(--bg); border-color: var(--text);
+}
+.tp-btn.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+/* Destructive actions use --bad, not --accent: the brand accent is also the
+   `.primary` hover, so a Delete button that shared it looked like a normal
+   call-to-action. */
+.tp-btn.danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 55%, var(--rule)); }
+.tp-btn.danger:hover { background: var(--bad-solid); border-color: var(--bad-solid); color: #ffffff; }
+.tp-btn-inline-form { display: inline; margin: 0; }
+
+/* ─── Inline confirm strip ───────────────────────────────────────────────
+   Two-step confirmation for actions worth a second thought. Replaces
+   native confirm() — see docs/design-system.md, no native popups.
+
+   The markup is built by the delegated handler in base.html from a form's
+   `data-confirm` attributes, so a form opts in with one attribute and
+   partials swapped in by HTMX are covered without their own script. */
+.tp-confirm {
+    --confirm-c: var(--bad);
+    /* The strip has to sit under the button that spawned it, but that
+       button lives in containers of every kind. Both properties below are
+       inert in the wrong context, so one rule covers all three cases:
+       flex-basis claims a full line in a flex button row (.tp-actions,
+       .tp-cal-list-actions), grid-column spans every column of a grid row
+       (.tp-cal-list-row), and a plain block parent just stacks it. */
+    flex: 1 0 100%;
+    grid-column: 1 / -1;
+    margin: 0.6rem 0 0;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--confirm-c) 35%, var(--rule));
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--confirm-c) 7%, var(--card));
+    /* Mounted inside clickable rows (calendar list) — don't inherit the
+       row's pointer or look draggable. */
+    cursor: default;
+    text-align: left;
+}
+/* Cautionary rather than destructive (set VDOT, recalibrate paces). */
+.tp-confirm.tone-primary { --confirm-c: var(--accent); }
+.tp-confirm-question {
+    margin: 0 0 0.6rem;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: var(--text);
+}
+.tp-confirm-actions {
+    display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;
+}
+/* While its strip is open the originating form is inert, so the runner
+   can't fire a second copy or hit the original button again. */
+.is-confirming { opacity: 0.5; pointer-events: none; }
+
+/* Inline API-key row + Edit button */
+.tp-api-row {
+    display: flex; gap: 0.4rem; align-items: center; margin-bottom: 1rem;
+}
+.tp-api-code {
+    flex: 1;
+    padding: 0.6rem 0.8rem;
+    background: var(--chip);
+    border: none; border-radius: 8px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Multi-provider LLM tabs (Coach voice card) ──────────────────────
+   CSS-only tab strip: three radio inputs at the top of the tabs
+   container drive which `.tp-llm-tab-panel` is visible via the
+   :checked + ~ sibling combinator. No JS. */
+.tp-llm-tabs {
+    display: block;
+}
+.tp-llm-tab-radio {
+    /* Visually hidden but still focusable for keyboard nav. */
+    position: absolute; opacity: 0; pointer-events: none;
+}
+.tp-llm-tab-strip {
+    display: flex; gap: 0; margin: 0 0 1rem;
+    border-bottom: 1px solid var(--rule);
+}
+.tp-llm-tab-label {
+    flex: 1;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.85rem; font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.12s, border-color 0.12s;
+}
+.tp-llm-tab-label:hover { color: var(--text); }
+/* Active-tab styling driven by the matching :checked radio. */
+#llmtab-anthropic:checked ~ .tp-llm-tab-strip label[for="llmtab-anthropic"],
+#llmtab-openai:checked    ~ .tp-llm-tab-strip label[for="llmtab-openai"],
+#llmtab-gemini:checked    ~ .tp-llm-tab-strip label[for="llmtab-gemini"] {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+}
+/* Small green dot next to the label of the currently-Active provider. */
+.tp-llm-active-dot {
+    color: var(--ok); font-size: 0.7rem; line-height: 1;
+}
+/* Free / paid badges. */
+.tp-llm-badge {
+    font-size: 0.62rem; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.12rem 0.45rem; border-radius: 999px;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+}
+.tp-llm-badge--free {
+    color: var(--ok);
+    border-color: color-mix(in srgb, var(--ok) 30%, var(--rule));
+    background: color-mix(in srgb, var(--ok) 8%, transparent);
+}
+.tp-llm-badge--paid {
+    color: var(--muted);
+    background: var(--chip);
+}
+/* Small "manage your key & usage" link under each provider's blurb —
+   takes the runner to the provider's own console where they can view
+   the key, see usage / credit, top up, etc. */
+.tp-llm-console-link {
+    margin: 0 0 0.95rem;
+    font-size: 0.78rem;
+}
+.tp-llm-console-link a {
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 1px dashed color-mix(in srgb, var(--muted) 50%, transparent);
+    padding-bottom: 1px;
+    transition: color 0.12s, border-color 0.12s;
+}
+.tp-llm-console-link a:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+/* Panels: hidden by default, show only the one matching the checked radio. */
+.tp-llm-tab-panel { display: none; }
+#llmtab-anthropic:checked ~ .tp-llm-tab-panel[data-tab="anthropic"],
+#llmtab-openai:checked    ~ .tp-llm-tab-panel[data-tab="openai"],
+#llmtab-gemini:checked    ~ .tp-llm-tab-panel[data-tab="gemini"] {
+    display: block;
+}
+
+/* Inline text/textarea inputs inside Tempo cards */
+.tp-input,
+.tp-textarea {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    background: var(--paper-alt);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.88rem;
+    color: var(--text);
+}
+.tp-input:focus,
+.tp-textarea:focus {
+    outline: none; border-color: var(--accent);
+}
+
+/* Hero location card: big italic city + stylised contour map background */
+.tp-location-feature {
+    background: var(--paper-alt);
+    border-radius: 12px;
+    padding: 1.15rem;
+    margin-bottom: 0.9rem;
+    position: relative;
+    overflow: hidden;
+    min-height: 7rem;
+    display: flex; flex-direction: column; justify-content: flex-end;
+}
+.tp-location-contours {
+    position: absolute; inset: 0; opacity: 0.3;
+    pointer-events: none;
+}
+.tp-location-name {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 2.1rem;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.2rem;
+    position: relative;
+}
+.tp-location-coords {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    position: relative;
+}
+
+/* Theme picker (Tempo's version — two big swatch cards) */
+.tp-theme-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.85rem;
+}
+@media (max-width: 760px) {
+    .tp-theme-grid { grid-template-columns: 1fr; }
+}
+.tp-theme-pick {
+    padding: 1.1rem 1.2rem;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    color: var(--text);
+    display: flex; flex-direction: column; gap: 0.6rem;
+}
+.tp-theme-pick.is-active {
+    border: 2px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 5%, var(--card));
+    padding: calc(1.1rem - 1px) calc(1.2rem - 1px);
+}
+.tp-theme-pick-head {
+    display: flex; align-items: center; justify-content: space-between;
+}
+.tp-theme-pick-name {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+}
+.tp-theme-pick-active {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    font-weight: 700;
+    color: var(--accent);
+}
+.tp-theme-swatches {
+    display: flex; gap: 0.25rem; height: 1.65rem;
+}
+.tp-theme-swatch {
+    flex: 1; border-radius: 4px;
+}
+.tp-theme-swatch.is-accent { flex: 0 0 1.65rem; }
+.tp-theme-pick-tag {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.4;
+}
+
+/* Mode toggle inside Tempo settings — segmented control */
+.tp-mode-toggle {
+    display: inline-flex; padding: 0.2rem;
+    background: var(--paper-alt);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+}
+.tp-mode-toggle button {
+    background: transparent; border: none; cursor: pointer;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 0.4rem 0.95rem;
+    border-radius: 999px;
+}
+.tp-mode-toggle button:hover { color: var(--text); }
+.tp-mode-toggle .is-active button {
+    background: var(--text); color: var(--bg);
+}
+.tp-mode-toggle form { margin: 0; }
+
+/* Data danger zone — bottom strip with stats + actions */
+.tp-data-zone {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    padding: 1.3rem 1.75rem;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+.tp-data-zone-text strong {
+    font-size: 0.95rem;
+}
+.tp-data-zone-text code {
+    display: block;
+    margin-top: 0.25rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   Tempo Dashboard — index page reskin.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Hero: main column (eyebrow + headline + coach pull-quote) | weather sidebar */
+.tp-dash-hero {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 2rem;
+    align-items: end;
+    padding: 1.5rem 0 2rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 2rem;
+}
+@media (max-width: 900px) {
+    .tp-dash-hero { grid-template-columns: 1fr; }
+}
+
+.tp-dash-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin: 0 0 1rem;
+}
+.tp-dash-headline-row {
+    display: flex; align-items: baseline; gap: 1.25rem;
+    flex-wrap: wrap;
+}
+.tp-dash-display {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: clamp(4rem, 11vw, 9rem);
+    letter-spacing: -0.03em;
+    line-height: 0.9;
+    margin: 0;
+}
+
+/* Status pill — uses semantic coach colors as background. */
+.tp-status-pill {
+    display: inline-flex; align-items: center; gap: 0.55rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #ffffff;
+    background: var(--accent);
+}
+.tp-status-pill.status-go      { background: var(--ok-solid); color: #ffffff; }
+.tp-status-pill.status-caution { background: var(--warn-solid); color: #ffffff; }
+.tp-status-pill.status-easy    { background: var(--bad-solid); color: #ffffff; }
+.tp-status-pill.status-rest    {
+    background: var(--paper-alt); color: var(--muted);
+}
+/* Session logged — the day's work is closed. Reads as settled rather than
+   as a green light to go again, so: ink on paper, not the GO fill. */
+.tp-status-pill.status-done    {
+    background: var(--paper-alt); color: var(--ok-solid);
+    box-shadow: inset 0 0 0 1px var(--ok-solid);
+}
+.tp-status-pill-dot {
+    width: 0.45rem; height: 0.45rem; border-radius: 50%;
+    background: currentColor;
+    animation: tp-pulse 2.2s ease-in-out infinite;
+}
+@keyframes tp-pulse {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 1;   }
+}
+
+/* Coach pull-quote — big italic body with red accent quote marks. */
+.tp-coach-quote {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 1.35rem;
+    line-height: 1.4;
+    color: var(--text);
+    max-width: 50rem;
+    margin: 1.4rem 0 0;
+}
+.tp-coach-quote::before {
+    content: "\201C";
+    color: var(--accent);
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: normal;
+    margin-right: 0.15em;
+}
+.tp-coach-quote::after {
+    content: "\201D";
+    color: var(--accent);
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: normal;
+    margin-left: 0.15em;
+}
+.tp-coach-attr {
+    display: inline-flex; align-items: center; gap: 0.65rem;
+    margin-top: 1rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    flex-wrap: wrap;
+}
+.tp-coach-attr .coach-refresh { margin-left: 0; }
+.tp-coach-reasons {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 1rem;
+    margin-top: 0.5rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+}
+
+/* ── Skeleton loaders ──────────────────────────────────────────────────
+   Shown while a region is fetching. HTMX adds `htmx-request` to the
+   indicated element for the whole request+swap duration; two regions
+   opt in:
+   • #dashboard-main — a Garmin sync (the long /ingest) or the follow-up
+     dashboardRefresh re-renders the hero (headline + coach quote).
+   • #coach-head — the coach pull-quote is regenerated in place.
+   We hide the real content and drop a shimmer placeholder into the same
+   slot so the layout never jumps. */
+@keyframes tp-sk-shimmer {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+}
+.tp-sk {
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--muted) 10%, transparent) 25%,
+        color-mix(in srgb, var(--muted) 24%, transparent) 37%,
+        color-mix(in srgb, var(--muted) 10%, transparent) 63%
+    );
+    background-size: 200% 100%;
+    animation: tp-sk-shimmer 1.5s ease-in-out infinite;
+    border-radius: 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+    .tp-sk { animation: none; }
+}
+
+/* Headline placeholder — one bar sized to the big italic display. */
+.tp-dash-display-sk {
+    display: none;
+    height: clamp(3.4rem, 9.9vw, 8rem);
+    width: min(55vw, 20rem);
+    border-radius: 12px;
+}
+/* Coach pull-quote placeholder — three shrinking lines. */
+.tp-coach-quote-sk {
+    display: none;
+    flex-direction: column;
+    gap: 0.6rem;
+    max-width: 50rem;
+    margin: 1.4rem 0 0;
+}
+.tp-coach-quote-sk .tp-sk { height: 1.35rem; }
+.tp-coach-quote-sk .tp-sk:nth-child(2) { width: 92%; }
+.tp-coach-quote-sk .tp-sk:nth-child(3) { width: 60%; }
+
+/* Toggle: hide the real content, reveal the skeleton while loading. */
+#dashboard-main.htmx-request .tp-dash-display,
+#dashboard-main.htmx-request .tp-status-pill { display: none; }
+#dashboard-main.htmx-request .tp-dash-display-sk { display: block; }
+
+#dashboard-main.htmx-request .tp-coach-quote,
+#coach-head.htmx-request .tp-coach-quote { display: none; }
+#dashboard-main.htmx-request .tp-coach-quote-sk,
+#coach-head.htmx-request .tp-coach-quote-sk { display: flex; }
+
+/* Keep the ↻ icon spinning during an in-place regenerate — in Tempo the
+   indicator is #coach-head, not the button, so the base rule can't see it. */
+#coach-head.htmx-request .coach-refresh-icon { animation: spin 0.8s linear infinite; }
+
+/* Weather sidebar — paper card with big italic temp. */
+.tp-weather-aside {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    color: inherit;
+    display: block;
+}
+.tp-weather-aside:hover { border-color: var(--text); }
+.tp-weather-aside-head {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 0.85rem;
+}
+.tp-weather-aside-temp {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 2.85rem;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin: 0 0 0.35rem;
+}
+.tp-weather-aside-temp .unit {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-style: normal;
+    font-size: 1rem;
+    color: var(--muted);
+    margin-left: 0.15rem;
+    letter-spacing: 0;
+}
+.tp-weather-aside-text {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0 0 0.85rem;
+}
+.tp-weather-aside-best {
+    padding: 0.55rem 0.7rem;
+    background: color-mix(in srgb, var(--ok) 8%, var(--card));
+    border-left: 3px solid var(--ok);
+    border-radius: 0 4px 4px 0;
+}
+.tp-weather-aside-best-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0 0 0.15rem;
+}
+.tp-weather-aside-best-time {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+/* Section heads (eyebrow + display title) shared across sections. */
+.tp-section-head {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+.tp-section-head-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 0 0 0.4rem;
+}
+.tp-section-head-title {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 2.4rem;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin: 0;
+}
+.tp-section-head-meta {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+}
+
+/* Flagship today's workout — main card + side column. */
+.tp-flagship-section { margin-bottom: 2.5rem; }
+
+/* ── Auto-VDOT suggestion banner ───────────────────────────────────
+   Shows when the detector finds a recent race-pace effort implying a
+   meaningful VDOT bump. Sits between the coach hero and the today's
+   workout flagship — high-attention but not loud. Accent-bordered so
+   it reads as a coach signal, not a generic notification. */
+.tp-vdot-suggestion {
+    background: color-mix(in srgb, var(--accent) 5%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--rule));
+    border-left: 4px solid var(--accent);
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+}
+.tp-vdot-suggestion-head {
+    margin-bottom: 0.6rem;
+}
+.tp-vdot-suggestion-kicker {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+}
+.tp-vdot-suggestion-body {
+    margin: 0 0 0.85rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text);
+}
+.tp-vdot-suggestion-body strong {
+    font-weight: 700;
+}
+.tp-vdot-suggestion-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.tp-flagship-grid {
+    display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.2rem;
+}
+@media (max-width: 900px) {
+    .tp-flagship-grid { grid-template-columns: 1fr; }
+}
+.tp-flagship-main {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    padding: 1.75rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+.tp-flagship-main::before {
+    content: "";
+    position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+    background: var(--wc, var(--accent));
+}
+.tp-flagship-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+@media (max-width: 560px) {
+    .tp-flagship-stats { grid-template-columns: repeat(2, 1fr); }
+}
+.tp-flagship-stat-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin: 0 0 0.35rem;
+}
+.tp-flagship-stat-value {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 2.4rem;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}
+.tp-flagship-stat-unit {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-style: normal;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-left: 0.3rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+/* Done state: eyebrow turns green so the card reads as finished at a glance. */
+.tp-section-head-eyebrow.is-done { color: var(--ok); }
+.tp-flagship-stat-sub {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin: 0.4rem 0 0;
+    font-variant-numeric: tabular-nums;
+}
+.tp-flagship-desc {
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.55;
+    margin: 0;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--rule);
+}
+/* Post-run: prescription text demoted once the day's run is logged. */
+.tp-flagship-desc.is-planned {
+    font-style: italic;
+    opacity: 0.7;
+}
+/* Rest-day strength flagship: violet accent (distinct from plain grey rest),
+   clickable stats body that opens the same detail modal as the plan chip. */
+.tp-flagship-main.is-strength { --wc: #8b5cf6; }
+/* Workout-type stripe color — same `--w-*` tokens used by plan-week
+   cards, the recent-runs stripe, and the run-detail modal masthead.
+   Today's flagship now reads "tempo / long / interval" at a glance
+   from the colored bar on its left edge. */
+.tp-flagship-main.wtype-easy      { --wc: var(--w-easy); }
+.tp-flagship-main.wtype-long      { --wc: var(--w-long); }
+.tp-flagship-main.wtype-tempo     { --wc: var(--w-tempo); }
+.tp-flagship-main.wtype-intervals { --wc: var(--w-intervals); }
+.tp-flagship-main.wtype-race      { --wc: var(--w-race); }
+.tp-strength-open.is-clickable { cursor: pointer; }
+.tp-strength-open.is-clickable:hover .tp-flagship-stat-value { color: #8b5cf6; }
+.tp-flagship-main.is-strength .tp-flagship-foot { margin-top: 1.25rem; }
+.tp-flagship-foot {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 0.75rem; flex-wrap: wrap;
+    margin-top: 1.25rem;
+}
+
+.tp-flagship-aside {
+    display: flex; flex-direction: column; gap: 0.9rem;
+}
+.tp-side-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    padding: 1.25rem 1.4rem;
+    position: relative;
+    overflow: hidden;
+}
+/* When the side-card is rendered as a <button> (e.g. clickable race-day card),
+   strip the native button chrome and surface a hover affordance. */
+button.tp-side-card {
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+button.tp-side-card:hover {
+    border-color: var(--sc, var(--accent));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px -6px var(--shadow, rgba(0,0,0,0.18));
+}
+button.tp-side-card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+.tp-side-card::before {
+    content: "";
+    position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+    background: var(--sc, var(--accent));
+}
+.tp-side-card.race    { --sc: #f59e0b; }
+.tp-side-card.tip     { --sc: #06b6d4; }
+.tp-side-card.rest    { --sc: var(--muted); }
+
+/* ── Race-day countdown ──────────────────────────────────────────────
+   Replaces the bonus tip when the active plan has a real race on the
+   horizon. Big number, flag banner kicker, phase-driven color. */
+.tp-side-card.race-countdown {
+    --sc: var(--w-race);
+    padding: 0;
+    overflow: hidden;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+/* The card body is a button, the readiness bar below it is a <details>. Two
+   sibling controls, so the card itself can't be the button — it borrows the
+   `button.tp-side-card` hover lift via :has() on its clickable half instead. */
+.tp-countdown-open {
+    display: block;
+    width: 100%;
+    margin: 0; padding: 0;
+    background: none;
+    border: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.tp-side-card.race-countdown:has(.tp-countdown-open:hover) {
+    border-color: var(--sc, var(--accent));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px -6px var(--shadow, rgba(0,0,0,0.18));
+}
+.tp-countdown-open:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -3px;
+}
+.tp-side-card.race-countdown.is-final-week,
+.tp-side-card.race-countdown.is-tomorrow,
+.tp-side-card.race-countdown.is-today {
+    --sc: var(--w-intervals);
+}
+.tp-side-card.race-countdown.is-recap {
+    --sc: var(--muted);
+}
+/* Flag banner — full-width strip at the top, mono caps. */
+.tp-countdown-flag {
+    background: var(--sc);
+    color: white;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 0.45rem 1.25rem;
+    text-align: center;
+    /* Shift left a touch so it tucks under the existing 6px stripe. */
+    margin-left: 6px;
+}
+.tp-countdown-body {
+    padding: 1rem 1.4rem 1.25rem;
+}
+/* The dominant number — large and bold so it reads from across the room. */
+.tp-countdown-number {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 3.2rem;
+    line-height: 0.95;
+    color: var(--sc);
+    margin: 0;
+    letter-spacing: -0.03em;
+}
+.tp-side-card.race-countdown.is-today .tp-countdown-number,
+.tp-side-card.race-countdown.is-recap  .tp-countdown-number {
+    /* "GO" / "✓" are short — make them feel like badges, not numbers. */
+    font-size: 2.4rem;
+}
+.tp-countdown-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0.15rem 0 0.85rem;
+}
+.tp-countdown-race {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    line-height: 1.15;
+    margin: 0 0 0.25rem;
+    letter-spacing: -0.015em;
+}
+/* "On pace for 4:08:32 · VDOT 49" — race-time prediction line tucked
+   under the meta row. Time is bold + mono so it reads as a stat;
+   label + VDOT are muted for context. Hidden in the recap phase
+   (race already happened — actual time is now the headline). */
+.tp-countdown-prediction {
+    margin: 0.65rem 0 0;
+    padding-top: 0.6rem;
+    border-top: 1px dashed color-mix(in srgb, var(--sc) 35%, var(--rule));
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: var(--muted);
+}
+.tp-countdown-prediction-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+.tp-countdown-prediction-time {
+    display: inline-block;
+    margin: 0 0.2em;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--sc);
+}
+.tp-countdown-prediction-meta {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-left: 0.35em;
+}
+/* ── Race-readiness bar ──────────────────────────────────────────
+   0-100 progress bar + verdict label, sits below the prediction
+   line. `--rdy-c` is set per band so the bar color reads at a
+   glance — green on-track, amber building, red behind.
+
+   The bar is a button that pops the component breakdown ("where does
+   80/100 come from?") open. Lives outside the card's open-button, so it
+   carries the body's side padding itself. */
+.tp-countdown-readiness {
+    padding: 0 1.4rem 1.25rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    --rdy-c: var(--muted);
+}
+/* Body's bottom padding collapses when the readiness bar follows it —
+   the trigger's own padding-top provides the gap above the dashed rule. */
+.tp-side-card.race-countdown:has(.tp-countdown-readiness) .tp-countdown-body {
+    padding-bottom: 0.7rem;
+}
+.tp-countdown-readiness-trigger {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0.6rem 0 0;
+    background: none;
+    border: 0;
+    border-top: 1px dashed color-mix(in srgb, var(--sc) 35%, var(--rule));
+    border-radius: 4px;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.tp-countdown-readiness-trigger:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+.tp-countdown-readiness-trigger:hover .tp-countdown-readiness-hint,
+.tp-countdown-readiness:has([popover]:popover-open) .tp-countdown-readiness-hint {
+    color: var(--text);
+    border-color: var(--text);
+}
+.tp-countdown-readiness.is-on_track { --rdy-c: var(--w-easy); }
+.tp-countdown-readiness.is-building { --rdy-c: var(--w-tempo); }
+.tp-countdown-readiness.is-behind   { --rdy-c: var(--w-intervals); }
+.tp-countdown-readiness-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.35rem;
+}
+.tp-countdown-readiness-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+.tp-countdown-readiness-score {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--rdy-c);
+}
+/* Both are <span>s — the trigger is a <button>, which only takes phrasing
+   content, so nothing inside it may be a <div>. */
+.tp-countdown-readiness-bar {
+    display: block;
+    height: 6px;
+    background: color-mix(in srgb, var(--rdy-c) 18%, transparent);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.tp-countdown-readiness-fill {
+    display: block;
+    height: 100%;
+    background: var(--rdy-c);
+    border-radius: 3px;
+    transition: width 0.4s ease-out;
+}
+/* Verdict on the left, "why?" affordance on the right. */
+.tp-countdown-readiness-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.35rem;
+}
+.tp-countdown-readiness-verdict {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--rdy-c);
+    font-weight: 700;
+}
+.tp-countdown-readiness-hint {
+    flex: none;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: lowercase;
+    color: var(--muted);
+    border-bottom: 1px dotted currentColor;
+    transition: color 0.15s, border-color 0.15s;
+}
+/* ── Race-readiness breakdown popup ──────────────────────────────
+   The "where does 80/100 come from?" answer. Five rows, one per
+   component: name, earned/ceiling, a mini-bar showing how much of
+   the ceiling was earned, and the raw numbers behind it. Rows that
+   fell back to half marks (no data yet) are dimmed and dashed so
+   they don't read as a real measurement.
+
+   A native [popover], so it renders in the top layer — the card's
+   `overflow: hidden` can't clip it and the card doesn't grow when it
+   opens. Light-dismiss and Esc come for free. Reset the UA popover
+   chrome (solid border, 0.25em padding, `inset: 0`) explicitly. */
+.tp-countdown-breakdown {
+    width: min(20rem, calc(100vw - 2rem));
+    max-height: min(70vh, 32rem);
+    padding: 0.75rem 0.85rem 0.8rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: color-mix(in srgb, var(--rdy-c) 7%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--rdy-c) 30%, var(--rule));
+    border-radius: 14px;
+    box-shadow: 0 12px 32px -10px var(--shadow, rgba(0,0,0,0.35));
+    overflow: auto;
+}
+/* Anchored under the bar, right edges flush, flipping above when the
+   viewport runs out below. Without anchor-positioning support the UA's
+   `inset: 0; margin: auto` still centers it on screen — a plain popup
+   rather than a broken one. */
+@supports (anchor-name: --tp-rdy) {
+    .tp-countdown-readiness-trigger { anchor-name: --tp-rdy; }
+    .tp-countdown-breakdown {
+        position-anchor: --tp-rdy;
+        inset: auto;
+        top: anchor(bottom);
+        right: anchor(right);
+        margin: 0.45rem 0 0;
+        position-try-fallbacks: flip-block;
+    }
+}
+/* Fade + lift on open. `allow-discrete` is what lets the display/overlay
+   switch participate, and @starting-style gives the entry its from-state.
+   Gated on :popover-open support — without it nothing would ever set
+   opacity back to 1 and the panel would be an invisible block taking up
+   space. A browser that old just gets it inline and always visible. */
+@supports selector(:popover-open) {
+    .tp-countdown-breakdown {
+        opacity: 0;
+        transform: translateY(-0.25rem);
+        transition:
+            opacity 0.14s ease-out,
+            transform 0.14s ease-out,
+            overlay 0.14s allow-discrete,
+            display 0.14s allow-discrete;
+    }
+    .tp-countdown-breakdown:popover-open { opacity: 1; transform: none; }
+    @starting-style {
+        .tp-countdown-breakdown:popover-open {
+            opacity: 0;
+            transform: translateY(-0.25rem);
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .tp-countdown-breakdown { transition: none; transform: none; }
+    }
+}
+/* Headline row — the label plus the total the five rows add up to. */
+.tp-countdown-breakdown-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin: 0 0 0.6rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--rdy-c) 25%, var(--rule));
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+}
+.tp-countdown-breakdown-head .tpcb-pts {
+    font-size: 0.85rem;
+    letter-spacing: 0;
+}
+.tp-countdown-breakdown-list {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+.tpcb-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 0.15rem 0.5rem;
+}
+/* Per-row color by earned fraction — same green/amber/red vocabulary as the
+   headline band, so the row dragging the score is obvious at a glance.
+   Overriding `--rdy-c` on the row keeps the panel frame and total on the
+   band color while points + mini-bar follow the component. */
+.tpcb-row.is-strong { --rdy-c: var(--w-easy); }
+.tpcb-row.is-mid    { --rdy-c: var(--w-tempo); }
+.tpcb-row.is-weak   { --rdy-c: var(--w-intervals); }
+.tpcb-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text);
+}
+.tpcb-pts {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--rdy-c);
+    white-space: nowrap;
+}
+.tpcb-max { color: var(--muted); font-weight: 400; }
+/* The empty part of the track has to stay clearly visible, otherwise a
+   full row reads as an underline of the name above it rather than a gauge. */
+.tpcb-bar {
+    grid-column: 1 / -1;
+    height: 4px;
+    margin: 0.1rem 0 0.05rem;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--rdy-c) 28%, transparent);
+    overflow: hidden;
+}
+.tpcb-bar > i {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--rdy-c);
+}
+.tpcb-note {
+    grid-column: 1 / -1;
+    font-size: 0.68rem;
+    line-height: 1.35;
+    color: var(--muted);
+}
+/* Half-marks fallback — no data, so don't dress it up as a measurement:
+   grey it out and dash the bar. Must win over the is-strong/mid/weak
+   fraction colors above, hence the later declaration. */
+.tpcb-row.is-estimated { --rdy-c: var(--muted); }
+.tpcb-row.is-estimated .tpcb-bar > i {
+    background: repeating-linear-gradient(
+        90deg,
+        var(--rdy-c) 0 3px,
+        transparent 3px 6px
+    );
+}
+/* Footnotes: band cut-offs, plus the half-marks caveat when it applies. */
+.tp-countdown-breakdown-note {
+    margin: 0.6rem 0 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--rdy-c) 25%, var(--rule));
+    font-size: 0.63rem;
+    line-height: 1.4;
+    color: var(--muted);
+}
+.tp-countdown-breakdown-note + .tp-countdown-breakdown-note {
+    margin-top: 0.3rem;
+    padding-top: 0;
+    border-top: 0;
+}
+
+/* ── Race-day carousel ───────────────────────────────────────────────
+   Stack of saved-race cards in the flagship aside; only the
+   `.is-active` slide is visible. Arrows + indicator dots cycle. */
+.tp-race-carousel-slides {
+    position: relative;
+}
+.tp-race-carousel-slide {
+    display: none;
+    width: 100%;
+}
+.tp-race-carousel-slide.is-active {
+    display: block;
+}
+.tp-race-carousel-controls {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.6rem;
+    margin-top: 0.5rem;
+}
+.tp-race-carousel-arrow {
+    background: transparent; border: 1px solid var(--rule); color: var(--muted);
+    width: 1.8rem; height: 1.8rem; border-radius: 50%;
+    font-size: 1.1rem; line-height: 1; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+    padding: 0;
+}
+.tp-race-carousel-arrow:hover {
+    color: var(--text); border-color: var(--text); background: var(--bg);
+}
+.tp-race-carousel-dots {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+}
+.tp-race-carousel-dot {
+    width: 0.5rem; height: 0.5rem; border-radius: 50%;
+    background: var(--rule); border: none; padding: 0;
+    cursor: pointer; transition: background 0.12s, transform 0.12s;
+}
+.tp-race-carousel-dot:hover { background: var(--muted); }
+.tp-race-carousel-dot.is-active {
+    background: #f59e0b;
+    transform: scale(1.2);
+}
+.tp-side-card-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--sc, var(--accent));
+    margin: 0 0 0.5rem;
+}
+.tp-side-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+}
+.tp-side-card-display {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 2.5rem;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin: 0 0 0.3rem;
+}
+.tp-side-card-desc {
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin: 0;
+}
+.tp-side-card-meta {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0.4rem 0 0;
+}
+
+/* Stats wall — 4 big italic numbers on the paper-alt strip. */
+.tp-stats-wall-section {
+    background: var(--paper-alt);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    margin: 2.5rem -2rem;
+    padding: 2.25rem 2rem;
+}
+.tp-stats-wall {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    overflow: hidden;
+}
+@media (max-width: 900px) {
+    .tp-stats-wall { grid-template-columns: repeat(2, 1fr); }
+}
+.tp-stats-wall-cell {
+    background: var(--bg);
+    padding: 1.75rem 1.5rem;
+}
+.tp-stats-wall-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin: 0 0 0.85rem;
+}
+.tp-stats-wall-value {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    letter-spacing: -0.025em;
+    line-height: 1;
+    margin: 0 0 0.3rem;
+    font-variant-numeric: tabular-nums;
+}
+.tp-stats-wall-unit {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin: 0 0 0.85rem;
+    letter-spacing: 0.06em;
+}
+.tp-stats-wall-sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin: 0;
+}
+
+/* "This week, wrapped" — reuses the stats-wall shell with a celebratory
+   accent. On a complete week the streak number picks up the accent + a flame;
+   mid-week it reads as a calm progress strip. The coach line below mirrors
+   the weekly-recap voice treatment. */
+.tp-week-wrapped.is-complete .tp-week-wrapped-streak .tp-stats-wall-value {
+    color: var(--accent);
+}
+.tp-week-wrapped-flame {
+    font-size: 0.55em;
+    font-style: normal;
+    margin-left: 0.15em;
+    vertical-align: 0.15em;
+}
+.tp-week-wrapped-note {
+    margin-top: 1.4rem;
+}
+.tp-week-wrapped-quote {
+    font-size: 1.05rem;
+    font-style: italic;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 60ch;
+}
+.tp-week-wrapped-quote .q {
+    color: var(--accent);
+    font-weight: 700;
+    font-style: normal;
+}
+.tp-week-wrapped-progress {
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+.tp-week-wrapped .tp-coach-attr { margin-top: 0.75rem; }
+#week-wrapped.htmx-request .coach-refresh-icon { animation: spin 0.8s linear infinite; }
+
+/* Charts row — wraps the existing SVG charts in editorial chrome. */
+.tp-charts-grid {
+    display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.2rem;
+    margin-bottom: 2.5rem;
+}
+/* Single-column variant for full-width charts (e.g. acute training load).
+   Specificity bumped via the double-class selector so it always wins
+   against the base 2-column rule above, regardless of source order. */
+.tp-charts-grid.tp-charts-grid--single {
+    grid-template-columns: 1fr;
+}
+@media (max-width: 900px) {
+    .tp-charts-grid { grid-template-columns: 1fr; }
+}
+
+/* Settings — pair two cards (Mode + Language) side-by-side. */
+.tp-settings-2col {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+}
+@media (max-width: 700px) {
+    .tp-settings-2col { grid-template-columns: 1fr; }
+}
+
+.tp-chart-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    padding: 1.5rem 1.75rem;
+}
+.tp-chart-card-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin: 0 0 1rem;
+}
+
+/* HR-zone vertical bars — 5 columns (Z1→Z5), pct / track / label, fills
+   grow bottom→top. */
+.tp-zone-bars {
+    display: flex; flex-direction: row;
+    align-items: stretch;
+    gap: 0.85rem;
+    height: 300px;
+    padding: 0.4rem 0 0.2rem;
+}
+.tp-zone-col {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+}
+.tp-zone-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+.tp-zone-track {
+    flex: 1;
+    width: 100%;
+    background: var(--chip);
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex; flex-direction: column-reverse;
+}
+.tp-zone-fill {
+    width: 100%;
+    border-radius: 2px;
+    min-height: 0.15rem;
+}
+.tp-zone-pct {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Recent runs table — keep table layout, lift typography. */
+.tp-recent-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+.tp-recent-card table { width: 100%; border-collapse: collapse; }
+.tp-recent-card thead {
+    background: var(--paper-alt);
+}
+.tp-recent-card th {
+    padding: 0.85rem 1rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-align: left;
+    border-bottom: 1px solid var(--rule);
+}
+.tp-recent-card th.num { text-align: right; }
+.tp-recent-card td {
+    padding: 0.95rem 1rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+.tp-recent-card tr:last-child td { border-bottom: none; }
+.tp-recent-card td.num {
+    text-align: right;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+.tp-recent-card td.date {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+    width: 5.5rem;
+    white-space: nowrap;
+}
+.tp-recent-card td.session {
+    font-weight: 600;
+    display: flex; align-items: center; gap: 0.7rem;
+}
+.tp-recent-card td.session::before {
+    content: "";
+    display: inline-block; width: 4px; height: 1.6rem; border-radius: 2px;
+    /* Default: unmatched run (no plan workout linked). Muted so the
+       eye reads the colored rows below as "from the plan" vs the
+       greys as "manual / unscheduled". */
+    background: var(--muted);
+    flex: 0 0 4px;
+}
+/* Stripe colors mirror the plan-day swatches (--w-* tokens defined in
+   base.html). A row gets `.wtype-{type}` when its run is matched to a
+   planned workout via plan_workouts.actual_activity_id. */
+.tp-recent-card tr.wtype-easy      td.session::before { background: var(--w-easy); }
+.tp-recent-card tr.wtype-long      td.session::before { background: var(--w-long); }
+.tp-recent-card tr.wtype-tempo     td.session::before { background: var(--w-tempo); }
+.tp-recent-card tr.wtype-intervals td.session::before { background: var(--w-intervals); }
+.tp-recent-card tr.wtype-race      td.session::before { background: var(--w-race); }
+.tp-recent-card tr.wtype-rest      td.session::before { background: var(--w-recovery); }
+.tp-recent-card tbody tr.clickable:hover {
+    background: color-mix(in srgb, var(--accent) 4%, var(--card));
+}
+
+/* Recent-runs pager — walk back through older runs (10 per page). */
+.tp-recent-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: -1rem 0 2rem;
+}
+.tp-pager-btn {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--ink);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.tp-pager-btn:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 8%, var(--card));
+    border-color: var(--accent);
+}
+.tp-pager-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+.tp-pager-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* Race countdown helper — used inline in side-card */
+.tp-t-minus {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    letter-spacing: -0.025em;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   Tempo Plans page — editorial reskin.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Hero: eyebrow + giant title + description, actions on the right */
+.tp-plan-hero {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: end;
+    padding: 1rem 0 1.75rem;
+    margin-bottom: 1.5rem;
+}
+@media (max-width: 900px) {
+    .tp-plan-hero { grid-template-columns: 1fr; }
+}
+.tp-plan-hero-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 0 0 0.85rem;
+}
+.tp-plan-hero-title {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: clamp(2.8rem, 6.5vw, 5rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 0.9rem;
+    max-width: 18ch;
+}
+.tp-plan-hero-desc {
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin: 0;
+}
+.tp-plan-hero-actions {
+    display: flex; gap: 0.55rem; align-items: center; flex-wrap: wrap;
+}
+
+/* Stats strip — five cells in one rounded border, hairlines between */
+.tp-plan-stats {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+@media (max-width: 760px) {
+    .tp-plan-stats { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 480px) {
+    .tp-plan-stats { grid-template-columns: repeat(2, 1fr); }
+}
+.tp-plan-stat-cell {
+    padding: 1.05rem 1.1rem 1.15rem;
+    background: var(--card);
+}
+.tp-plan-stat-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin: 0 0 0.45rem;
+}
+.tp-plan-stat-value {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 2rem;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin: 0 0 0.25rem;
+    font-variant-numeric: tabular-nums;
+}
+.tp-plan-stat-sub {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin: 0;
+}
+
+/* Phase bar — horizontal stretched colored segments showing the plan arc */
+.tp-plan-phasebar {
+    margin-bottom: 2.5rem;
+}
+.tp-plan-phasebar-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+.tp-plan-phasebar-track {
+    display: flex;
+    height: 1.1rem;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+}
+.tp-plan-phasebar-seg {
+    flex: 1;
+    border-right: 1px solid var(--bg);
+}
+.tp-plan-phasebar-seg:last-child { border-right: none; }
+.tp-plan-phasebar-seg.is-today {
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+/* `--phase-c` is the week's phase colour, set once per phase and read by the
+   block-map segment here and by the week-row pill below. Tokens live in
+   base.html next to the workout-type palette. */
+.phase-base     { --phase-c: var(--phase-base); }
+.phase-build    { --phase-c: var(--phase-build); }
+.phase-peak     { --phase-c: var(--phase-peak); }
+.phase-taper    { --phase-c: var(--phase-taper); }
+.phase-race     { --phase-c: var(--phase-race); }
+.phase-maintain { --phase-c: var(--phase-maintain); }
+.tp-plan-phasebar-seg[class*="phase-"] {
+    background: color-mix(in srgb, var(--phase-c) 50%, var(--card));
+}
+.tp-plan-phasebar-legend {
+    display: flex; gap: 1.25rem; flex-wrap: wrap;
+    margin-top: 0.65rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+}
+.tp-plan-phasebar-legend .swatch {
+    display: inline-block; width: 0.7rem; height: 0.7rem;
+    border-radius: 2px; margin-right: 0.4rem;
+    vertical-align: middle;
+}
+
+/* Section eyebrow before the weeks list */
+.tp-plan-section-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1rem;
+}
+
+/* Week row — phase pill on the left, mini 7-day grid in the middle, total km on the right. */
+.tp-plan-week {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 16px;
+    padding: 1.1rem 1.5rem;
+    margin-bottom: 0.85rem;
+    display: grid;
+    grid-template-columns: 12rem 1fr 5rem;
+    gap: 1.5rem;
+    align-items: center;
+}
+@media (max-width: 1000px) {
+    .tp-plan-week {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+.tp-plan-week.is-today {
+    border: 2px solid var(--accent);
+    padding: calc(1.1rem - 1px) calc(1.5rem - 1px);
+}
+.tp-plan-week-label {
+    display: flex; flex-direction: column; gap: 0.3rem;
+    min-width: 0;
+}
+.tp-plan-week-phase {
+    display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+/* Phase pill — colour-matched to this week's segment in the block map above,
+   so the eye can jump between the two without re-reading the legend. The
+   label stays in --text rather than the phase colour: the palette is tuned
+   for filled blocks, and several of those hues (base green, maintain grey)
+   fail contrast as micro-type on card backgrounds. */
+.tp-plan-week-phase-pill {
+    padding: 0.16rem 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--phase-c) 20%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--phase-c) 45%, var(--rule));
+    color: var(--text);
+    letter-spacing: 0.14em;
+}
+/* No separator dot — the row is a flex line now, and the accent colour is
+   distinction enough. A leading "·" looked stranded when this wrapped. */
+.tp-plan-week-phase .this-week {
+    color: var(--accent);
+    font-weight: 700;
+}
+.tp-plan-week-num {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.9rem;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin: 0;
+}
+.tp-plan-week-sub {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* Mini 7-day cell row */
+.tp-plan-week-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.45rem;
+    min-width: 0;
+}
+.tp-plan-day {
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--wc, var(--w-rest));
+    border-radius: 6px;
+    padding: 0.5rem 0.55rem 0.55rem;
+    min-height: 3.6rem;
+    display: flex; flex-direction: column;
+    text-decoration: none;
+    color: var(--text);
+}
+.tp-plan-day:hover {
+    background: color-mix(in srgb, var(--wc) 8%, var(--bg));
+}
+.tp-plan-day.is-today {
+    box-shadow: 0 0 0 2px var(--accent);
+}
+.tp-plan-day.is-rest {
+    background: var(--paper-alt);
+    opacity: 0.7;
+}
+.tp-plan-day.is-done { opacity: 0.92; }
+.tp-plan-day.is-missed { border-left-style: dashed; opacity: 0.6; }
+.tp-plan-day-type {
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1;
+}
+.tp-plan-day-km {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: auto;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+}
+.tp-plan-day-dow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.55rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.2rem;
+}
+
+/* Total km — big italic number at the end of each week row. */
+.tp-plan-week-total {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 2rem;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    margin: 0;
+}
+.tp-plan-week-total .unit {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-style: normal;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 0.2rem;
+}
+
+/* Push-week ghost button slot (when a week has pushable workouts) */
+.tp-plan-week-actions {
+    grid-column: 1 / -1;
+    display: flex; justify-content: flex-end;
+    margin-top: 0.4rem;
+}
+
+/* Collapsible "previous weeks" — past weeks on an active plan are tucked
+   behind this toggle so the page opens on the current + upcoming weeks. */
+.tp-plan-prev-weeks { margin-bottom: 0.85rem; }
+.tp-plan-prev-toggle {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    list-style: none;
+    user-select: none;
+    transition: color 0.15s, border-color 0.15s;
+}
+.tp-plan-prev-toggle:hover { color: var(--text); border-color: var(--text); }
+.tp-plan-prev-toggle::-webkit-details-marker { display: none; }
+.tp-plan-prev-weeks > summary .when-open { display: none; }
+.tp-plan-prev-weeks[open] > summary .when-closed { display: none; }
+.tp-plan-prev-weeks[open] > summary .when-open { display: inline; }
+.tp-plan-prev-weeks[open] > summary { margin-bottom: 0.85rem; }
+
+/* Plan archive list (Tempo treatment — keep it light) */
+.tp-plan-archive {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-top: 2rem;
+}
+.tp-plan-archive h2 {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+    margin: 0 0 1rem;
+}
+.tp-plan-archive .archive-row {
+    border-color: var(--rule);
+    padding: 0.7rem 0;
+}
+
+/* Notes / seed banner inside Tempo */
+.tp-plan-notes {
+    background: var(--paper-alt);
+    border: none;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 0.85rem 1.1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+/* Day cell as a clickable button — keeps the cell's existing visual but
+   gives it the affordances of a control (cursor, focus, hover lift). */
+button.tp-plan-day {
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.08s, box-shadow 0.12s;
+}
+button.tp-plan-day:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px -6px color-mix(in srgb, var(--text) 25%, transparent);
+}
+button.tp-plan-day:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* Planned-workout modal interior — sits inside dialog.modal (base.html). */
+dialog.modal { background: var(--card); }
+.tp-pw { padding: 1.75rem 2rem 2rem; }
+.tp-pw-head { margin-bottom: 1.25rem; }
+.tp-pw-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin: 0 0 0.65rem;
+}
+.tp-pw-title {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin: 0 0 0.85rem;
+}
+.tp-pw-pills {
+    display: flex; gap: 0.45rem; flex-wrap: wrap;
+}
+.tp-pw-pill {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    background: var(--paper-alt);
+    color: var(--muted);
+    border: 1px solid var(--rule);
+}
+.tp-pw-pill.type-easy      { color: #15803d; }
+.tp-pw-pill.type-long      { color: #1d4ed8; }
+.tp-pw-pill.type-tempo     { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, var(--rule)); }
+.tp-pw-pill.type-intervals { color: #b91c1c; }
+.tp-pw-pill.type-recovery  { color: #475569; }
+.tp-pw-pill.type-rest      { color: var(--muted); }
+.tp-pw-pill.type-race      { color: #b45309; }
+.tp-pw-pill.type-cross     { color: #6d28d9; }
+/* Status pills read from the status tokens, not the workout-type palette
+   above: done and on-watch are positive, missed is negative, and "today" is
+   neither — it is the current-item marker, which is the brand accent's job. */
+.tp-pw-pill.status-done   { background: color-mix(in srgb, var(--ok) 14%, var(--card)); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 30%, var(--rule)); }
+.tp-pw-pill.status-missed { background: color-mix(in srgb, var(--bad) 14%, var(--card)); color: var(--bad); border-color: color-mix(in srgb, var(--bad) 30%, var(--rule)); }
+.tp-pw-pill.status-today  { background: color-mix(in srgb, var(--accent) 14%, var(--card)); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, var(--rule)); }
+.tp-pw-pill.on-watch      { background: color-mix(in srgb, var(--ok) 10%, var(--card)); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 25%, var(--rule)); }
+
+.tp-pw-desc {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    padding-left: 0.85rem;
+    border-left: 3px solid color-mix(in srgb, var(--accent) 30%, var(--rule));
+}
+/* Coach-voice walkthrough: one <p> per beat of the session — warm-up, main
+   set, cool-down, then why you're running it. The closing "why" paragraph is
+   italic so the rationale reads as commentary rather than another
+   instruction. Single-paragraph fallbacks (the engine shorthand) stay plain. */
+/* pre-line keeps the single newlines inside authored engine notes (Foppen's
+   numbered race-day tips) as real line breaks. Generated sentences carry no
+   newlines, so they're unaffected. */
+.tp-pw-desc p { margin: 0 0 0.7rem; white-space: pre-line; }
+.tp-pw-desc p:last-child { margin-bottom: 0; }
+.tp-pw-desc p:last-child:not(:only-child) {
+    font-style: italic;
+    color: color-mix(in srgb, var(--muted) 75%, var(--text));
+}
+
+.tp-pw-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--rule);
+}
+.tp-pw-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0; padding-bottom: 0;
+}
+.tp-pw-section-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin: 0 0 0.85rem;
+}
+
+.tp-pw-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+    gap: 1.25rem 1.5rem;
+}
+
+/* Structured step breakdown — chips joined by arrows (WU 2 km → 7 km @ 4:50/km → CD 2 km). */
+.tp-pw-structure {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+.tp-pw-structure-step {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.55rem;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    color: var(--muted);
+    white-space: nowrap;
+}
+.tp-pw-structure-step.accent {
+    color: var(--text);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.tp-pw-structure-arrow {
+    color: var(--muted);
+    font-size: 0.75rem;
+}
+.tp-pw-stat-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0 0 0.3rem;
+}
+.tp-pw-stat-value {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.85rem;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}
+.tp-pw-stat-unit {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-style: normal;
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-left: 0.3rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.tp-pw-actual-name {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin: 1rem 0 0;
+}
+
+.tp-pw-swap {
+    background: color-mix(in srgb, var(--accent) 6%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--rule));
+    border-radius: 10px;
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 25%, var(--rule));
+}
+.tp-pw-swap-body {
+    font-style: italic;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0 0 0.85rem;
+}
+
+.tp-pw-actions-desc {
+    color: var(--muted);
+    font-size: 0.86rem;
+    line-height: 1.5;
+    margin: 0 0 0.95rem;
+    max-width: 38rem;
+}
+.tp-pw-stub {
+    opacity: 0.7;
+}
+
+/* Recalibrate-paces preview — lives inside the plan-settings modal,
+   HTMX-loaded after the runner clicks "Preview changes". */
+.tp-pw-recal-preview {
+    margin-top: 1rem;
+    padding: 1rem 1.15rem;
+    background: color-mix(in srgb, var(--accent) 5%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--rule));
+    border-radius: 10px;
+}
+.tp-pw-recal-headline {
+    font-size: 1rem;
+    margin: 0 0 0.5rem;
+    line-height: 1.4;
+}
+.tp-pw-recal-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.85rem 0 0.25rem;
+}
+.tp-pw-recal-table th {
+    text-align: left;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.55rem;
+    border-bottom: 1px solid var(--rule);
+}
+.tp-pw-recal-table th.num,
+.tp-pw-recal-table td.num {
+    text-align: right;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+}
+.tp-pw-recal-table td {
+    padding: 0.4rem 0.55rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 10%, var(--rule));
+    font-size: 0.88rem;
+}
+.tp-pw-recal-table tr:last-child td {
+    border-bottom: none;
+}
+.tp-pw-recal-zone {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--accent);
+    margin-right: 0.35rem;
+}
+.tp-pw-recal-examples {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0;
+    display: flex; flex-direction: column;
+    gap: 0.35rem;
+}
+.tp-pw-recal-examples li {
+    display: grid;
+    grid-template-columns: 6rem 1fr auto;
+    gap: 0.75rem;
+    align-items: baseline;
+    font-size: 0.85rem;
+}
+.tp-pw-recal-ex-date {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+}
+.tp-pw-recal-ex-title {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.tp-pw-recal-ex-delta {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+}
+.tp-pw-recal-ex-delta strong {
+    color: var(--text);
+}
+
+/* VDOT override section (Tier 2b) */
+.tp-pw-vdot-form {
+    display: flex; align-items: flex-end; gap: 0.85rem;
+    margin-bottom: 0.85rem;
+}
+.tp-pw-vdot-form label {
+    display: flex; flex-direction: column; gap: 0.3rem;
+}
+.tp-pw-vdot-estimator {
+    margin-top: 0.85rem;
+    padding: 0.85rem 1rem;
+    background: var(--paper-alt);
+    border-radius: 8px;
+}
+.tp-pw-vdot-estimator summary {
+    cursor: pointer;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    user-select: none;
+}
+.tp-pw-vdot-estimator summary:hover { color: var(--text); }
+.tp-pw-vdot-est-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 0.6fr 0.6fr 0.6fr;
+    gap: 0.55rem;
+    margin: 0.6rem 0;
+}
+.tp-pw-vdot-est-grid label {
+    display: flex; flex-direction: column; gap: 0.3rem;
+}
+.tp-pw-vdot-est-result {
+    display: flex; align-items: center; gap: 0.85rem;
+    margin-top: 0.6rem;
+    flex-wrap: wrap;
+}
+.tp-pw-vdot-est-output {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.95rem;
+    color: var(--text);
+}
+.tp-pw-vdot-est-output strong {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.4rem;
+    color: var(--accent);
+    margin-left: 0.15rem;
+}
+
+/* Manual edit + move forms inside the modal */
+.tp-pw-edit-form,
+.tp-pw-move-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 0.85rem 1rem;
+    align-items: end;
+}
+.tp-pw-edit-form label,
+.tp-pw-move-form label {
+    display: flex; flex-direction: column; gap: 0.3rem;
+    margin: 0;
+}
+.tp-pw-field-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+.tp-pw-input {
+    font: inherit;
+    font-size: 0.92rem;
+    padding: 0.55rem 0.75rem;
+    background: var(--paper-alt);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    width: 100%;
+}
+.tp-pw-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+select.tp-pw-input {
+    appearance: none;
+    cursor: pointer;
+    padding-right: 1.75rem;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: right 0.75rem center, right 0.55rem center;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+}
+.tp-pw-edit-actions {
+    grid-column: 1 / -1;
+    display: flex; justify-content: flex-end;
+    margin-top: 0.4rem;
+}
+.tp-pw-edit-warning {
+    margin: 0 0 1rem;
+    padding: 0.7rem 0.95rem;
+    background: color-mix(in srgb, var(--accent) 8%, var(--card));
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    color: var(--text);
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+/* Per-step rows for tempo / intervals edit. Each row carries its own label
+   (Warm-up / Tempo / Recovery / Cool-down) plus 1–3 inputs side-by-side. */
+.tp-pw-steps {
+    grid-column: 1 / -1;
+    display: flex; flex-direction: column;
+    gap: 0.6rem;
+    margin: 0.2rem 0 0.4rem;
+}
+.tp-pw-step {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 0.75rem;
+    align-items: end;
+    padding: 0.7rem 0.85rem;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--rule);
+    border-radius: 8px;
+}
+.tp-pw-step.accent {
+    border-left-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 4%, var(--bg));
+}
+.tp-pw-step .tp-pw-step-label {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1rem;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    padding-bottom: 0.55rem;
+}
+.tp-pw-step.accent .tp-pw-step-label { color: var(--accent); }
+.tp-pw-step label {
+    flex-direction: column;
+}
+.tp-pw-step > label,
+.tp-pw-step > .tp-pw-step-pair {
+    display: flex; flex-direction: column; gap: 0.3rem; margin: 0;
+}
+/* When a step has multiple inputs, lay them out as columns within the row. */
+.tp-pw-step:has(> label + label) {
+    grid-template-columns: 7rem repeat(auto-fit, minmax(7rem, 1fr));
+}
+@media (max-width: 720px) {
+    .tp-pw-step,
+    .tp-pw-step:has(> label + label) {
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
+    }
+    .tp-pw-step .tp-pw-step-label { padding-bottom: 0; }
+}
+
+/* Type select wants to span the full width above the steps. */
+.tp-pw-field-full {
+    grid-column: 1 / -1;
+}
+.tp-pw-move-form .tp-btn {
+    align-self: flex-end;
+    height: fit-content;
+}
+
+/* Empty-state for plans page (no active plan) */
+.tp-plan-empty {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    text-align: center;
+}
+.tp-plan-empty h2 {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 2rem;
+    letter-spacing: -0.025em;
+    margin: 0 0 0.6rem;
+}
+.tp-plan-empty p {
+    color: var(--muted);
+    max-width: 38rem;
+    margin: 0 auto 1.5rem;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   Tempo Calendar — editorial reskin.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Hero: title left + "N saved" right, with mono eyebrow and lede paragraph */
+.tp-cal-hero {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: end;
+    padding: 1rem 0 1.75rem;
+    margin-bottom: 0.5rem;
+}
+@media (max-width: 760px) {
+    .tp-cal-hero { grid-template-columns: 1fr; }
+}
+.tp-cal-hero-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 0 0 0.85rem;
+}
+.tp-cal-hero-title {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0 0 0.85rem;
+}
+.tp-cal-hero-lede {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    max-width: 36rem;
+    margin: 0;
+}
+.tp-cal-hero-saved {
+    text-align: right;
+}
+.tp-cal-hero-saved-count {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 2.2rem;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin: 0 0 0.35rem;
+}
+.tp-cal-hero-saved-count .label {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 1.4rem;
+    color: var(--muted);
+    margin-left: 0.35rem;
+}
+.tp-cal-hero-saved-cities {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+/* Toolbar: view-toggle pill on the left, mono FILTER + colored distance pills */
+.tp-cal-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; flex-wrap: wrap;
+    padding: 0.4rem 0 1.5rem;
+}
+.tp-cal-toolbar-left {
+    display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;
+}
+.tp-cal-view-toggle {
+    display: inline-flex;
+    background: var(--chip);
+    border-radius: 999px;
+    padding: 3px;
+    border: none;
+}
+.tp-cal-view-toggle a {
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--muted);
+}
+.tp-cal-view-toggle a.active {
+    background: var(--text);
+    color: var(--bg);
+}
+.tp-cal-toolbar-sep {
+    width: 1px; height: 1.1rem; background: var(--rule);
+}
+.tp-cal-filter-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+.tp-cal-filter-pill {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+    cursor: pointer;
+}
+.tp-cal-filter-pill .dot {
+    display: inline-block;
+    width: 0.45rem; height: 0.45rem; border-radius: 50%;
+    background: var(--dot-color, var(--muted));
+}
+.tp-cal-filter-pill.active {
+    background: color-mix(in srgb, var(--dot-color, var(--accent)) 12%, transparent);
+    border-color: color-mix(in srgb, var(--dot-color, var(--accent)) 50%, var(--rule));
+}
+.tp-cal-filter-pill.band-short    { --dot-color: #4ade80; }
+.tp-cal-filter-pill.band-mid      { --dot-color: #3b82f6; }
+.tp-cal-filter-pill.band-long     { --dot-color: #fb923c; }
+.tp-cal-filter-pill.band-marathon { --dot-color: #ef4444; }
+
+/* Agenda grid: 7-column cell grid with mono day headers */
+.tp-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+}
+.tp-cal-dow {
+    background: var(--paper-alt);
+    padding: 0.75rem 0.9rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+.tp-cal-cell {
+    background: var(--card);
+    min-height: 8rem;
+    padding: 0.65rem 0.75rem;
+    display: flex; flex-direction: column;
+    position: relative;
+}
+.tp-cal-cell.is-other-month {
+    background: var(--bg);
+    opacity: 0.5;
+}
+.tp-cal-cell-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 0.5rem;
+    min-height: 1.3rem;
+}
+.tp-cal-day-num {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+    color: var(--text);
+    font-weight: 600;
+}
+.tp-cal-cell.is-today .tp-cal-day-num {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.4rem;
+    color: var(--accent);
+    line-height: 1;
+}
+.tp-cal-today-tag {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+}
+
+/* Event chip inside an agenda cell — coloured by distance band */
+.tp-cal-chip {
+    background: color-mix(in srgb, var(--chip-color, var(--accent)) 12%, var(--card));
+    border-left: 3px solid var(--chip-color, var(--accent));
+    border-radius: 0 4px 4px 0;
+    border-top: none; border-right: none; border-bottom: none;
+    padding: 0.32rem 0.45rem;
+    margin-bottom: 0.3rem;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text);
+    position: relative;
+    width: 100%;
+}
+.tp-cal-chip:hover {
+    background: color-mix(in srgb, var(--chip-color, var(--accent)) 22%, var(--card));
+}
+.tp-cal-chip-name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 0.55rem;
+}
+.tp-cal-chip-meta {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+    margin-top: 0.1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.tp-cal-chip-saved {
+    position: absolute; top: 0.18rem; right: 0.3rem;
+    font-size: 0.55rem;
+    color: var(--chip-color, var(--accent));
+}
+.tp-cal-chip.band-short    { --chip-color: #4ade80; }
+.tp-cal-chip.band-mid      { --chip-color: #3b82f6; }
+.tp-cal-chip.band-long     { --chip-color: #fb923c; }
+.tp-cal-chip.band-marathon { --chip-color: #ef4444; }
+.tp-cal-cell-more {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 0.1rem 0;
+}
+.tp-cal-cell-more:hover { color: var(--accent); }
+
+@media (max-width: 760px) {
+    .tp-cal-cell { min-height: 5.5rem; padding: 0.45rem; }
+    .tp-cal-chip-name { font-size: 0.62rem; }
+    .tp-cal-chip-meta { display: none; }
+}
+
+/* Month section header (when stacking multiple months in agenda) */
+.tp-cal-month-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin: 0 0 0.85rem;
+}
+.tp-cal-month-label {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.5rem;
+    letter-spacing: -0.025em;
+    margin: 0;
+}
+.tp-cal-month-key {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+}
+
+/* "Your races · in order" — editorial cards in a 2-up grid */
+.tp-cal-races-head {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 0 0 1.1rem;
+}
+.tp-cal-races-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+@media (max-width: 760px) {
+    .tp-cal-races-grid { grid-template-columns: 1fr; }
+}
+.tp-cal-race-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 1.25rem 1.4rem;
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 1.1rem;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+}
+.tp-cal-race-card:hover {
+    background: color-mix(in srgb, var(--accent) 4%, var(--card));
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--rule));
+}
+.tp-cal-race-card:hover .tp-cal-race-name { color: var(--accent); }
+.tp-cal-race-card.is-a-race {
+    border: 2px solid var(--accent);
+    padding: calc(1.25rem - 1px) calc(1.4rem - 1px);
+}
+.tp-cal-race-date {
+    text-align: center;
+    border-right: 1px solid var(--rule);
+    padding-right: 1.1rem;
+}
+.tp-cal-race-date .tp-mon {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+.tp-cal-race-date .tp-day {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 2.4rem;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin: 0.15rem 0;
+}
+.tp-cal-race-card.is-a-race .tp-cal-race-date .tp-day { color: var(--accent); }
+.tp-cal-race-date .tp-dow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+.tp-cal-race-body {
+    min-width: 0;
+}
+.tp-cal-race-band {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--band-color, var(--accent));
+    margin: 0 0 0.35rem;
+}
+.tp-cal-race-name {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.25rem;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.25rem;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+.tp-cal-race-name:hover { color: var(--accent); }
+.tp-cal-race-loc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 0 0 0.75rem;
+}
+.tp-cal-race-pills {
+    display: flex; gap: 0.4rem; flex-wrap: wrap;
+}
+.tp-cal-race-pill {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.22rem 0.55rem;
+    border-radius: 999px;
+    background: var(--chip);
+    color: var(--text);
+    border: 1px solid var(--rule);
+}
+.tp-cal-race-pill.a-race {
+    background: color-mix(in srgb, var(--accent) 18%, var(--card));
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--rule));
+}
+.tp-cal-race-pill.t-minus { color: var(--muted); }
+a.tp-cal-race-pill {
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+a.tp-cal-race-pill:hover {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--rule));
+}
+.tp-cal-race-band.band-short    { --band-color: #16a34a; }
+.tp-cal-race-band.band-mid      { --band-color: #1d4ed8; }
+.tp-cal-race-band.band-long     { --band-color: #c2410c; }
+.tp-cal-race-band.band-marathon { --band-color: #b91c1c; }
+
+/* List-view month section + event cards */
+.tp-cal-list-month {
+    margin-bottom: 2rem;
+}
+.tp-cal-list {
+    display: flex; flex-direction: column; gap: 0.55rem;
+}
+.tp-cal-list-row {
+    display: grid;
+    grid-template-columns: 4rem 1fr auto;
+    gap: 1rem;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--band-color, var(--muted));
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+}
+.tp-cal-list-row:hover {
+    background: color-mix(in srgb, var(--accent) 4%, var(--card));
+}
+.tp-cal-list-row.is-favorited {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
+    border-left-color: var(--accent);
+}
+.tp-cal-list-row.band-short    { --band-color: #4ade80; }
+.tp-cal-list-row.band-mid      { --band-color: #3b82f6; }
+.tp-cal-list-row.band-long     { --band-color: #fb923c; }
+.tp-cal-list-row.band-marathon { --band-color: #ef4444; }
+.tp-cal-list-date {
+    text-align: center;
+    border-right: 1px solid var(--rule);
+    padding-right: 0.85rem;
+}
+.tp-cal-list-date .tp-day {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.4rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+.tp-cal-list-date .tp-mon {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.tp-cal-list-body { min-width: 0; }
+.tp-cal-list-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 0 0.2rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.tp-cal-list-loc {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.66rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+}
+.tp-cal-list-actions {
+    display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;
+}
+
+/* Manual-add + import collapsible sections */
+.tp-cal-extras {
+    border-top: 1px solid var(--rule);
+    padding-top: 1.5rem;
+    margin-top: 1rem;
+}
+.tp-cal-extras details {
+    margin-bottom: 0.85rem;
+}
+.tp-cal-extras summary {
+    cursor: pointer; padding: 0.5rem 0;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.tp-cal-extras summary:hover { color: var(--text); }
+
+/* ──────────────────────────────────────────────────────────────────────
+   Tempo Diary — editorial reskin.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Hero: eyebrow + huge italic title + streak counter on the right */
+.tp-diary-hero {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: end;
+    padding: 1rem 0 1.75rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 2rem;
+}
+@media (max-width: 760px) {
+    .tp-diary-hero { grid-template-columns: 1fr; }
+}
+.tp-diary-hero-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 0 0 0.85rem;
+}
+.tp-diary-hero-title {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: clamp(2.4rem, 6.5vw, 5rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin: 0;
+}
+.tp-diary-streak {
+    text-align: right;
+    flex-shrink: 0;
+}
+.tp-diary-streak-num {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 2.2rem;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin: 0 0 0.2rem;
+}
+.tp-diary-streak-num .label {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 1.1rem;
+    color: var(--muted);
+    margin-left: 0.3rem;
+}
+.tp-diary-streak-sub {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+/* Today's entry form — large bordered card, big textarea, mood dots at bottom */
+.tp-diary-form {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 2rem;
+}
+.tp-diary-form-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 0.85rem;
+}
+.tp-diary-form-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+}
+.tp-diary-form-date {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+}
+.tp-diary-form textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text);
+    resize: none;
+    min-height: 5.5rem;
+    padding: 0;
+}
+.tp-diary-form textarea::placeholder { color: var(--muted); }
+.tp-diary-form textarea:focus { outline: none; }
+.tp-diary-form-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 1rem;
+    margin-top: 1.1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+}
+.tp-diary-form-date-field {
+    font: inherit; font-size: 0.8rem;
+    padding: 0.35rem 0.55rem; border-radius: 6px;
+    border: 1px solid var(--rule); background: var(--paper-alt); color: var(--text);
+}
+.tp-diary-form-date-field:focus { outline: none; border-color: var(--accent); }
+
+/* Mood pills — bigger emoji-in-circle, matches the design's editorial scale */
+.tp-diary-mood {
+    display: flex; align-items: center; gap: 0.55rem;
+}
+.tp-diary-mood-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-right: 0.15rem;
+}
+.tp-diary-mood-label::after { content: " →"; }
+.tp-diary-mood-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 2.25rem; height: 2.25rem;
+    border-radius: 50%;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    cursor: pointer;
+    padding: 0;
+    transition: border-color 0.1s, background 0.1s, transform 0.08s;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+                 "Noto Color Emoji", sans-serif;
+    font-size: 1.15rem;
+    line-height: 1;
+}
+.tp-diary-mood-pill input { display: none; }
+.tp-diary-mood-pill:hover { transform: translateY(-1px); }
+.tp-diary-mood-pill.selected,
+.tp-diary-mood-pill:has(input:checked) {
+    background: color-mix(in srgb, var(--tint, var(--accent)) 18%, var(--card));
+    border-color: var(--tint, var(--accent));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--tint, var(--accent)) 25%, transparent);
+}
+/* Per-mood tint colors. Mood 1 (worst) is hottest accent; 5 (best) is calm green. */
+.tp-diary-mood-pill[data-mood="1"] { --tint: var(--accent); }
+.tp-diary-mood-pill[data-mood="2"] { --tint: #d97706; }
+.tp-diary-mood-pill[data-mood="3"] { --tint: #ca8a04; }
+.tp-diary-mood-pill[data-mood="4"] { --tint: #16a34a; }
+.tp-diary-mood-pill[data-mood="5"] { --tint: #4ade80; }
+.tp-diary-mood-pill[data-mood=""] { --tint: var(--muted); font-size: 0.85rem; color: var(--muted); }
+
+/* Divider between form and past entries */
+.tp-diary-section-head {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+.tp-diary-section-label {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+    color: var(--muted);
+    margin: 0;
+}
+.tp-diary-section-actions {
+    display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+}
+.tp-diary-backfill {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+}
+.tp-diary-backfill:hover { color: var(--accent); }
+
+/* Entry feed — vertical timeline.
+   Outer row layout (each row): [date] [dow tag] [mood emoji] [card]
+   The date and mood emoji sit OUTSIDE the card; a thin rule runs down the
+   feed between the dow column and the mood column to suggest a timeline. */
+.tp-diary-feed {
+    display: flex; flex-direction: column;
+    gap: 1.1rem;
+    padding-left: 0.4rem;
+    position: relative;
+}
+/* Timeline rail — vertical line between the date and mood columns. */
+.tp-diary-feed::before {
+    content: '';
+    position: absolute;
+    left: 4.4rem;
+    top: 0.4rem;
+    bottom: 0.4rem;
+    width: 1px;
+    background: var(--rule);
+}
+.tp-diary-entry {
+    display: grid;
+    grid-template-columns: 3.4rem 2.6rem 1fr;
+    gap: 0.9rem;
+    align-items: start;
+    position: relative;
+}
+@media (max-width: 760px) {
+    .tp-diary-feed::before { left: 3.6rem; }
+    .tp-diary-entry {
+        grid-template-columns: 2.8rem 2.2rem 1fr;
+        gap: 0.55rem;
+    }
+}
+/* Date column (outside the card) — italic day + month, dow underneath. */
+.tp-diary-entry-date {
+    text-align: right;
+    padding-top: 0.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+}
+.tp-diary-entry-date .tp-day {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.65rem;
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+}
+.tp-diary-entry-date .tp-mon {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.55rem;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-top: 0.15rem;
+}
+.tp-diary-entry-date .tp-dow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.5rem;
+    color: var(--muted);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-top: 0.15rem;
+}
+/* Mood emoji pill (smaller cousin of the form's mood-pill) */
+.tp-diary-entry-mood {
+    width: 1.85rem; height: 1.85rem;
+    border-radius: 50%;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 0.15rem;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+                 "Noto Color Emoji", sans-serif;
+    font-size: 0.95rem;
+    line-height: 1;
+}
+.tp-diary-entry-mood.mood-1 { background: color-mix(in srgb, var(--accent) 14%, var(--card)); border-color: color-mix(in srgb, var(--accent) 35%, var(--rule)); }
+.tp-diary-entry-mood.mood-2 { background: color-mix(in srgb, #d97706 14%, var(--card)); border-color: color-mix(in srgb, #d97706 35%, var(--rule)); }
+.tp-diary-entry-mood.mood-3 { background: color-mix(in srgb, #ca8a04 14%, var(--card)); border-color: color-mix(in srgb, #ca8a04 35%, var(--rule)); }
+.tp-diary-entry-mood.mood-4 { background: color-mix(in srgb, #16a34a 14%, var(--card)); border-color: color-mix(in srgb, #16a34a 35%, var(--rule)); }
+.tp-diary-entry-mood.mood-5 { background: color-mix(in srgb, #4ade80 14%, var(--card)); border-color: color-mix(in srgb, #4ade80 35%, var(--rule)); }
+/* No-mood entries leave the column visually blank — matches the design's
+   sparse style where only rated entries display a dot. */
+.tp-diary-entry-mood.mood-none {
+    border: none;
+    background: transparent;
+    color: transparent;
+}
+/* The card itself — clean panel containing headline + body + chips. */
+.tp-diary-entry-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 0.9rem 1.1rem;
+    min-width: 0;
+    position: relative;
+}
+.tp-diary-entry-headline {
+    font-size: 0.98rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0 0 0.3rem;
+    padding-right: 2rem;  /* leave room for the edit button */
+}
+.tp-diary-entry-text {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0 0 0.65rem;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+.tp-diary-entry-chips {
+    display: flex; gap: 0.35rem; flex-wrap: wrap;
+}
+.tp-diary-entry-chip {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: var(--chip);
+    color: var(--muted);
+    border: 1px solid var(--rule);
+}
+.tp-diary-entry-chip.wtype-easy      { background: color-mix(in srgb, var(--w-easy) 16%, var(--card)); color: #15803d; border-color: color-mix(in srgb, var(--w-easy) 35%, var(--rule)); }
+.tp-diary-entry-chip.wtype-long      { background: color-mix(in srgb, var(--w-long) 16%, var(--card)); color: #1d4ed8; border-color: color-mix(in srgb, var(--w-long) 35%, var(--rule)); }
+.tp-diary-entry-chip.wtype-tempo     { background: color-mix(in srgb, var(--accent) 14%, var(--card)); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, var(--rule)); }
+.tp-diary-entry-chip.wtype-intervals { background: color-mix(in srgb, var(--w-intervals) 16%, var(--card)); color: #b91c1c; border-color: color-mix(in srgb, var(--w-intervals) 35%, var(--rule)); }
+.tp-diary-entry-chip.wtype-recovery  { background: color-mix(in srgb, var(--w-recovery) 16%, var(--card)); color: #475569; border-color: color-mix(in srgb, var(--w-recovery) 35%, var(--rule)); }
+.tp-diary-entry-chip.wtype-race      { background: color-mix(in srgb, var(--w-race) 16%, var(--card)); color: #b45309; border-color: color-mix(in srgb, var(--w-race) 35%, var(--rule)); }
+/* Edit pencil — top-right of the card */
+.tp-diary-entry-edit {
+    position: absolute;
+    top: 0.55rem; right: 0.6rem;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    width: 1.7rem; height: 1.7rem;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+}
+.tp-diary-entry-edit:hover { color: var(--accent); border-color: var(--rule); background: var(--card); }
+.tp-diary-entry-edit.htmx-request { opacity: 0.5; cursor: wait; }
+/* Edit form inline */
+.tp-diary-entry-card.is-editing {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* Empty state */
+.tp-diary-empty {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    text-align: center;
+    margin-top: 1rem;
+}
+.tp-diary-empty h2 {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 1.8rem;
+    letter-spacing: -0.025em;
+    margin: 0 0 0.5rem;
+}
+.tp-diary-empty p {
+    color: var(--muted);
+    margin: 0 auto;
+    max-width: 34rem;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Tempo run-detail modal — editorial redesign with tabs.
+   Loaded into <dialog id="run-detail-modal"> via HTMX from /runs/{id}.
+   All class names prefixed `tprd-` (tempo run-detail) to keep this self-
+   contained — the old `.run-detail`, `.lap-chart-*`, etc. live elsewhere
+   for the base run-detail and other modals.
+
+   Layout: masthead → coach byline → tabs (Workout / Effort / Notes).
+   Tabs are CSS-radio driven, zero JS.
+   ──────────────────────────────────────────────────────────────────────── */
+
+/* Override the generic dialog.modal box (defined in base.html) so the new
+   editorial look isn't fighting wrapper padding/border-radius. Only when
+   the tempo detail content is inside it. */
+dialog#run-detail-modal.modal {
+    padding: 0;
+    border: none;
+    width: 720px;
+    max-width: calc(100vw - 2rem);
+    max-height: 90vh;
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 20px;
+    /* Single scroll container — the dialog itself. overflow: hidden
+       cropped content on shorter viewports without any scrollbar to
+       reach the lap chart / notes tabs below. overscroll-behavior
+       keeps the scroll inside the modal instead of bubbling to the
+       page body when you hit either end. */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    box-shadow: 0 40px 120px rgba(0,0,0,0.32);
+}
+dialog#run-detail-modal.modal > .modal-close {
+    /* One close affordance for every slide — the masthead no longer
+       carries its own (it's hidden entirely on the Replay slide). Sticky
+       so it stays reachable as the modal's single scroll container moves;
+       zero-size sticky anchor floated to the top-right corner. */
+    position: sticky;
+    top: 14px;
+    float: right;
+    margin: 14px 14px -52px 0;
+    z-index: 20;
+    display: inline-flex;
+}
+
+/* Wrapper inserted at the top of the swapped-in template so we can scope
+   everything below to one container without leaking. */
+.tprd-root {
+    font-family: 'Inter', -apple-system, sans-serif;
+    /* `--wtype-c` is the per-workout-type accent (set by `.wtype-*` rules
+       below). When no workout is matched, falls back to the theme accent
+       so the kicker still has color. */
+    --wtype-c: var(--accent);
+}
+/* Workout-type color injection — same `--w-*` tokens we use on plan-week
+   cards and the recent-runs stripe, so a Tempo run reads "orange"
+   consistently across surfaces. */
+.tprd-root.wtype-easy      { --wtype-c: var(--w-easy); }
+.tprd-root.wtype-long      { --wtype-c: var(--w-long); }
+.tprd-root.wtype-tempo     { --wtype-c: var(--w-tempo); }
+.tprd-root.wtype-intervals { --wtype-c: var(--w-intervals); }
+.tprd-root.wtype-race      { --wtype-c: var(--w-race); }
+.tprd-root.wtype-rest      { --wtype-c: var(--w-recovery); }
+/* Repaint the kicker + add a 6px left stripe to the masthead so the
+   color is visible immediately on modal-open, not just in the
+   per-workout text. */
+.tprd-root .tprd-kicker { color: var(--wtype-c); }
+.tprd-root .tprd-head {
+    border-left: 6px solid var(--wtype-c);
+}
+
+/* ── Masthead ───────────────────────────────────────────────────────── */
+.tprd-head {
+    padding: 26px 32px 22px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+.tprd-kicker {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+.tprd-title {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 40px;
+    letter-spacing: -0.025em;
+    line-height: 0.92;
+    margin: 0 0 14px;
+}
+.tprd-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+}
+.tprd-meta b {
+    color: var(--text);
+    font-weight: 600;
+}
+.tprd-close {
+    margin-left: auto;
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    color: var(--text);
+    font-size: 17px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: all 0.12s;
+}
+.tprd-close:hover {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+}
+
+/* ── Coach byline (always above tabs) ───────────────────────────────── */
+.tprd-coach {
+    padding: 26px 32px;
+    display: flex;
+    gap: 18px;
+    position: relative;
+}
+.tprd-coach::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 24px;
+    bottom: 24px;
+    width: 6px;
+    background: var(--accent);
+    border-radius: 0 3px 3px 0;
+}
+.tprd-coach-body { flex: 1; }
+.tprd-coach-quote {
+    font-style: italic;
+    font-weight: 300;
+    font-size: 21px;
+    line-height: 1.38;
+    margin: 0 0 14px;
+    text-wrap: pretty;
+}
+.tprd-coach-quote .q {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: normal;
+    color: var(--accent);
+}
+.tprd-coach-by {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.tprd-coach-by button.coach-refresh {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+    letter-spacing: inherit;
+}
+.tprd-coach-by button.coach-refresh:hover { color: var(--accent); }
+.tprd-coach-loading {
+    color: var(--muted);
+    font-style: italic;
+}
+
+/* ── Slide system (no tab bar — the foot-of-panel slide-nav drives it) ──
+   The radio inputs remain the switching mechanism; the <label>s that
+   toggle them live in each panel's `.tprd-slidenav`. The masthead sits
+   inside `.tprd-tabwrap` (after the inputs) so it can be hidden on the
+   Replay slide via `:checked ~`. */
+.tprd-tab-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+.tprd-panels {
+    padding: 26px 32px 30px;
+}
+.tprd-panel {
+    display: none;
+    animation: tprd-fade 0.22s ease;
+}
+@keyframes tprd-fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* Replay is the map-first slide: hide the masthead there so the glow
+   header + map sit at the top, uncluttered. (Only matters when a route
+   exists — routeless runs have no #tprd-t-replay and open on The Run
+   with the masthead shown.) */
+.tprd-tab-input#tprd-t-replay:checked ~ .tprd-head { display: none; }
+
+/* Wire-up: checked input → visible panel. */
+.tprd-tab-input#tprd-t-replay:checked ~ .tprd-panels #tprd-p-replay,
+.tprd-tab-input#tprd-t-run:checked    ~ .tprd-panels #tprd-p-run,
+.tprd-tab-input#tprd-t-log:checked    ~ .tprd-panels #tprd-p-log {
+    display: block;
+}
+
+/* Prev/next slide navigation at the foot of every panel — plain <label>s
+   for the tab radios, so it's still zero-JS. */
+.tprd-slidenav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+}
+.tprd-slidenav .dots { display: flex; gap: 7px; align-items: center; }
+.tprd-slidenav .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rule); }
+.tprd-slidenav .dot.on { background: var(--accent); width: 20px; border-radius: 999px; }
+.tprd-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    user-select: none;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    color: var(--text);
+    transition: all 0.12s;
+}
+.tprd-nav-btn:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
+.tprd-nav-btn.next { background: var(--text); color: var(--bg); border-color: var(--text); }
+.tprd-nav-btn.next:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tprd-nav-ghost { visibility: hidden; }
+
+/* ── Replay tab: glow header + route map ────────────────────────────── */
+.tprd-glow-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+.tprd-glow-title {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 42px;
+    letter-spacing: -0.03em;
+    line-height: 0.88;
+    margin: 0;
+}
+.tprd-glow-sub {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 10px 0 0;
+    max-width: 46ch;
+    line-height: 1.5;
+}
+.tprd-glow-badge {
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--ok);
+    background: color-mix(in oklab, var(--ok) 13%, transparent);
+    padding: 7px 13px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.tprd-glow-badge.over {
+    color: var(--warn);
+    background: color-mix(in oklab, var(--warn) 14%, transparent);
+}
+.tprd-map-card { padding: 0; }
+.tprd-map-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--rule);
+}
+.tprd-map-replay {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+.tprd-map-replay:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
+.tprd-map {
+    height: 380px;
+    /* Neutral placeholder while tiles stream in. */
+    background: var(--paper-alt);
+}
+/* OSM only serves light tiles; invert + hue-rotate keeps water blue and
+   text legible, then dim to sit comfortably on the dark card. Route colors
+   are drawn in SVG panes above the tile layer, so they keep their true
+   colors. */
+html.is-dark .tprd-map .leaflet-tile {
+    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.88) saturate(0.55);
+}
+html.is-dark .tprd-map { background: #1e293b; }
+.tprd-map-foot {
+    display: flex;
+    gap: 10px 24px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--rule);
+    flex-wrap: wrap;
+}
+.tprd-map-foot div {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--muted);
+}
+.tprd-map-foot b { color: var(--text); font-weight: 600; }
+html.is-dark .tprd-map .leaflet-control-attribution {
+    background: rgba(10, 10, 10, 0.7);
+    color: #8a857c;
+}
+
+/* ── The Run: coach intro + verdict chip + stat line ────────────────── */
+.tprd-run-intro { margin-bottom: 20px; }
+.tprd-run-intro .tprd-coach { padding: 2px 0 2px 20px; margin-bottom: 18px; }
+.tprd-run-intro .tprd-coach::before { top: 2px; bottom: 2px; border-radius: 3px; }
+.tprd-run-intro .tprd-coach-quote { font-size: 19px; }
+.tprd-verdict {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 5px 11px;
+    border-radius: 999px;
+    color: var(--ok);
+    background: color-mix(in oklab, var(--ok) 14%, transparent);
+}
+/* "over" = ran harder/longer than prescribed. Not a failure, but not on-plan
+   either → warn, matching the glow badge above. */
+.tprd-verdict.over {
+    color: var(--warn);
+    background: color-mix(in oklab, var(--warn) 14%, transparent);
+}
+.tprd-statline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.tprd-statline > div { background: var(--card); padding: 12px 16px; }
+.tprd-statline .k {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-bottom: 5px;
+}
+.tprd-statline .v {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 19px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.tprd-statline .v small {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 400;
+    margin-left: 3px;
+}
+.tprd-subhead {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+    color: var(--muted);
+    margin: 22px 0 12px;
+}
+
+/* ── Shared block primitives ────────────────────────────────────────── */
+.tprd-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+}
+.tprd-stripe::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 6px;
+    background: var(--accent);
+}
+.tprd-lbl {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--muted);
+    text-transform: uppercase;
+}
+
+/* ── Lap chart (hero) ────────────────────────────────────────────────── */
+.tprd-chart-card { padding: 24px 26px 20px; margin-bottom: 22px; }
+.tprd-chart-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.tprd-chart-legend { display: flex; gap: 16px; flex-wrap: wrap; }
+.tprd-chart-legend span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+}
+.tprd-chart-legend i {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    display: inline-block;
+}
+.tprd-plot {
+    position: relative;
+    height: 172px;
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+    padding-top: 6px;
+}
+.tprd-plot .target {
+    position: absolute;
+    left: 0; right: 0;
+    border-top: 1.5px dashed var(--accent);
+    pointer-events: none;
+}
+.tprd-plot .target span {
+    position: absolute;
+    right: 0; top: -9px;
+    background: var(--card);
+    padding: 0 6px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+}
+.tprd-bar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 100%;
+    min-width: 4px;
+}
+.tprd-bar .fill {
+    width: 100%;
+    border-radius: 3px 3px 0 0;
+    transition: height 0.3s, opacity 0.15s;
+}
+.tprd-bar:hover .fill { opacity: 0.78; }
+.tprd-bar .blab {
+    text-align: center;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 7px;
+}
+.tprd-bar .blab b {
+    display: block;
+    color: var(--text);
+    font-size: 10px;
+    font-weight: 600;
+}
+
+/* Intensity color tokens. ACTIVE uses the accent so the workout block
+   reads as the centerpiece; warm/cool fade into muted greys. */
+.tprd-c-warm { background: #b8b1a2; }
+.tprd-c-active { background: var(--accent); }
+.tprd-c-cool { background: #8a857c; }
+.tprd-c-recovery { background: #cbd5e1; }
+html.is-dark.tprd-c-warm { background: #4a463f; }
+html.is-dark.tprd-c-cool { background: #6a655c; }
+
+/* Lap-chart empty state. */
+.tprd-chart-empty { padding: 26px 24px 26px 30px; margin-bottom: 22px; }
+.tprd-chart-empty .tprd-lbl { margin-bottom: 8px; }
+.tprd-chart-empty p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--muted);
+    max-width: 62ch;
+}
+.tprd-chart-empty p b { color: var(--text); font-weight: 600; }
+
+/* ── Fastest splits ──────────────────────────────────────────────────── */
+.tprd-splits-h {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.tprd-splits {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+.tprd-split { padding: 13px 14px; }
+.tprd-split .d {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+.tprd-split .t {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+}
+.tprd-split.empty .t {
+    color: var(--muted);
+    font-size: 18px;
+}
+
+/* ── HR zones (The Run tab) ─────────────────────────────────────────── */
+.tprd-hr-card { padding: 22px 24px; margin-bottom: 22px; }
+.tprd-hr-top {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+.tprd-hr-fig .v {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 46px;
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+}
+.tprd-hr-fig .v small {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--muted);
+    font-style: normal;
+    margin-left: 5px;
+}
+.tprd-hr-fig .k {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+.tprd-zonebar {
+    display: flex;
+    height: 16px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+.tprd-zonebar i { height: 100%; min-width: 0; }
+.tprd-ztable {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+.tprd-zrow {
+    display: grid;
+    grid-template-columns: 34px 1fr 64px 48px;
+    gap: 12px;
+    align-items: center;
+}
+.tprd-zrow .zz {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 700;
+}
+.tprd-zrow .zl { font-size: 13px; font-weight: 500; }
+.tprd-zrow .ztime {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+}
+.tprd-zrow .zpct {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.tprd-te-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+.tprd-te { padding: 18px 20px; }
+.tprd-te .k {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+.tprd-te .v {
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic;
+    font-size: 40px;
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+}
+.tprd-te .v small {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    font-style: normal;
+    margin-left: 5px;
+}
+.tprd-te .tag {
+    display: inline-block;
+    margin-top: 10px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+}
+.tprd-misc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 26px;
+    padding: 16px 20px;
+}
+.tprd-misc div {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--muted);
+}
+.tprd-misc div b {
+    color: var(--text);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* ── Log tab: watch reference card ──────────────────────────────────── */
+.tprd-ref-card { padding: 18px 22px; margin-bottom: 18px; }
+.tprd-ref-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+.tprd-ref-feel {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--text);
+}
+.tprd-ref-feel .f { color: var(--ok); }
+
+/* Mood pills in the Log tab carry a short caps label beside the emoji.
+   The base `.tp-diary-mood-pill` is a fixed round emoji-only chip (used on
+   /diary); here we reshape it into a wider rounded-rect pill so the label
+   fits without colliding with the emoji. */
+.tprd-moods-h { margin-bottom: 10px; }
+.tprd-moods { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.tprd-moods .tp-diary-mood-pill {
+    width: auto;
+    height: auto;
+    border-radius: 999px;
+    padding: 8px 14px;
+    gap: 8px;
+    font-size: 1rem;
+}
+.tprd-moods .tp-diary-mood-pill .ml {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+}
+.tprd-moods .tp-diary-mood-pill.selected .ml,
+.tprd-moods .tp-diary-mood-pill:has(input:checked) .ml { color: var(--text); }
+/* The "no rating" pill is just a dash — keep it compact and square-ish. */
+.tprd-moods .tp-diary-mood-pill[data-mood=""] { padding: 8px 16px; }
+.tprd-moods .tp-diary-mood-pill[data-mood=""] .ml { display: none; }
+
+/* ── Notes tab ───────────────────────────────────────────────────────── */
+.tprd-feel-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+.tprd-feel-chip {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.tprd-feel-chip.on,
+.tprd-feel-chip:has(input:checked) {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+}
+.tprd-feel-chip input {
+    /* Keep the input in the DOM so the form submits, but visually gone. */
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+
+.tprd-rpe {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.tprd-rpe-cell {
+    width: 30px;
+    height: 34px;
+    border-radius: 5px;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    color: var(--muted);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    display: grid;
+    place-items: center;
+}
+.tprd-rpe-cell.on {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+}
+
+.tprd-diary {
+    width: 100%;
+    min-height: 120px;
+    resize: vertical;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    margin-top: 4px;
+}
+.tprd-diary:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+.tprd-diary::placeholder {
+    color: var(--muted);
+    font-style: italic;
+}
+.tprd-notes-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.tprd-save-btn {
+    padding: 11px 22px;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 999px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+}
+.tprd-save-btn:hover { opacity: 0.85; }
+.tprd-autosave {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+}
+.tprd-gap { height: 22px; }
+
+/* ── Notes-tab diary form ───────────────────────────────────────────
+   Inside the run-detail modal, reuse `.tp-diary-form` styling for
+   visual continuity with `/diary`. A few overrides drop the outer
+   bordered-card chrome (the modal already provides it) and shape the
+   textarea so it reads as a clear writing zone instead of an awkward
+   inner scrollbox. */
+.tprd-panel .tp-diary-form.tprd-diary-form {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+}
+/* Inside the modal, give the textarea its own soft background tint +
+   generous min-height so multi-paragraph run debriefs fit without an
+   inner scrollbar. On the /diary page the textarea is borderless on
+   the card; here it visually anchors the form. */
+.tprd-panel .tp-diary-form.tprd-diary-form textarea {
+    background: var(--paper-alt);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 14px 18px;
+    min-height: 9rem;
+    transition: border-color 0.12s, background 0.12s;
+}
+.tprd-panel .tp-diary-form.tprd-diary-form textarea:focus {
+    background: var(--card);
+    border-color: var(--accent);
+    outline: none;
+}
+/* Thin, subtle scrollbar for the rare case where the entry exceeds 6 rows. */
+.tprd-panel .tp-diary-form.tprd-diary-form textarea::-webkit-scrollbar {
+    width: 6px;
+}
+.tprd-panel .tp-diary-form.tprd-diary-form textarea::-webkit-scrollbar-thumb {
+    background: var(--rule); border-radius: 3px;
+}
+/* Save cluster (autosave status + button) sits to the right of the
+   mood pills. `flex: 1` claims the footer's remaining width;
+   `justify-content: flex-end` packs the label + button against the
+   right edge so the Save button always anchors the far right. */
+.tprd-notes-save {
+    display: flex; align-items: center; gap: 0.85rem;
+    flex: 1; justify-content: flex-end;
+    flex-wrap: wrap;
+}
+/* ── Mobile ─────────────────────────────────────────────────────────── */
+@media (max-width: 560px) {
+    dialog#run-detail-modal.modal {
+        width: 100%;
+        min-height: 100vh;
+        border-radius: 0;
+    }
+    .tprd-title { font-size: 32px; }
+    .tprd-glow-title { font-size: 34px; }
+    .tprd-statline,
+    .tprd-splits { grid-template-columns: repeat(2, 1fr); }
+    .tprd-te-grid { grid-template-columns: 1fr; }
+    .tprd-moods .tp-diary-mood-pill .ml { display: none; }
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Optional strength sessions — rest-day chip + detail modal.
+   See running_coach/strength/ for the data; docs/strength-sessions.md
+   for the design rationale.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* The day-cell wrapper holds the existing tp-plan-day button plus the
+   optional strength chip on rest days. Position relative so the chip
+   can sit in the top-left corner without disturbing the grid. */
+.tp-plan-day-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.tp-plan-strength-chip {
+    position: absolute;
+    top: 4px; left: 4px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    color: var(--text);
+    font-size: 11px;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.12s, border-color 0.12s;
+    z-index: 1;
+}
+.tp-plan-strength-chip:hover {
+    transform: scale(1.08);
+    border-color: var(--accent);
+}
+.tp-plan-strength-chip.is-done {
+    background: color-mix(in oklab, var(--ok) 20%, var(--card));
+    border-color: color-mix(in oklab, var(--ok) 60%, var(--rule));
+    color: var(--ok);
+}
+
+/* Detail-modal block + exercise + superset layout. The blocks render
+   in vertical stack; supersets pair two exercises side-by-side with a
+   subtle accent stripe so the runner sees the pairing at a glance. */
+.tp-strength-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.tp-strength-ex,
+.tp-strength-superset {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 0.7rem 0.9rem;
+}
+.tp-strength-ex-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+}
+.tp-strength-ex-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+.tp-strength-ex-tag {
+    background: color-mix(in oklab, var(--accent) 14%, transparent);
+    color: var(--accent);
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.tp-strength-ex-dose {
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* Superset card holds two exercises side by side and labels itself
+   with a small "Superset" tag in the corner. */
+.tp-strength-superset {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+    padding-top: 1.3rem;
+    border-left: 3px solid var(--accent);
+}
+.tp-strength-superset-tag {
+    position: absolute;
+    top: 0.35rem; left: 0.7rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+}
+.tp-strength-superset .tp-strength-ex {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+/* Actual-stats grid for matched strength sessions — sits between the
+   header pills and the prescribed structure when a Garmin activity
+   has been auto-linked via workoutId echo. Mirrors the running
+   modal's actual-stats treatment for visual consistency. */
+.tp-strength-actuals {
+    background: color-mix(in oklab, var(--ok) 8%, var(--card));
+    border-left: 3px solid var(--ok);
+    border-radius: 0 10px 10px 0;
+    padding: 1rem 1.1rem 0.85rem 1.3rem;
+    margin: 0.6rem 1.25rem 0.4rem;
+}
+.tp-strength-actuals .tp-pw-section-label { color: var(--ok); }
+.tp-strength-actuals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 0.65rem;
+    margin-top: 0.5rem;
+}
+
+/* Small inline flash for push/unpush feedback inside the strength modal.
+   Re-uses the seed-banner accent tone but stays modal-scoped. */
+.tp-pw-flash {
+    margin: 0.6rem 1.25rem;
+    padding: 0.55rem 0.85rem;
+    background: color-mix(in oklab, var(--accent) 10%, var(--card));
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--text);
+}
+
+/* Exercise description (1-line static form cue) + LLM "Explain more"
+   affordance. Sits under the dose row; small, muted, easy to ignore
+   when the runner just wants the headline. */
+.tp-strength-ex-desc {
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--text);
+    margin: 0.5rem 0 0;
+}
+.tp-strength-ex-explain { margin-top: 0.4rem; }
+.tp-strength-explain-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: color 0.12s;
+}
+.tp-strength-explain-btn:hover { color: var(--accent); }
+.tp-strength-explain-btn.htmx-request {
+    opacity: 0.5;
+    pointer-events: none;
+}
+.tp-strength-ex-explained pre {
+    margin: 0.4rem 0 0;
+    padding: 0.6rem 0.8rem;
+    background: color-mix(in oklab, var(--accent) 6%, var(--card));
+    border-left: 2px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    font-family: inherit;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Strength pill in the modal header (matches the existing pill styles). */
+.tp-pw-pill.type-strength {
+    background: color-mix(in oklab, #a855f7 18%, var(--card));
+    color: #7e22ce;
+    border-color: color-mix(in oklab, #a855f7 30%, var(--rule));
+}
+/* Descendant selector — `html.is-dark.tp-pw-pill` matched nothing. */
+html.is-dark .tp-pw-pill.type-strength {
+    color: #c084fc;
+}
+
+@media (max-width: 560px) {
+    .tp-strength-superset {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   BODY / WELLBEING CHECK-IN  (ported from Claude Design's handoff)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Hero + view toggle ─────────────────────────────────────────────── */
+.tp-body-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; letter-spacing: 0.22em; color: var(--faint);
+    margin: 0 0 18px;
+}
+.tp-body-hero {
+    font-family: 'Archivo Black', sans-serif; font-style: italic;
+    font-size: clamp(54px, 9vw, 116px);
+    letter-spacing: -0.035em; line-height: 0.86;
+    margin: 0 0 22px;
+}
+.tp-body-lede {
+    font-size: 18px; line-height: 1.5; color: var(--mute);
+    max-width: 50ch; margin: 0 0 34px;
+    text-wrap: pretty;
+}
+.tp-body-lede em { color: var(--text); font-style: italic; }
+
+.tp-body-views { display: flex; gap: 8px; margin-bottom: 30px; }
+.tp-body-view-pill {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--mute);
+    background: transparent;
+    border: 1px solid var(--line2);
+    border-radius: 999px;
+    padding: 9px 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.tp-body-view-pill:hover { color: var(--text); border-color: var(--mute); }
+.tp-body-view-pill.on {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: color-mix(in oklab, var(--accent) 7%, transparent);
+}
+
+/* View visibility — toggled by data-view on .tp-body-root */
+.tp-body-root .tp-body-view-panel { display: none; }
+.tp-body-root[data-view="active"]  .tp-body-view-active  { display: block; }
+.tp-body-root[data-view="history"] .tp-body-view-history { display: block; }
+.tp-body-root[data-view="heatmap"] .tp-body-view-heatmap { display: block; }
+
+/* ── Active grid ─────────────────────────────────────────────────── */
+.tp-body-active-grid {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 22px; align-items: start;
+}
+.tp-body-diagram-card { padding: 26px 28px 22px; }
+.figs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fig-col { display: flex; flex-direction: column; align-items: center; }
+.fig-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.2em; color: var(--faint);
+    margin-bottom: 10px;
+}
+.fig-col .fig-slot { width: 100%; display: flex; justify-content: center; }
+.tp-body-fig {
+    width: 100%; height: auto; max-height: 520px; display: block;
+    touch-action: manipulation;
+}
+.tp-body-fig-hint {
+    margin-top: 8px; text-align: center;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.14em; color: var(--faint);
+}
+
+/* SVG body styling */
+.body-line {
+    fill: color-mix(in oklab, var(--text) 6%, transparent);
+    stroke: var(--silhouette);
+    stroke-width: 2.6;
+    stroke-linejoin: round; stroke-linecap: round;
+    transition: stroke 0.3s, fill 0.3s;
+}
+.muscles { display: none; }
+.tp-body-root[data-anatomy="on"] .muscles { display: block; }
+.tp-body-root[data-anatomy="on"] .body-line {
+    fill: color-mix(in oklab, var(--text) 3%, transparent);
+}
+.muscles .m {
+    fill: var(--muscle); stroke: var(--muscle-line);
+    stroke-width: 0.8; stroke-linejoin: round;
+    transition: fill 0.16s, stroke 0.16s;
+}
+.muscles .m.hot {
+    fill: color-mix(in oklab, var(--accent) 28%, var(--muscle));
+    stroke: color-mix(in oklab, var(--accent) 46%, var(--muscle-line));
+}
+.muscles .m-detail {
+    fill: none; stroke: var(--muscle-line);
+    stroke-width: 0.8; stroke-linecap: round;
+    opacity: 0.55; pointer-events: none;
+}
+
+/* Diagram toggles */
+.tp-body-anatomy-toggle {
+    display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 14px;
+}
+.tp-body-anatomy-toggle button {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mute);
+    background: var(--bg);
+    border: 1px solid var(--line2);
+    border-radius: 999px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.14s;
+}
+.tp-body-anatomy-toggle button:hover { color: var(--text); border-color: var(--mute); }
+.tp-body-anatomy-toggle button.on {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: color-mix(in oklab, var(--accent) 8%, transparent);
+}
+
+/* Region hitboxes */
+.region {
+    fill: transparent;
+    stroke: transparent;
+    stroke-width: 2;
+    cursor: pointer;
+    transition: fill 0.14s, stroke 0.14s;
+}
+.region:hover {
+    fill: color-mix(in oklab, var(--accent) 11%, transparent);
+    stroke: var(--accent);
+}
+.region.selected {
+    fill: color-mix(in oklab, var(--accent) 9%, transparent);
+    stroke: var(--accent);
+    stroke-dasharray: 3 3;
+}
+
+/* Glow pulse */
+.glow { pointer-events: none; }
+.glow ellipse { transform-box: fill-box; transform-origin: center; }
+.glow ellipse.pulse { animation: tpBodyLogPulse 1.1s cubic-bezier(.2,.7,.3,1) 1; }
+@keyframes tpBodyLogPulse {
+    0% { transform: scale(0.5); opacity: 0.2; }
+    35% { transform: scale(1.32); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .glow ellipse.pulse { animation: none; }
+}
+
+/* ── Entry panel ────────────────────────────────────────────────── */
+.tp-body-entry {
+    padding: 24px 26px 22px; position: relative; overflow: hidden;
+}
+.tp-body-entry::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 5px; background: var(--accent);
+}
+.tp-body-entry.sev-1::before { background: var(--sev-mild); }
+.tp-body-entry.sev-2::before { background: var(--sev-mod); }
+.tp-body-entry.sev-3::before { background: var(--sev-severe); }
+
+.tp-body-entry-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.18em; color: var(--faint);
+    text-transform: uppercase; margin-bottom: 9px;
+}
+.tp-body-entry-title {
+    font-size: 21px; font-weight: 700;
+    letter-spacing: -0.01em; margin: 0 0 4px;
+}
+.tp-body-entry-sub { font-size: 13px; color: var(--mute); margin: 0 0 18px; }
+
+.tp-body-field { margin-bottom: 16px; }
+.tp-body-field > label,
+.tp-body-field > div > label {
+    display: block;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.14em;
+    color: var(--mute); text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.tp-body-type-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+}
+.tp-body-type-opt {
+    text-align: left; padding: 9px 11px;
+    border: 1px solid var(--line2); border-radius: 9px;
+    background: var(--bg); font-size: 12.5px; font-weight: 500;
+    color: var(--text); cursor: pointer; transition: all 0.12s;
+    display: block;
+}
+.tp-body-type-opt:hover { border-color: var(--mute); }
+.tp-body-type-opt.on {
+    border-color: var(--accent);
+    background: color-mix(in oklab, var(--accent) 8%, transparent);
+    color: var(--accent); font-weight: 600;
+}
+.tp-body-type-opt input { display: none; }
+.tp-body-entry input[type=text],
+.tp-body-entry textarea,
+.tp-body-entry select {
+    width: 100%;
+    font-family: inherit; font-size: 14px;
+    color: var(--text); background: var(--bg);
+    border: 1px solid var(--line2);
+    border-radius: 10px; padding: 11px 13px;
+}
+.tp-body-entry textarea { resize: vertical; min-height: 62px; line-height: 1.5; }
+.tp-body-entry input[type=text]::placeholder,
+.tp-body-entry textarea::placeholder {
+    color: var(--faint); font-style: italic;
+}
+.tp-body-entry input:focus,
+.tp-body-entry textarea:focus,
+.tp-body-entry select:focus {
+    outline: none; border-color: var(--accent);
+}
+
+/* Severity head + slider */
+.tp-body-sev-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 10px;
+}
+.tp-body-sev-val-row { margin-bottom: 8px; }
+.tp-body-sev-val {
+    font-family: 'Archivo Black', sans-serif;
+    font-style: italic; font-size: 30px; line-height: 1;
+    color: var(--text);
+}
+.tp-body-sev-val.sev-1 { color: var(--sev-mild-ink); }
+.tp-body-sev-val.sev-2 { color: var(--sev-mod-ink); }
+.tp-body-sev-val.sev-3 { color: var(--sev-severe-ink); }
+.tp-body-sev-val small {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-style: normal; font-size: 12px;
+    color: var(--mute); margin-left: 2px;
+}
+.tp-body-sev-band {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.12em;
+    padding: 4px 9px; border-radius: 999px;
+    background: transparent; color: var(--mute);
+}
+.tp-body-sev-band.sev-1 { background: color-mix(in oklab, var(--sev-mild) 22%, transparent); color: var(--sev-mild-ink); }
+.tp-body-sev-band.sev-2 { background: color-mix(in oklab, var(--sev-mod)  22%, transparent); color: var(--sev-mod-ink); }
+.tp-body-sev-band.sev-3 { background: color-mix(in oklab, var(--sev-severe) 20%, transparent); color: var(--sev-severe-ink); }
+input[type=range].tp-body-sev-range {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 8px; border-radius: 999px;
+    outline: none; background: var(--line2);
+}
+input[type=range].tp-body-sev-range.sev-1 { background: linear-gradient(90deg, var(--sev-mild-ink) var(--p,10%), var(--line2) var(--p,10%)); }
+input[type=range].tp-body-sev-range.sev-2 { background: linear-gradient(90deg, var(--sev-mod-ink) var(--p,50%), var(--line2) var(--p,50%)); }
+input[type=range].tp-body-sev-range.sev-3 { background: linear-gradient(90deg, var(--sev-severe-ink) var(--p,80%), var(--line2) var(--p,80%)); }
+input[type=range].tp-body-sev-range::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 22px; height: 22px;
+    border-radius: 50%; background: var(--text);
+    border: 3px solid var(--card);
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    cursor: pointer;
+}
+input[type=range].tp-body-sev-range::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--text); border: 3px solid var(--card);
+    cursor: pointer;
+}
+.tp-body-scale-ticks {
+    display: flex; justify-content: space-between;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px; color: var(--faint);
+    margin-top: 7px; padding: 0 2px;
+}
+
+.tp-body-entry-actions {
+    display: flex; gap: 9px; align-items: center;
+    margin-top: 20px; flex-wrap: wrap;
+}
+.tp-body-btn {
+    border: none; border-radius: 999px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; font-weight: 600;
+    padding: 11px 20px; cursor: pointer;
+    transition: all 0.14s;
+}
+.tp-body-btn-primary {
+    background: var(--text); color: var(--bg);
+}
+.tp-body-btn-primary:hover { transform: translateY(-1px); }
+.tp-body-btn-ghost {
+    background: transparent; border: 1px solid var(--line2); color: var(--text);
+}
+.tp-body-btn-ghost:hover { border-color: var(--mute); }
+.tp-body-btn-resolve {
+    margin-left: auto;
+    background: transparent; border: 1px solid var(--line2);
+    color: var(--mute); font-size: 12px; padding: 10px 16px;
+}
+.tp-body-btn-resolve:hover {
+    border-color: var(--sev-mild-ink); color: var(--sev-mild-ink);
+}
+
+.tp-body-entry-empty {
+    padding: 42px 30px; text-align: center;
+}
+.tp-body-entry-empty .ico {
+    width: 46px; height: 46px; margin: 0 auto 16px;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--accent) 12%, transparent);
+    display: grid; place-items: center;
+    color: var(--accent); font-size: 20px; font-weight: 700;
+}
+.tp-body-entry-empty h3 {
+    font-family: 'Archivo Black', sans-serif; font-style: italic;
+    font-size: 24px; margin: 0 0 8px; letter-spacing: -0.02em;
+}
+.tp-body-entry-empty p {
+    font-size: 13.5px; color: var(--mute);
+    margin: 0 auto; max-width: 30ch; line-height: 1.5;
+}
+
+/* ── Active issues section + cards ──────────────────────────────── */
+.tp-body-section-head {
+    display: flex; align-items: center; gap: 12px;
+    margin: 40px 0 18px;
+}
+.tp-body-section-head .mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; letter-spacing: 0.2em;
+    color: var(--mute); text-transform: uppercase;
+}
+.tp-body-section-head .rule { flex: 1; height: 1px; background: var(--line); }
+.tp-body-streak {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 8px 15px; border-radius: 999px;
+    background: color-mix(in oklab, var(--sev-mild) 22%, transparent);
+    color: var(--sev-mild-ink);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; letter-spacing: 0.08em; font-weight: 600;
+}
+
+.tp-body-issue-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 16px;
+}
+.tp-body-issue {
+    padding: 20px 22px 18px; position: relative; overflow: hidden;
+    transition: box-shadow 0.18s, transform 0.18s;
+}
+.tp-body-issue::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 4px;
+}
+.tp-body-issue.sev-1::before { background: var(--sev-mild); }
+.tp-body-issue.sev-2::before { background: var(--sev-mod); }
+.tp-body-issue.sev-3::before { background: var(--sev-severe); }
+.tp-body-issue.linked,
+.tp-body-issue.pulse-card {
+    box-shadow: 0 0 0 2px var(--accent), 0 1px 2px rgba(20,16,10,.04), 0 12px 32px rgba(20,16,10,.06);
+}
+.tp-body-issue.pulse-card { animation: tpBodyCardPulse 1.1s ease 1; }
+@keyframes tpBodyCardPulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 50%, transparent),
+                     0 1px 2px rgba(20,16,10,.04), 0 12px 32px rgba(20,16,10,.06); }
+    100% { box-shadow: 0 0 0 2px var(--accent),
+                       0 1px 2px rgba(20,16,10,.04), 0 12px 32px rgba(20,16,10,.06); }
+}
+
+.tp-body-issue-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 10px;
+}
+.tp-body-issue-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.16em;
+    color: var(--faint); text-transform: uppercase;
+    margin-bottom: 7px;
+}
+.tp-body-issue-title {
+    font-size: 18px; font-weight: 700; margin: 0;
+    letter-spacing: -0.01em;
+}
+.tp-body-issue-struct {
+    font-size: 12.5px; color: var(--mute);
+    margin: 2px 0 0; font-style: italic;
+}
+.tp-body-trend {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.06em; font-weight: 600;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 5px;
+}
+.tp-body-trend.worsening { color: var(--sev-severe-ink); }
+.tp-body-trend.improving { color: var(--sev-mild-ink); }
+.tp-body-trend.steady    { color: var(--mute); }
+.tp-body-trend.new       { color: var(--accent); }
+
+.tp-body-issue-mid {
+    display: flex; align-items: flex-end; gap: 16px;
+    margin: 14px 0 4px;
+}
+.tp-body-big-sev {
+    font-family: 'Archivo Black', sans-serif; font-style: italic;
+    font-size: 52px; line-height: 0.8; letter-spacing: -0.03em;
+    color: var(--text);
+}
+.tp-body-big-sev.s1 { color: var(--sev-mild-ink); }
+.tp-body-big-sev.s2 { color: var(--sev-mod-ink); }
+.tp-body-big-sev.s3 { color: var(--sev-severe-ink); }
+.tp-body-big-sev small {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-style: normal; font-size: 13px;
+    color: var(--mute); margin-left: 3px;
+}
+.tp-body-spark { margin-left: auto; }
+.tp-body-spark path { stroke: var(--mute); }
+.tp-body-spark circle { fill: var(--mute); }
+.tp-body-issue.sev-1 .tp-body-spark path,
+.tp-body-issue.sev-1 .tp-body-spark circle { stroke: var(--sev-mild-ink); fill: var(--sev-mild-ink); }
+.tp-body-issue.sev-2 .tp-body-spark path,
+.tp-body-issue.sev-2 .tp-body-spark circle { stroke: var(--sev-mod-ink); fill: var(--sev-mod-ink); }
+.tp-body-issue.sev-3 .tp-body-spark path,
+.tp-body-issue.sev-3 .tp-body-spark circle { stroke: var(--sev-severe-ink); fill: var(--sev-severe-ink); }
+
+.tp-body-issue-note {
+    font-size: 13px; color: var(--mute); font-style: italic;
+    line-height: 1.45; margin: 8px 0 0; text-wrap: pretty;
+}
+
+.tp-body-lifecycle {
+    margin-top: 14px; padding: 11px 13px; border-radius: 11px;
+    background: var(--paperAlt);
+    display: flex; align-items: center; gap: 10px; font-size: 12.5px;
+}
+.tp-body-lifecycle.warn {
+    background: color-mix(in oklab, var(--sev-mod) 16%, transparent);
+}
+.tp-body-lifecycle .lc-q { color: var(--text); font-weight: 500; }
+.tp-body-lifecycle button,
+.tp-body-lifecycle form button {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.1em; font-weight: 600;
+    color: var(--accent); background: none;
+    border: none; cursor: pointer;
+}
+
+.tp-body-issue-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 14px; padding-top: 13px;
+    border-top: 1px solid var(--line);
+}
+.tp-body-days-open {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.1em; color: var(--faint);
+}
+.tp-body-mini-resolve {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.08em; font-weight: 600;
+    color: var(--mute);
+    background: none;
+    border: 1px solid var(--line2);
+    border-radius: 999px;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+.tp-body-mini-resolve:hover {
+    color: var(--sev-mild-ink);
+    border-color: var(--sev-mild-ink);
+}
+
+/* All-clear empty state */
+.tp-body-empty {
+    text-align: center; padding: 42px 30px;
+}
+.tp-body-empty .ico {
+    width: 46px; height: 46px; margin: 0 auto 16px;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--sev-mild) 22%, transparent);
+    color: var(--sev-mild-ink);
+    display: grid; place-items: center; font-size: 22px; font-weight: 700;
+}
+.tp-body-empty h3 {
+    font-family: 'Archivo Black', sans-serif; font-style: italic;
+    font-size: 24px; margin: 0 0 8px; letter-spacing: -0.02em;
+}
+.tp-body-empty p {
+    font-size: 13.5px; color: var(--mute);
+    margin: 0 auto; max-width: 38ch; line-height: 1.5;
+}
+
+/* ── History view ───────────────────────────────────────────────── */
+.tp-body-hist-month { margin-bottom: 22px; }
+.tp-body-hist-month:last-child { margin-bottom: 0; }
+.tp-body-hist-month-head {
+    font-family: 'Archivo Black', sans-serif; font-style: italic;
+    font-size: 22px; letter-spacing: -0.02em;
+    color: var(--text); margin: 0 0 10px;
+    padding-left: 6px;
+}
+.tp-body-hist-list {
+    display: flex; flex-direction: column;
+}
+.tp-body-hist-row {
+    display: grid; grid-template-columns: 1fr auto auto auto;
+    gap: 20px; align-items: center;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--line);
+}
+.tp-body-hist-row:last-child { border-bottom: none; }
+.tp-body-hist-span {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.1em; color: var(--faint);
+    white-space: nowrap;
+}
+.tp-body-hist-main .he {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.16em;
+    color: var(--faint); text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.tp-body-hist-main .ht { font-size: 16px; font-weight: 600; }
+.tp-body-hist-peak {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; color: var(--mute); text-align: right;
+}
+.tp-body-hist-peak b {
+    font-family: 'Archivo Black', sans-serif; font-style: italic;
+    font-size: 22px; display: block;
+}
+.tp-body-hist-peak b.s1 { color: var(--sev-mild-ink); }
+.tp-body-hist-peak b.s2 { color: var(--sev-mod-ink); }
+.tp-body-hist-peak b.s3 { color: var(--sev-severe-ink); }
+.tp-body-reopen {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.08em; font-weight: 600;
+    color: var(--mute); border: 1px solid var(--line2);
+    border-radius: 999px; padding: 8px 14px;
+    background: none; cursor: pointer;
+}
+.tp-body-reopen:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── Heatmap view ───────────────────────────────────────────────── */
+.tp-body-heat-grid {
+    display: grid; grid-template-columns: 1fr 320px;
+    gap: 22px; align-items: start;
+}
+.tp-body-heat-aside {
+    display: flex; flex-direction: column; gap: 18px;
+}
+.tp-body-heat-windows,
+.tp-body-heat-legend,
+.tp-body-heat-zones { padding: 20px 22px; }
+.tp-body-heat-aside h3 {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.16em;
+    color: var(--mute); text-transform: uppercase;
+    margin: 0 0 13px;
+}
+.tp-body-win-pills { display: flex; gap: 7px; }
+.tp-body-win-pill {
+    flex: 1; text-align: center;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    padding: 11px 0;
+    border: 1px solid var(--line2);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--mute);
+    text-decoration: none;
+    transition: all 0.14s;
+}
+.tp-body-win-pill.on {
+    background: var(--text); color: var(--bg); border-color: var(--text);
+}
+.tp-body-legend-bar {
+    height: 14px; border-radius: 7px;
+    background: linear-gradient(90deg, var(--h1), var(--h2), var(--h3), var(--h4), var(--h5));
+}
+.tp-body-legend-scale {
+    display: flex; justify-content: space-between;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9.5px; color: var(--faint);
+    margin-top: 7px; letter-spacing: 0.06em;
+}
+.tp-body-zone-row {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+}
+.tp-body-zone-row:last-child { border-bottom: none; }
+.tp-body-zone-dot {
+    width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0;
+}
+.tp-body-zone-name { font-size: 13px; font-weight: 500; }
+.tp-body-zone-meta {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; color: var(--mute); letter-spacing: 0.06em;
+}
+.tp-body-heat-title {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 8px;
+}
+.tp-body-heat-title .mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.2em; color: var(--faint);
+    text-transform: uppercase;
+}
+
+/* ── Mobile front/back toggle ───────────────────────────────────── */
+.tp-body-fb-toggle { display: none; }
+
+@media (max-width: 920px) {
+    .tp-body-active-grid, .tp-body-heat-grid { grid-template-columns: 1fr; }
+    .tp-body-heat-aside { flex-direction: row; flex-wrap: wrap; }
+    .tp-body-heat-aside > * { flex: 1; min-width: 240px; }
+}
+@media (max-width: 560px) {
+    .tp-body-fb-toggle {
+        display: flex; gap: 7px; margin-bottom: 14px; justify-content: center;
+    }
+    .tp-body-fb-toggle button {
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 11px; letter-spacing: 0.14em; font-weight: 600;
+        color: var(--mute);
+        border: 1px solid var(--line2);
+        border-radius: 999px;
+        padding: 8px 22px;
+        background: var(--bg); cursor: pointer;
+    }
+    .tp-body-fb-toggle button.on {
+        background: var(--text); color: var(--bg); border-color: var(--text);
+    }
+    .figs { grid-template-columns: 1fr; }
+    .tp-body-root[data-face="front"] .fig-back { display: none; }
+    .tp-body-root[data-face="back"]  .fig-front { display: none; }
+    .tp-body-active-grid { gap: 16px; }
+}
+
+/* ── Dashboard widget — "Body" status card ──────────────────────── */
+
+.tp-body-widget {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 14px 18px 12px;
+    margin: 0 0 1.6rem;
+    transition: border-color 0.14s, transform 0.14s;
+}
+.tp-body-widget:hover {
+    border-color: var(--mute);
+    transform: translateY(-1px);
+}
+.tp-body-widget.is-clear { border-left: 4px solid var(--sev-mild); padding-left: 14px; }
+.tp-body-widget-head {
+    display: flex; align-items: baseline; gap: 10px;
+    margin-bottom: 6px;
+}
+.tp-body-widget-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.18em;
+    color: var(--mute); text-transform: uppercase;
+}
+.tp-body-widget-clear {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.08em; font-weight: 600;
+    color: var(--sev-mild-ink);
+}
+.tp-body-widget-count {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.08em; font-weight: 600;
+    color: var(--accent);
+}
+.tp-body-widget-list { list-style: none; padding: 0; margin: 6px 0 0; }
+.tp-body-widget-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 5px 0;
+    border-top: 1px solid var(--line);
+}
+.tp-body-widget-row:first-child { border-top: none; }
+.tp-body-widget-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    background: var(--sev-inactive);
+}
+.tp-body-widget-dot.sev-1 { background: var(--sev-mild); }
+.tp-body-widget-dot.sev-2 { background: var(--sev-mod); }
+.tp-body-widget-dot.sev-3 { background: var(--sev-severe); }
+.tp-body-widget-row-region {
+    font-size: 13.5px; font-weight: 500; color: var(--text);
+}
+.tp-body-widget-row-sev {
+    margin-left: auto;
+    font-family: 'Archivo Black', sans-serif; font-style: italic;
+    font-size: 16px; color: var(--mute);
+    font-variant-numeric: tabular-nums;
+}
+.tp-body-widget-row-sev.s1 { color: var(--sev-mild-ink); }
+.tp-body-widget-row-sev.s2 { color: var(--sev-mod-ink); }
+.tp-body-widget-row-sev.s3 { color: var(--sev-severe-ink); }
+.tp-body-widget-row-sev small {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-style: normal; font-size: 10px;
+    color: var(--mute); margin-left: 1px;
+}
+
+/* ── Dashboard daily check-in prompt ────────────────────────────── */
+
+.tp-body-prompt {
+    display: flex; align-items: center; gap: 14px;
+    background: color-mix(in oklab, var(--accent) 6%, var(--card));
+    border: 1px solid color-mix(in oklab, var(--accent) 18%, var(--rule));
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 0 0 1rem;
+    flex-wrap: wrap;
+}
+.tp-body-prompt-text {
+    display: flex; flex-direction: column; gap: 2px;
+}
+.tp-body-prompt-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9.5px; letter-spacing: 0.18em;
+    color: var(--accent); text-transform: uppercase;
+    font-weight: 600;
+}
+.tp-body-prompt-q {
+    font-size: 14.5px; color: var(--text); font-weight: 500;
+}
+.tp-body-prompt-actions {
+    display: flex; gap: 8px; margin-left: auto;
+}
+.tp-body-prompt-btn {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    padding: 8px 14px; border-radius: 999px;
+    border: 1px solid var(--line2);
+    background: var(--card); color: var(--mute);
+    cursor: pointer; text-decoration: none;
+    transition: all 0.14s;
+}
+.tp-body-prompt-btn:hover {
+    border-color: var(--text); color: var(--text);
+}
+.tp-body-prompt-btn-primary {
+    background: var(--accent); color: var(--accentInk);
+    border-color: var(--accent);
+}
+.tp-body-prompt-btn-primary:hover {
+    background: color-mix(in oklab, var(--accent) 80%, black);
+    border-color: color-mix(in oklab, var(--accent) 80%, black);
+    color: var(--accentInk);
+}
+
+/* ── Run-detail modal: post-run body-check auto-suggest ─────────── */
+
+.tprd-body-suggest {
+    display: flex; align-items: center; gap: 14px;
+    background: color-mix(in oklab, var(--accent) 7%, transparent);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin: 0.6rem 0;
+}
+.tprd-body-suggest-text {
+    display: flex; flex-direction: column; gap: 2px;
+    flex: 1;
+}
+.tprd-body-suggest-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9.5px; letter-spacing: 0.18em;
+    color: var(--accent); text-transform: uppercase;
+    font-weight: 600;
+}
+.tprd-body-suggest-q {
+    font-size: 13.5px; color: var(--text); line-height: 1.4;
+}
+.tprd-body-suggest-btn {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    color: var(--accent); text-decoration: none;
+    padding: 7px 12px; border: 1px solid var(--accent);
+    border-radius: 999px;
+    transition: all 0.14s; white-space: nowrap;
+}
+.tprd-body-suggest-btn:hover {
+    background: var(--accent); color: var(--accentInk);
+}
+
+/* ── Settings → About-you card: body-in-LLM toggle row ──────────── */
+
+.tp-body-llm-row {
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    margin-top: 0.4rem;
+}
+.tp-body-llm-text { flex: 1; min-width: 14rem; }
+.tp-body-llm-text .tp-card-desc { margin-top: 0.3rem; }
+
+/* iOS-ish toggle switch */
+.tp-toggle {
+    position: relative; display: inline-block;
+    width: 44px; height: 24px; flex-shrink: 0;
+}
+.tp-toggle input { opacity: 0; width: 0; height: 0; }
+.tp-toggle-slider {
+    position: absolute; inset: 0; cursor: pointer;
+    background: var(--line2); border-radius: 999px;
+    transition: background 0.18s;
+}
+.tp-toggle-slider::before {
+    content: ""; position: absolute;
+    height: 18px; width: 18px; left: 3px; bottom: 3px;
+    background: var(--card);
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+    transition: transform 0.18s;
+}
+.tp-toggle input:checked + .tp-toggle-slider { background: var(--accent); }
+.tp-toggle input:checked + .tp-toggle-slider::before { transform: translateX(20px); }
+.tp-toggle input:focus-visible + .tp-toggle-slider {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+}
+
+/* ─── Methodology picker tiles (/plans/new) ───────────────────────────── */
+/* Illustrated gallery tiles for the methodology step. Scoped to `.method-*`
+   so the shared `.pick` selection mechanics (base.html inline CSS) and the
+   compact goal `.pick` tiles are left untouched. Design handoff: "Methodology
+   Picker" (TEMPO). Tokens reuse the app palette; phase colours + --tint are
+   defined here because they only exist on this surface. */
+.method-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    /* Phase/workout tokens — colour the hero badge dot + intensity chip. */
+    --base: #4ade80; --build: #3b82f6; --peak: #ef4444;
+    --taper: #a855f7; --race: #f59e0b; --maintain: #94a3b8;
+    --tint: color-mix(in srgb, var(--accent) 7%, var(--card));
+}
+html.is-dark .method-grid { --tint: color-mix(in srgb, var(--accent) 12%, var(--card)); }
+
+/* Tile shell — override the base .pick box model into a flush-hero card. */
+.method-tile.pick {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--card);
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow .18s, border-color .18s, transform .18s;
+}
+/* Visually-hidden but focusable (base .pick hides radios with display:none,
+   which drops keyboard focus + the focus ring). */
+.method-tile input[type="radio"] {
+    position: absolute; opacity: 0; width: 1px; height: 1px;
+    display: block; pointer-events: none;
+}
+.method-tile.pick:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+    box-shadow: 0 14px 34px -18px rgba(0,0,0,.28);
+}
+.method-tile.pick:has(input:focus-visible) {
+    outline: 3px solid color-mix(in srgb, var(--accent) 50%, transparent);
+    outline-offset: 2px;
+}
+.method-tile.pick:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--card);
+    box-shadow: 0 0 0 1px var(--accent),
+                0 16px 38px -18px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.method-tile.pick:has(input:checked) .method-body { background: var(--tint); }
+
+/* Select mark — top-right circle, fills accent when checked. */
+.method-selmark {
+    position: absolute; top: 12px; right: 12px; z-index: 3;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--card); border: 1px solid var(--line);
+    color: transparent; transition: .18s;
+}
+.method-tile.pick:has(input:checked) .method-selmark {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+}
+.method-selmark svg { width: 14px; height: 14px; }
+
+/* Hero band — two absolutely-positioned PNG layers; the layer matching the
+   active theme is shown, the other faded out. */
+.method-hero {
+    position: relative; height: 200px; overflow: hidden;
+    border-bottom: 1px solid var(--line);
+}
+.method-art {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center 34%;
+    transition: opacity .18s;
+}
+html.is-light .method-art.art-dark { opacity: 0; }
+html.is-dark  .method-art.art-light { opacity: 0; }
+.method-badge {
+    position: absolute; left: 14px; bottom: 12px; z-index: 2;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: color-mix(in srgb, var(--card) 84%, transparent);
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 5px 11px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--text);
+}
+.method-badge .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+/* "Recommended for you" ribbon (plans/recommend.py) — accent-filled so it
+   reads as guidance, distinct from the neutral info badge. */
+.method-recommend {
+    position: absolute; left: 14px; top: 12px; z-index: 2;
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--accent); color: #fff;
+    border-radius: 999px; padding: 5px 11px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.method-reason {
+    margin: 0; font-size: 12.5px; font-weight: 600;
+    color: var(--accent); line-height: 1.35;
+}
+
+/* Self-assessment strip above the methodology gallery. */
+.assess-strip {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;
+}
+.assess-strip .assess-actions { display: inline-flex; gap: 0.5rem; }
+
+/* Body */
+.method-body {
+    padding: 18px 20px 20px;
+    display: flex; flex-direction: column; flex: 1; gap: 11px;
+    transition: background .18s;
+}
+.method-title {
+    margin: 0;
+    font-family: 'Archivo Black', 'Arial Black', sans-serif;
+    font-style: italic; font-size: 22px;
+    letter-spacing: -.015em; line-height: 1.05; color: var(--text);
+}
+.method-hook {
+    margin: 0; font-size: 14px; font-weight: 600;
+    color: var(--text); line-height: 1.35;
+}
+
+.method-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.method-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--chip); border: 1px solid var(--line);
+    border-radius: 7px; padding: 4px 9px;
+    font-size: 11.5px; font-weight: 600; color: var(--muted);
+}
+.method-chip .k {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    color: var(--text); font-variant-numeric: tabular-nums;
+}
+.method-chip.intensity {
+    border-color: color-mix(in srgb, var(--iv) 55%, var(--line));
+    background: color-mix(in srgb, var(--iv) 13%, var(--card));
+    color: color-mix(in srgb, var(--iv) 70%, var(--text));
+}
+.method-chip.fixed {
+    border-color: color-mix(in srgb, var(--race) 55%, var(--line));
+    background: color-mix(in srgb, var(--race) 13%, var(--card));
+    color: color-mix(in srgb, var(--race) 78%, var(--text));
+}
+.method-chip.fixed svg { width: 11px; height: 11px; }
+
+.method-desc {
+    margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.55;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.method-tile.expanded .method-desc {
+    -webkit-line-clamp: unset; overflow: visible;
+}
+.method-more {
+    align-self: flex-start; margin-top: -2px; padding: 0;
+    background: none; border: none; cursor: pointer;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+}
+
+.method-bestfor {
+    margin-top: auto; display: flex; align-items: flex-start; gap: 9px;
+    padding-top: 14px; border-top: 1px dashed var(--line);
+    font-size: 12.5px; color: var(--muted);
+}
+.method-bestfor svg { width: 15px; height: 15px; flex: none; margin-top: 2px; color: var(--accent); }
+.method-bestfor b { color: var(--text); font-weight: 600; }
+
+/* Coming soon — desaturated hero + scrim, dimmed body, solid "soon" ribbon,
+   no lift on hover. Base .pick.disabled (opacity .5) is overridden. */
+.method-tile.pick.disabled { cursor: not-allowed; opacity: 1; }
+.method-tile.pick.disabled:hover {
+    transform: none; border-color: var(--line); box-shadow: none;
+}
+.method-tile.disabled .method-hero { filter: grayscale(.65); }
+.method-tile.disabled .method-hero::after {
+    content: ""; position: absolute; inset: 0; z-index: 1;
+    background: color-mix(in srgb, var(--card) 52%, transparent);
+}
+.method-tile.disabled .method-body { opacity: .7; }
+.method-tile.disabled .method-selmark { display: none; }
+.method-soon {
+    position: absolute; top: 12px; right: 12px; z-index: 3;
+    background: var(--text); color: var(--bg);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+    padding: 5px 11px; border-radius: 999px;
+}
+
+@media (max-width: 820px) {
+    .method-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+    .method-hero { height: 90px; }
+}
+
+/* ── Methodology "Read more" detail modal ──────────────────────────────
+   Body rendered by _method_detail.html into dialog.method-detail-modal. */
+.method-detail-modal { width: 720px; max-width: min(720px, 94vw); }
+.md-detail { display: flex; flex-direction: column; }
+.md-masthead {
+    position: relative;
+    border-bottom: 1px solid var(--line);
+}
+.md-hero {
+    position: relative; height: 168px; overflow: hidden;
+    border-radius: 12px 12px 0 0;
+}
+.md-art {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center 34%;
+    transition: opacity .18s;
+}
+html.is-light .md-art.art-dark { opacity: 0; }
+html.is-dark  .md-art.art-light { opacity: 0; }
+.md-head-body { padding: 18px 26px 20px; }
+.md-badge { position: static; margin-bottom: 10px; backdrop-filter: none; }
+.md-title { margin: 0; font-size: 25px; letter-spacing: -.01em; }
+.md-tagline { margin: 6px 0 0; font-size: 15px; color: var(--text); line-height: 1.5; }
+.md-credit {
+    margin: 8px 0 0; font-size: 11.5px; color: var(--muted);
+    font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .02em;
+}
+.md-chips { margin-top: 14px; }
+
+.md-content { padding: 22px 26px 6px; }
+.md-content p { margin: 0 0 14px; font-size: 14.5px; line-height: 1.65; color: var(--text); }
+.md-lead { font-size: 15.5px !important; color: var(--text); }
+.md-lead:first-child { margin-top: 0; }
+.md-section { margin-top: 26px; }
+.md-section-title {
+    margin: 0 0 10px; font-size: 12px; font-weight: 700;
+    letter-spacing: .09em; text-transform: uppercase; color: var(--accent);
+}
+.md-bullets { margin: 0 0 14px; padding-left: 20px; }
+.md-bullets li { font-size: 14.5px; line-height: 1.6; color: var(--text); margin-bottom: 8px; }
+.md-bullets li b { color: var(--text); }
+.md-soon-note { color: var(--muted); font-style: italic; }
+
+/* Illustration placeholder — swapped for a rendered PNG once generated. */
+.md-illus { margin: 4px 0 18px; }
+/* Rendered illustration: a light/dark PNG pair, one shown per theme. */
+.md-illus-art {
+    display: block; width: 100%; height: auto;
+    border-radius: 12px; border: 1px solid var(--line);
+}
+.md-illus-art.art-dark { display: none; }
+html.is-dark .md-illus-art.art-light { display: none; }
+html.is-dark .md-illus-art.art-dark { display: block; }
+.md-illus-ph {
+    border: 1.5px dashed color-mix(in srgb, var(--accent) 45%, var(--line));
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent) 5%, var(--card));
+    padding: 18px 18px 14px; text-align: center;
+}
+.md-illus-ph > svg {
+    width: 30px; height: 30px; color: color-mix(in srgb, var(--accent) 70%, var(--muted));
+    margin-bottom: 8px;
+}
+.md-illus-cap { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.md-illus-cap b { color: var(--accent); font-weight: 700; }
+.md-illus-prompt { margin-top: 12px; text-align: left; }
+.md-illus-prompt > summary {
+    cursor: pointer; font-size: 11px; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--accent); list-style: none;
+    display: inline-flex; align-items: center; gap: 5px;
+}
+.md-illus-prompt > summary::before { content: "＋"; font-size: 13px; }
+.md-illus-prompt[open] > summary::before { content: "－"; }
+.md-illus-prompt p {
+    font-size: 12.5px !important; color: var(--muted) !important; line-height: 1.55;
+    margin: 10px 0 0; padding: 10px 12px; border-radius: 8px;
+    background: color-mix(in srgb, var(--muted) 8%, var(--card));
+    border: 1px solid var(--line);
+}
+.md-illus-file { font-size: 11.5px !important; }
+.md-illus-file code {
+    font-size: 11px; background: color-mix(in srgb, var(--muted) 14%, var(--card));
+    padding: 1px 5px; border-radius: 4px;
+}
+
+.md-foot {
+    display: flex; justify-content: flex-end;
+    padding: 14px 26px 20px; margin-top: 8px;
+    border-top: 1px solid var(--line);
+}
+
+@media (max-width: 480px) {
+    .md-hero { height: 120px; }
+    .md-head-body, .md-content, .md-foot { padding-left: 18px; padding-right: 18px; }
+}

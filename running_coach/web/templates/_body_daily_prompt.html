@@ -1,0 +1,21 @@
+{# Daily body check-in banner. Shown only when body_summary.show_daily_prompt
+   is true (no body update in the throttle window + the runner already has
+   some body data). The All-good button POSTs /body/clear and removes the
+   banner from view. #}
+{% if body_summary and body_summary.show_daily_prompt %}
+<div class="tp-body-prompt" id="tp-body-prompt">
+    <div class="tp-body-prompt-text">
+        <span class="tp-body-prompt-eyebrow">{{ t("BODY CHECK-IN") }}</span>
+        <span class="tp-body-prompt-q">{{ t("Anything new today?") }}</span>
+    </div>
+    <div class="tp-body-prompt-actions">
+        <button type="button" class="tp-body-prompt-btn"
+                hx-post="/body/clear"
+                hx-swap="none"
+                hx-on::after-request="document.getElementById('tp-body-prompt').remove()">
+            {{ t("All good") }}
+        </button>
+        <a href="/body" class="tp-body-prompt-btn tp-body-prompt-btn-primary">{{ t("Log something") }}</a>
+    </div>
+</div>
+{% endif %}

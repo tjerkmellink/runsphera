@@ -1,0 +1,344 @@
+{# Tempo plan-settings modal (Tier 1).
+   Lazy-loaded into the plans-page dialog when the user clicks "Edit" on the
+   plan hero. This tier covers only metadata fields — title + notes — that
+   don't affect any workouts. Schedule + targets (Tier 2) will land in a
+   follow-up edit. #}
+<article class="tp-pw" id="plan-settings-{{ plan.id }}">
+    <header class="tp-pw-head">
+        <div class="tp-pw-eyebrow">
+            {{ t(plan.status)|upper }} {{ t("PLAN · ID {id}", id=plan.id) }}
+            {% if plan.race_date %} · {{ t("RACE {date}", date=plan.race_date) }}{% endif %}
+        </div>
+        <h2 class="tp-pw-title">{{ t("Plan settings") }}</h2>
+        <div class="tp-pw-pills">
+            <span class="tp-pw-pill">{{ t(goal_labels.get(plan.goal_type, plan.goal_type)) }}</span>
+            <span class="tp-pw-pill">{{ plan.methodology }}</span>
+            <span class="tp-pw-pill">{{ t("{n} days/wk", n=plan.days_per_week) }}</span>
+        </div>
+    </header>
+
+    {# Tier 1 form — straight metadata, no warnings needed. #}
+    <section class="tp-pw-section tp-pw-edit">
+        <p class="tp-pw-section-label">{{ t("Name & notes") }}</p>
+        <form method="post" action="/plans/{{ plan.id }}/edit" class="tp-pw-edit-form">
+            <label class="tp-pw-field-full">
+                <span class="tp-pw-field-label">{{ t("Title") }}</span>
+                <input type="text" name="title"
+                       value="{{ plan.title or '' }}"
+                       class="tp-pw-input" maxlength="200" required>
+            </label>
+            <label class="tp-pw-field-full">
+                <span class="tp-pw-field-label">{{ t("Notes") }}</span>
+                <textarea name="notes" rows="4" maxlength="2000"
+                          class="tp-pw-input" style="resize: vertical; line-height: 1.5;"
+                          placeholder="{{ t('Optional. Anything you want to remember about why this plan exists, what to focus on, gotchas.') }}">{{ plan.notes or '' }}</textarea>
+            </label>
+
+            {# Optional strength toggle — flipping ON auto-assigns sessions
+               across every future rest day; OFF clears them and the rest
+               days go back to bare rest. See docs/strength-sessions.md. #}
+            <label class="tp-pw-field-full" style="display: flex; gap: 0.7rem; align-items: flex-start;">
+                <input type="checkbox" name="include_optional_strength"
+                       value="1" style="margin-top: 0.3rem;"
+                       {% if plan.include_optional_strength %}checked{% endif %}>
+                <span>
+                    <span class="tp-pw-field-label">{{ t("Include optional core / strength sessions on rest days") }}</span>
+                    <span class="tp-pw-actions-desc" style="display: block; margin-top: 0.2rem;">
+                        {{ t("Bodyweight only. Rotates 4 sessions (core+hamstrings, full body, hip stability, plyometric power); the day after any tempo / intervals / long run gets a recovery & mobility session instead. Toggle off to clear future sessions.") }}
+                    </span>
+                </span>
+            </label>
+
+            <div class="tp-pw-edit-actions">
+                <button type="submit" class="tp-btn primary">{{ t("Save changes") }}</button>
+            </div>
+        </form>
+    </section>
+
+    {# Recalibrate + Set-VDOT only make sense for pace-based plans. Effort-
+       based methodologies (Foppen, Couch to 5K) carry no VDOT paces — the
+       service refuses too; hiding the sections keeps the modal honest. #}
+    {% set _vdot_based = methodology_info is none or methodology_info.uses_vdot_paces %}
+    {% if _vdot_based %}
+    {# Recalibrate paces — rewrite future workouts from the current VDOT
+       against the canonical pace table. Two-step: preview, then confirm. #}
+    <section class="tp-pw-section tp-pw-recalibrate">
+        <p class="tp-pw-section-label">{{ t("Recalibrate paces") }}</p>
+        <p class="tp-pw-actions-desc">
+            {{ t("Rewrites every future workout's pace target from your current VDOT") }}
+            ({{ '%.1f'|format(plan.vdot_at_start) if plan.vdot_at_start else '—' }})
+            {{ t("against the canonical Daniels chart. Past workouts and completed runs stay locked.") }}
+        </p>
+        <button type="button" class="tp-btn"
+                hx-get="/plans/{{ plan.id }}/recalibrate-paces"
+                hx-target="#recalibrate-preview-{{ plan.id }}"
+                hx-swap="innerHTML">
+            {{ t("Preview changes") }}
+        </button>
+        <div id="recalibrate-preview-{{ plan.id }}"></div>
+    </section>
+
+    {# Tier 2b — manual VDOT override. Garmin's VO2max is the default but
+       often overstated for amateurs; this lets the runner dial it down
+       (or up) from race-derived reality. Recalibrating paces after a
+       change is a separate explicit click. #}
+    <section class="tp-pw-section tp-pw-vdot">
+        <p class="tp-pw-section-label">{{ t("Set VDOT") }}</p>
+        <p class="tp-pw-actions-desc">
+            {{ t("Garmin's VO₂max estimate is the default. If it doesn't match your race performance — Garmin tends to skew high — set the value here. Recalibrate paces afterwards.") }}
+        </p>
+        <form method="post" action="/plans/{{ plan.id }}/vdot" class="tp-pw-vdot-form"
+              data-confirm="{{ t('Set plan VDOT to {value}? Recalibrate paces afterwards to apply the new prescriptions.') }}"
+              data-confirm-field="vdot"
+              data-confirm-yes="{{ t('Yes, set VDOT') }}"
+              data-confirm-tone="primary">
+            <label>
+                <span class="tp-pw-field-label">{{ t("Current VDOT") }}</span>
+                <input type="number" name="vdot"
+                       value="{{ '%.1f'|format(plan.vdot_at_start) if plan.vdot_at_start else '' }}"
+                       step="0.1" min="25" max="80" required
+                       class="tp-pw-input" style="max-width: 8rem;">
+            </label>
+            <button type="submit" class="tp-btn primary">{{ t("Save VDOT") }}</button>
+        </form>
+
+        <details class="tp-pw-vdot-estimator">
+            <summary>↓ {{ t("Estimate from a race time") }}</summary>
+            <p class="tp-pw-actions-desc" style="margin-top: 0.6rem;">
+                {{ t("Punch in any all-out race result and we'll compute the matching VDOT via Daniels' formula.") }}
+            </p>
+            <div class="tp-pw-vdot-est-grid">
+                <label>
+                    <span class="tp-pw-field-label">{{ t("Distance") }}</span>
+                    <select id="vdot-est-distance" class="tp-pw-input">
+                        <option value="5000">5 km</option>
+                        <option value="10000">10 km</option>
+                        <option value="15000">15 km</option>
+                        <option value="21097.5" selected>{{ t("Half marathon") }}</option>
+                        <option value="42195">{{ t("Marathon") }}</option>
+                    </select>
+                </label>
+                <label>
+                    <span class="tp-pw-field-label">{{ t("Hours") }}</span>
+                    <input type="number" id="vdot-est-h" min="0" max="9" value="1" class="tp-pw-input">
+                </label>
+                <label>
+                    <span class="tp-pw-field-label">{{ t("Minutes") }}</span>
+                    <input type="number" id="vdot-est-m" min="0" max="59" value="55" class="tp-pw-input">
+                </label>
+                <label>
+                    <span class="tp-pw-field-label">{{ t("Seconds") }}</span>
+                    <input type="number" id="vdot-est-s" min="0" max="59" value="0" class="tp-pw-input">
+                </label>
+            </div>
+            <div class="tp-pw-vdot-est-result">
+                <button type="button" id="vdot-est-calc" class="tp-btn">{{ t("Calculate") }}</button>
+                <span id="vdot-est-output" class="tp-pw-vdot-est-output"></span>
+                <button type="button" id="vdot-est-use" class="tp-btn" style="display:none;">{{ t("Use this VDOT") }}</button>
+            </div>
+        </details>
+
+        <script>
+        (() => {
+            // Daniels' VDOT formula — mirrors plan_service.estimate_vdot_from_race.
+            const compute = (distM, timeS) => {
+                if (distM <= 0 || timeS <= 0) return null;
+                const t = timeS / 60;
+                const v = distM / t;
+                const vo2 = -4.60 + 0.182258 * v + 0.000104 * v * v;
+                const pct = 0.8
+                    + 0.1894393 * Math.exp(-0.012778 * t)
+                    + 0.2989558 * Math.exp(-0.1932605 * t);
+                return Math.round((vo2 / pct) * 10) / 10;
+            };
+            const $ = id => document.getElementById(id);
+            const out = $('vdot-est-output');
+            const useBtn = $('vdot-est-use');
+            let lastVdot = null;
+            $('vdot-est-calc').addEventListener('click', () => {
+                const d = parseFloat($('vdot-est-distance').value);
+                const h = parseInt($('vdot-est-h').value || 0, 10);
+                const m = parseInt($('vdot-est-m').value || 0, 10);
+                const s = parseInt($('vdot-est-s').value || 0, 10);
+                const t = h * 3600 + m * 60 + s;
+                const v = compute(d, t);
+                if (!v) { out.textContent = {{ t("(needs a valid time)") | tojson }}; return; }
+                lastVdot = v;
+                out.innerHTML = `→ VDOT <strong>${v.toFixed(1)}</strong>`;
+                useBtn.style.display = '';
+            });
+            useBtn.addEventListener('click', () => {
+                if (lastVdot == null) return;
+                document.querySelector('input[name="vdot"]').value = lastVdot.toFixed(1);
+            });
+        })();
+        </script>
+    </section>
+    {% endif %}
+
+    {# Tier 2c/d — schedule & race-date edits. Regenerates the plan with the
+       new shape and splices it in from today onward: past and completed
+       workouts stay locked, everything upcoming is rebuilt.
+       See docs/plan-reshape.md. #}
+    <section class="tp-pw-section tp-pw-reshape">
+        <p class="tp-pw-section-label">{{ t("Schedule & race date") }}</p>
+        {% set _fixed = methodology_info and methodology_info.fixed_schedule %}
+        <p class="tp-pw-actions-desc">
+            {% if _fixed %}
+            {{ t("This methodology owns its weekly schedule — only the race date can move. Changing it rebuilds every upcoming workout around the new date;") }}
+            {% else %}
+            {{ t("Rebuilds every upcoming workout on the new days;") }}
+            {% endif %}
+            {{ t("past weeks and completed runs stay exactly as they are. Upcoming workouts already on your watch are removed from Garmin — re-push the weeks you want.") }}
+        </p>
+        {# Mirrors the /plans/new schedule block: .field-row for the scalar
+           fields, full-width 7-cell training-day picker below. Deliberately
+           NOT .tp-pw-edit-form — its auto-fit grid squeezes the day picker
+           into a single narrow column. #}
+        <form method="post" action="/plans/{{ plan.id }}/reshape" id="rs-form">
+            <div class="field-row" style="align-items: flex-end;">
+                {% if plan.goal_type != 'stay_fit' %}
+                <div style="min-width: 200px;">
+                    <label for="rs-race-date" style="font-size: 0.8rem; color: var(--muted);">{{ t("Race date") }}</label>
+                    <input type="date" id="rs-race-date" name="race_date"
+                           value="{{ plan.race_date or '' }}" required>
+                </div>
+                {% endif %}
+                {% if not _fixed %}
+                <div>
+                    <label style="font-size: 0.8rem; color: var(--muted);">{{ t("Days per week") }}</label>
+                    <div class="day-picker" id="rs-days-per-week">
+                        {% for d in [3, 4, 5, 6] %}
+                        <label><input type="radio" name="days_per_week" value="{{ d }}"
+                                      {% if plan.days_per_week == d %}checked{% endif %}>{{ d }}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if not _fixed %}
+            <div style="margin-top: 1.25rem;">
+                <label style="font-size: 0.8rem; color: var(--muted);">{{ t("Training days") }}
+                    <span id="rs-days-count" class="muted" style="font-size: 0.75rem;"></span></label>
+                <div class="day-picker workout-day-picker" id="rs-workout-days">
+                    {% for i in range(7) %}
+                    <label class="workout-day-cell">
+                        <input type="checkbox" name="workout_days" value="{{ i }}"
+                               {% if i in plan_workout_days %}checked{% endif %}
+                               class="wd-checkbox rs-wd-checkbox">
+                        <span class="wd-label">{{ day_label(i) }}</span>
+                        <span class="wd-long">
+                            <input type="radio" name="long_run_day" value="{{ i }}"
+                                   {% if plan.long_run_day == i %}checked{% endif %}
+                                   class="wd-long-radio rs-long-radio">
+                            <span class="wd-long-text">{{ t("long run") }}</span>
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+                <div id="rs-days-hint" class="muted" style="font-size: 0.75rem; min-height: 1em;"></div>
+            </div>
+
+            <script>
+            (() => {
+                // Same contract as the create form: exactly N days checked,
+                // long-run day inside the checked set.
+                const boxes = () => Array.from(document.querySelectorAll('.rs-wd-checkbox'));
+                const longs = () => Array.from(document.querySelectorAll('.rs-long-radio'));
+                const dpw = () => parseInt(document.querySelector('#rs-days-per-week input:checked')?.value || '0');
+                const form = document.querySelector('#rs-workout-days').closest('form');
+
+                function hint() {
+                    const n = boxes().filter(b => b.checked).length, want = dpw();
+                    document.getElementById('rs-days-count').textContent = '(' + n + ' {{ t("of") }} ' + want + ')';
+                    const h = document.getElementById('rs-days-hint');
+                    if (n < want) {
+                        const miss = want - n;
+                        h.textContent = (miss === 1 ? {{ t("Pick 1 more day.") | tojson }} : {{ t("Pick {n} more days.") | tojson }}.replace('{n}', miss));
+                    } else if (n > want) {
+                        h.textContent = {{ t("Uncheck {n}.") | tojson }}.replace('{n}', n - want);
+                    } else h.textContent = '';
+                }
+                function syncLong() {
+                    const checked = new Set(boxes().filter(b => b.checked).map(b => b.value));
+                    const cur = longs().find(r => r.checked);
+                    if (cur && !checked.has(cur.value)) {
+                        const first = boxes().find(b => b.checked);
+                        if (first) { const r = longs().find(x => x.value === first.value); if (r) r.checked = true; }
+                    }
+                }
+                boxes().forEach(b => b.addEventListener('change', () => { syncLong(); hint(); }));
+                longs().forEach(r => r.addEventListener('change', () => {
+                    const b = boxes().find(x => x.value === r.value);
+                    if (b && !b.checked) b.checked = true;
+                    hint();
+                }));
+                document.querySelectorAll('#rs-days-per-week input').forEach(r =>
+                    r.addEventListener('change', hint));
+                hint();
+            })();
+            </script>
+            {% endif %}
+
+            {# Two-step inline confirm — no native popups. The first button
+               validates the day picks and reveals the confirm strip; only
+               the strip's submit actually posts. #}
+            <div class="tp-pw-edit-actions" id="rs-actions">
+                <button type="button" id="rs-reshape-btn" class="tp-btn primary">{{ t("Reshape future weeks") }}</button>
+            </div>
+            <div id="rs-confirm"
+                 style="display: none; margin-top: 0.75rem; padding: 0.75rem 0.9rem;
+                        border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+                        border-radius: 8px; background: color-mix(in srgb, var(--accent) 7%, var(--card));">
+                <p class="tp-pw-actions-desc" style="margin: 0 0 0.6rem 0;">
+                    {{ t("Reshape all upcoming workouts? Past weeks and completed runs are kept; upcoming pushed workouts are removed from Garmin.") }}
+                </p>
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <button type="button" id="rs-cancel-btn" class="tp-btn">{{ t("Cancel") }}</button>
+                    <button type="submit" class="tp-btn primary">{{ t("Yes, reshape") }}</button>
+                </div>
+            </div>
+
+            <script>
+            (() => {
+                const form = document.getElementById('rs-form');
+                const actions = document.getElementById('rs-actions');
+                const confirmBox = document.getElementById('rs-confirm');
+                const hintEl = document.getElementById('rs-days-hint');
+
+                document.getElementById('rs-reshape-btn').addEventListener('click', () => {
+                    if (!form.reportValidity()) return;  // e.g. empty race date
+                    const boxes = Array.from(form.querySelectorAll('.rs-wd-checkbox'));
+                    if (boxes.length) {
+                        const n = boxes.filter(b => b.checked).length;
+                        const want = parseInt(form.querySelector('#rs-days-per-week input:checked')?.value || '0');
+                        if (n !== want) {
+                            if (hintEl) {
+                                hintEl.textContent = {{ t("Pick exactly {want} training days (currently {n}).") | tojson }}.replace('{want}', want).replace('{n}', n);
+                                hintEl.style.color = 'var(--accent)';
+                            }
+                            return;
+                        }
+                        if (hintEl) hintEl.style.color = '';
+                    }
+                    actions.style.display = 'none';
+                    confirmBox.style.display = '';
+                });
+                document.getElementById('rs-cancel-btn').addEventListener('click', () => {
+                    confirmBox.style.display = 'none';
+                    actions.style.display = '';
+                });
+            })();
+            </script>
+        </form>
+    </section>
+
+    {# Hard edits stay as "create new plan" — too much surgery to retrofit. #}
+    <section class="tp-pw-section tp-pw-stub">
+        <p class="tp-pw-section-label">{{ t("Goal & methodology") }}</p>
+        <p class="tp-pw-actions-desc">
+            {{ t("Switching the goal (marathon → half) or the methodology (Daniels → another) changes the entire plan shape — easier to") }} <a href="/plans/new">{{ t("create a new plan") }}</a> {{ t("than to refit this one.") }}
+        </p>
+    </section>
+</article>

@@ -1,0 +1,81 @@
+{# Editorial active-issue card — severity stripe, big italic numeral,
+   trend tag, sparkline, lifecycle pill, days-open + resolve footer. #}
+{%- set b = issue.severity_band_num -%}
+{%- set _trail = issue.severity_trail or [] -%}
+{%- set _is_stale = issue.nudge_due -%}
+{%- set _is_cleared = issue.cleared_soft_prompt -%}
+<article class="card tp-body-issue sev-{{ b }}" data-card="{{ issue.design_key }}">
+    <div class="tp-body-issue-top">
+        <div>
+            <div class="tp-body-issue-eyebrow">
+                {% if issue.side != 'midline' %}{{ t(side_label(issue.side)) }} · {% endif %}{{ t(slug_label(issue.region)) }}
+            </div>
+            {% set type_label = (issue_types|selectattr('0','equalto', issue.issue_type)|map(attribute=1)|first) if issue_types else issue.issue_type %}
+            <h3 class="tp-body-issue-title">{{ t(type_label or issue.issue_type) }}</h3>
+            {% if issue.structure_name %}
+            <p class="tp-body-issue-struct">{{ issue.structure_name }}</p>
+            {% endif %}
+        </div>
+        <div class="tp-body-trend {{ issue.trend }}">
+            {% if issue.trend == 'improving' %}↘ {{ t("improving") }}
+            {% elif issue.trend == 'worsening' %}↗ {{ t("worsening") }}
+            {% elif issue.trend == 'steady' %}— {{ t("steady") }}
+            {% else %}● {{ t("new") }}{% endif %}
+        </div>
+    </div>
+
+    <div class="tp-body-issue-mid">
+        <div class="tp-body-big-sev s{{ b }}">{{ issue.current_severity }}<small>/ 10</small></div>
+        {% if _trail|length >= 2 %}
+        {# Inline 240×28 sparkline — last ~10 readings #}
+        {%- set _w = 240 -%}{%- set _h = 28 -%}{%- set _pad = 3 -%}
+        {%- set _n = _trail|length -%}
+        {%- set _step = (_w - _pad * 2) / ((_n - 1) if _n > 1 else 1) -%}
+        <svg class="tp-body-spark" width="{{ _w // 2 }}" height="{{ _h }}"
+             viewBox="0 0 {{ _w }} {{ _h }}" preserveAspectRatio="none" aria-hidden="true">
+            <path d="
+                {%- for v in _trail -%}
+                    {{- 'M' if loop.first else 'L' -}}
+                    {{- " %.1f"|format(_pad + loop.index0 * _step) -}}
+                    {{- " %.1f"|format(_h - _pad - (v / 10) * (_h - _pad * 2)) -}}
+                    {{ ' ' }}
+                {%- endfor -%}
+            " fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="{{ "%.1f"|format(_pad + (_n - 1) * _step) }}"
+                    cy="{{ "%.1f"|format(_h - _pad - (_trail[-1] / 10) * (_h - _pad * 2)) }}"
+                    r="3"/>
+        </svg>
+        {% endif %}
+    </div>
+
+    {% if issue.note %}
+    <p class="tp-body-issue-note">{{ issue.note }}</p>
+    {% endif %}
+
+    {% if _is_cleared %}
+    <div class="tp-body-lifecycle">
+        <span class="lc-q">{{ t("Looks like this cleared up.") }}</span>
+        <form method="post" action="/body/issues/{{ issue.id }}/resolve"
+              hx-post="/body/issues/{{ issue.id }}/resolve"
+              hx-target="#body-active-issues" hx-swap="outerHTML">
+            <button type="submit">{{ t("CLOSE IT →") }}</button>
+        </form>
+    </div>
+    {% elif _is_stale %}
+    <div class="tp-body-lifecycle warn">
+        <span class="lc-q">{{ t("Still bothering you? No update in {n} days.", n=issue.days_since_update) }}</span>
+        <button type="button"
+                hx-get="/body/region/{{ issue.region }}/{{ issue.side }}"
+                hx-target="#entrySlot" hx-swap="innerHTML">{{ t("UPDATE →") }}</button>
+    </div>
+    {% endif %}
+
+    <div class="tp-body-issue-foot">
+        <span class="tp-body-days-open">{{ t("OPEN {n} DAYS", n=issue.days_open) }}</span>
+        <form method="post" action="/body/issues/{{ issue.id }}/resolve"
+              hx-post="/body/issues/{{ issue.id }}/resolve"
+              hx-target="#body-active-issues" hx-swap="outerHTML">
+            <button type="submit" class="tp-body-mini-resolve">{{ t("MARK RESOLVED") }}</button>
+        </form>
+    </div>
+</article>

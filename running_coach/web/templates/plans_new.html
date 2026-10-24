@@ -1,0 +1,634 @@
+{% extends "base.html" %}
+
+{% set fv = form_values or {} %}
+{% set rec_m = rec.methodology_id if rec else none %}
+{% set rec_goal = rec.goal_type if rec else none %}
+{# The goal that will be checked on first paint — drives the server-side
+   methodology filtering so the gallery is correct before JS runs. #}
+{% set initial_goal = fv.goal_type or rec_goal or 'half_marathon' %}
+{# Methodology to pre-check: form replay wins, then the recommendation — but
+   only when its tile is visible for the initial goal (an event-prefilled
+   marathon shouldn't pre-check a hidden C25K tile) — else the first
+   available all-distance tile. #}
+{% set rec_tile = (methodologies | selectattr('id', 'equalto', rec_m) | list | first) if rec_m else none %}
+{% set rec_tile_goals = ([rec_tile.force_goal] if rec_tile.force_goal else (rec_tile.supported_goals or none)) if rec_tile else none %}
+{% set rec_visible = rec_tile and (not rec_tile_goals or initial_goal in rec_tile_goals) %}
+{% set precheck_m = fv.methodology_id or (rec_m if rec_visible else none) %}
+
+{% block headline %}{{ t("New training plan") }}{% endblock %}
+
+{% block subhead %}
+    {# Honest seed labeling: say where the numbers came from — measured
+       (Garmin), runner-entered, or a default guess — instead of presenting
+       the fallback as data. #}
+    {% if seed.vdot_source == 'garmin' %}
+        {{ t("Built from your current data:") }} <strong>VDOT {{ "%.1f"|format(seed.current_vdot) }}</strong>,
+    {% elif seed.vdot_source == 'manual' %}
+        {{ t("Built from what you told us:") }} <strong>VDOT {{ "%.1f"|format(seed.current_vdot) }}</strong>{% if seed.vdot_note %} ({{ seed.vdot_note }}){% endif %},
+    {% else %}
+        {{ t("No fitness data yet — using a cautious default:") }} <strong>VDOT {{ "%.1f"|format(seed.current_vdot) }}</strong>,
+    {% endif %}
+    <strong>{{ "%.1f"|format(seed.weekly_km_baseline) }} km/week</strong>
+    {% if seed.weekly_km_source == 'garmin' %}{{ t("baseline (4-week average).") }}
+    {% elif seed.weekly_km_source == 'manual' %}{{ t("baseline (your estimate).") }}
+    {% else %}{{ t("baseline (default).") }}{% endif %}
+    {% if seed.vdot_source == 'default' %}
+        <a href="/settings#fitness">{{ t("Set your fitness baseline") }}</a> {{ t("for paces that actually fit you.") }}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+{% if form_error %}
+<div class="error" style="margin-bottom: 1rem;">{{ form_error }}</div>
+{% endif %}
+
+{% if prefill_event %}
+<div class="seed-banner" style="margin-bottom: 1rem;">
+    {{ t("Building a plan toward") }}
+    <strong>{{ prefill_event.name }}</strong>
+    {{ t("on") }} <strong>{{ fmt_date_long(prefill_event.race_date) }}</strong>
+    {% if prefill_event.city %}({{ prefill_event.city }}){% endif %}
+    {% if fv.chosen_distance_label %}· <strong>{{ fv.chosen_distance_label }}</strong>{% endif %}.
+    {{ t("Date, goal, and title are pre-filled. Pick a methodology and the schedule details below.") }}
+</div>
+{% endif %}
+
+<form method="post" action="/plans/new" class="card" style="padding: 1.5rem 1.75rem;">
+    {% if fv.from_event_id %}
+    <input type="hidden" name="from_event_id" value="{{ fv.from_event_id }}">
+    <input type="hidden" name="chosen_distance_km" value="{{ fv.chosen_distance_km or '' }}">
+    <input type="hidden" name="chosen_distance_label" value="{{ fv.chosen_distance_label or '' }}">
+    {% endif %}
+
+    <div class="form-block">
+        <h3>{{ t("Goal") }}</h3>
+        <div class="pick-grid cols-6">
+            {% for goal_id, label in [('stay_fit', 'Stay fit'), ('5k', '5 km race'), ('10k', '10 km race'), ('15k', '15 km race'), ('half_marathon', 'Half marathon'), ('marathon', 'Marathon')] %}
+            <label class="pick">
+                <input type="radio" name="goal_type" value="{{ goal_id }}"
+                       {% if fv.goal_type == goal_id
+                          or (not fv.goal_type and rec_goal == goal_id)
+                          or (not fv.goal_type and not rec_goal and goal_id == 'half_marathon') %}checked{% endif %}
+                       required>
+                <div class="pick-title">{{ t(label) }}</div>
+                <div class="pick-sub">
+                    {% if goal_id == 'stay_fit' %}{{ t("rolling 4-week cycle") }}
+                    {% elif goal_id == '5k' %}{{ t("~8 weeks") }}
+                    {% elif goal_id == '10k' %}{{ t("~10 weeks") }}
+                    {% elif goal_id == '15k' %}{{ t("~11 weeks") }}
+                    {% elif goal_id == 'half_marathon' %}{{ t("~12 weeks") }}
+                    {% else %}{{ t("~16 weeks") }}
+                    {% endif %}
+                </div>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-block">
+        <h3>{{ t("Methodology") }}</h3>
+        {% if ask_can_run_10min and not prefill_event %}
+        {# Blank-slate users: one question so the badge below can point them
+           at the right plan. Plain form post — the form is still at its
+           defaults, so the full re-render loses nothing. No popups. #}
+        <div class="seed-banner assess-strip">
+            <span>{{ t("Quick question so we can point you at the right plan: can you currently run 10 minutes non-stop?") }}</span>
+            <span class="assess-actions">
+                <button type="submit" class="ghost" form="self-assess-form" name="answer" value="yes">{{ t("Yes") }}</button>
+                <button type="submit" class="ghost" form="self-assess-form" name="answer" value="no">{{ t("Not yet") }}</button>
+            </span>
+        </div>
+        {% endif %}
+        {# Illustrated gallery tiles. The tile is a `<label>` wrapping a
+           visually-hidden radio — every behavioural hook the page JS relies on
+           (name, data-force-goal, data-fixed-schedule, disabled, required) lives
+           on that input, so goal-locking and fixed-schedule dimming keep working.
+           Hero art is a per-id PNG pair in /static/heroes; the layer matching the
+           active theme shows (html.is-dark / .is-light drive the opacity swap). #}
+        <div class="method-grid">
+            {% for m in methodologies %}
+            {% set iv_phase = {'low': 'base', 'moderate': 'race', 'high': 'peak'}.get(m.intensity, 'build') %}
+            {% set intensity_label = {'low': 'Low intensity', 'moderate': 'Moderate intensity', 'high': 'High intensity'}.get(m.intensity) %}
+            {# Goal-first filtering, server-rendered for the initial goal;
+               applyLock() keeps it in sync as the user browses distances. #}
+            {% set _tile_goals = [m.force_goal] if m.force_goal else (m.supported_goals or none) %}
+            {% set _tile_visible = not _tile_goals or initial_goal in _tile_goals %}
+            <label class="pick method-tile {{ 'disabled' if not m.available }}"
+                   {% if not _tile_visible %}style="display: none;"{% endif %}>
+                <input type="radio" name="methodology_id" value="{{ m.id }}"
+                       {% if (precheck_m == m.id)
+                          or (not precheck_m and m.available and loop.first) %}checked{% endif %}
+                       {{ 'disabled' if not m.available }}
+                       {% if m.force_goal %}data-force-goal="{{ m.force_goal }}"{% endif %}
+                       {% if m.supported_goals %}data-supported-goals="{{ m.supported_goals|join(',') }}"{% endif %}
+                       {% if m.variants %}data-has-variants="1"{% endif %}
+                       {% if m.fixed_schedule %}data-fixed-schedule="1"{% endif %}
+                       {% if m.fixed_days_per_week %}data-fixed-dpw="{{ m.fixed_days_per_week }}"{% endif %}
+                       {% if m.preferred_day_offsets %}data-day-offsets="{{ m.preferred_day_offsets|join(',') }}"{% endif %}
+                       {% if m.requires_race_date %}data-requires-race="1"{% endif %}
+                       {% if m.fixed_day_offsets %}data-fixed-offsets="{{ m.fixed_day_offsets|join(',') }}"{% endif %}
+                       {{ 'required' if loop.first }}>
+
+                <div class="method-hero" aria-hidden="true">
+                    <span class="method-art art-light" style="background-image: url('/static/heroes/{{ m.id }}-light.png');"></span>
+                    <span class="method-art art-dark" style="background-image: url('/static/heroes/{{ m.id }}-dark.png');"></span>
+                    {% if m.badge %}
+                    <span class="method-badge"><span class="dot" style="background: var(--{{ m.badge_phase }});"></span>{{ t(m.badge) }}</span>
+                    {% endif %}
+                    {% if rec_m == m.id %}
+                    <span class="method-recommend">★ {{ t("Recommended for you") }}</span>
+                    {% endif %}
+                </div>
+
+                {% if m.available %}
+                <span class="method-selmark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"><path d="M5 12l5 5L20 6"/></svg>
+                </span>
+                {% else %}
+                <span class="method-soon">{{ t("Coming soon") }}</span>
+                {% endif %}
+
+                <div class="method-body">
+                    <h4 class="method-title">{{ m.name }}</h4>
+                    <p class="method-hook">{{ t(m.hook or m.tagline) }}</p>
+                    {% if rec_m == m.id and rec.reason %}
+                    <p class="method-reason">{{ t(rec.reason) }}</p>
+                    {% endif %}
+
+                    <div class="method-chips">
+                        {% for value, label in m.stat_chips %}
+                        <span class="method-chip"><span class="k">{{ value }}</span>{% if label %} {{ t(label) }}{% endif %}</span>
+                        {% endfor %}
+                        {% if m.intensity and intensity_label %}
+                        <span class="method-chip intensity" style="--iv: var(--{{ iv_phase }});">{{ t(intensity_label) }}</span>
+                        {% endif %}
+                        {% if m.fixed_schedule %}
+                        <span class="method-chip fixed">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                            {{ t("Fixed schedule") }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <p class="method-desc">{{ t(m.description) }}</p>
+                    <button type="button" class="method-more"
+                            hx-get="/plans/methodology/{{ m.id }}/detail"
+                            hx-target="#method-detail-content"
+                            hx-swap="innerHTML"
+                            onclick="event.stopPropagation();"
+                            hx-on::after-request="if(event.detail.successful){document.getElementById('method-detail-modal').showModal();}">
+                        {{ t("Read more") }} →
+                    </button>
+
+                    <div class="method-bestfor">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+                        <div><b>{{ t("Best for:") }}</b> {{ t(m.best_for) }}</div>
+                    </div>
+                </div>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# Variant (experience-tier) picker. One group per methodology that declares
+       `variants`; JS reveals only the selected methodology's group and keeps a
+       radio checked inside it. Groups for other methodologies are hidden and
+       their inputs disabled so they never POST a stale `variant`. #}
+    {% set methods_with_variants = methodologies | selectattr('variants') | list %}
+    {% if methods_with_variants %}
+    {# Initial visibility is rendered server-side (the initially-checked
+       methodology's group shows, the block hides otherwise) so the form is
+       correct before JS runs and on form-error replay; applyLock() keeps it
+       in sync on methodology change. #}
+    {% set initial_m = precheck_m or (methodologies | selectattr('available') | map(attribute='id') | first) %}
+    {% set initial_has_variants = methods_with_variants | selectattr('id', 'equalto', initial_m) | list %}
+    <div class="form-block" id="variant-block" {% if not initial_has_variants %}style="display: none;"{% endif %}>
+        <h3>{{ t("Experience level") }}</h3>
+        {% for m in methods_with_variants %}
+        <div class="variant-group pick-grid cols-3" data-methodology="{{ m.id }}"
+             {% if m.id != initial_m %}style="display: none;"{% endif %}>
+            {# Pre-check order: form replay → recommendation tier → first. #}
+            {% set pre_v = fv.variant or (rec.higdon_variant if rec and m.id == 'higdon' else none) %}
+            {% for vid, vlabel, vdesc, voffsets in m.variants %}
+            <label class="pick">
+                <input type="radio" name="variant" value="{{ vid }}"
+                       data-methodology="{{ m.id }}"
+                       data-offsets="{{ voffsets|join(',') }}"
+                       {% if m.id != initial_m %}disabled{% endif %}
+                       {% if pre_v == vid or (not pre_v and loop.first) %}checked{% endif %}>
+                <div class="pick-title">{{ t(vlabel) }}</div>
+                <div class="pick-sub">{{ t(vdesc) }}</div>
+            </label>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="form-block">
+        <h3>{{ t("Schedule") }}</h3>
+        <p id="fixed-schedule-note" class="muted" style="display: none; font-size: 0.85rem;">
+            {{ t("This methodology follows its own fixed schedule — shown below for reference, anchored to your race day (or the long-run day until a race is set).") }}
+        </p>
+        <div class="field-row" style="align-items: flex-end;">
+            <div>
+                <label style="font-size: 0.8rem; color: var(--muted);">{{ t("Start") }}</label>
+                <div class="day-picker">
+                    <label><input type="radio" name="start_when" value="next"
+                                  {% if not fv.start_when or fv.start_when == 'next' %}checked{% endif %}>
+                        {{ t('Next week') }} · {{ fmt_date_short(start_options.next) }}</label>
+                    <label><input type="radio" name="start_when" value="this"
+                                  {% if fv.start_when == 'this' %}checked{% endif %}>
+                        {{ t('This week') }}</label>
+                </div>
+            </div>
+            <div style="min-width: 200px;">
+                <label for="race_date" style="font-size: 0.8rem; color: var(--muted);">
+                    {{ t("Race date") }} <span id="race-date-optional">({{ t("optional") }})</span>
+                </label>
+                <input type="date" id="race_date" name="race_date" value="{{ fv.race_date or '' }}">
+            </div>
+            <div>
+                <label style="font-size: 0.8rem; color: var(--muted);">{{ t("Target time (optional)") }}</label>
+                <div class="field-row">
+                    <input type="number" name="target_hours" min="0" max="6" placeholder="{{ t('h') }}" style="width: 70px;" value="{{ fv.target_hours or '' }}">
+                    <input type="number" name="target_minutes" min="0" max="59" placeholder="{{ t('min') }}" style="width: 80px;" value="{{ fv.target_minutes or '' }}">
+                </div>
+            </div>
+            <div>
+                <label style="font-size: 0.8rem; color: var(--muted);">{{ t("Days per week") }}</label>
+                <div class="day-picker" id="days-per-week-picker">
+                    {% for d in [3, 4, 5, 6] %}
+                    <label><input type="radio" name="days_per_week" value="{{ d }}"
+                                  {% if (fv.days_per_week|string == d|string) or (not fv.days_per_week and d == 4) %}checked{% endif %}
+                                  required>{{ d }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <p id="no-race-hint" class="muted" style="font-size: 0.8rem; margin-top: 0.5rem;">
+            {{ t("No race booked? Leave the date empty — the plan runs its full length from your start week, and you can link a real race later.") }}
+        </p>
+
+        {# Training-day picker: N checkboxes (one per weekday). The runner picks
+           exactly `days_per_week` of them, and marks one as the long run. JS
+           below enforces the count constraint and keeps long-run-day in sync. #}
+        <div style="margin-top: 1.25rem;">
+            <label style="font-size: 0.8rem; color: var(--muted);">{{ t("Training days") }} <span id="workout-days-count" class="muted" style="font-size: 0.75rem;"></span></label>
+            <div class="day-picker workout-day-picker" id="workout-days-picker">
+                {% set selected_days = fv.workout_days_list or [] %}
+                {% set _default_long = (fv.long_run_day|int) if fv.long_run_day else 6 %}
+                {% for i in range(7) %}
+                <label class="workout-day-cell">
+                    <input type="checkbox" name="workout_days" value="{{ i }}"
+                           {% if i in selected_days %}checked{% endif %}
+                           class="wd-checkbox">
+                    <span class="wd-label">{{ day_label(i) }}</span>
+                    <span class="wd-long">
+                        <input type="radio" name="long_run_day" value="{{ i }}"
+                               {% if (fv.long_run_day|string == i|string) or (not fv.long_run_day and i == _default_long) %}checked{% endif %}
+                               class="wd-long-radio">
+                        <span class="wd-long-text">{{ t("long run") }}</span>
+                    </span>
+                </label>
+                {% endfor %}
+            </div>
+            <div id="workout-days-hint" class="muted" style="font-size: 0.75rem; margin-top: 0.3rem;"></div>
+        </div>
+    </div>
+
+    <div class="form-block">
+        <h3>{{ t("Plan name (optional)") }}</h3>
+        <input type="text" name="title" placeholder="{{ t('e.g. Amsterdam Marathon 2026') }}" value="{{ fv.title or '' }}">
+    </div>
+
+    <div class="form-block">
+        <h3>{{ t("Extras") }}</h3>
+        <label style="display: flex; gap: 0.6rem; align-items: flex-start;">
+            <input type="checkbox" name="include_optional_strength" value="1"
+                   style="margin-top: 0.25rem;"
+                   {% if fv.include_optional_strength %}checked{% endif %}>
+            <span>
+                <strong>{{ t("Add optional core / strength sessions on rest days") }}</strong><br>
+                <span class="muted" style="font-size: 0.85rem;">
+                    {{ t("Bodyweight only. Rotates 4 sessions across rest days; the day after any tempo / intervals / long run gets a recovery & mobility session instead. You can toggle this off later from plan settings.") }}
+                </span>
+            </span>
+        </label>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <a href="/plans" class="button ghost">{{ t("Cancel") }}</a>
+        <button type="submit" class="primary">{{ t("Generate plan") }}</button>
+    </div>
+</form>
+
+{# Target of the question strip's buttons (form= attribute) — lives outside
+   the main plan form because forms don't nest. #}
+{% if ask_can_run_10min and not prefill_event %}
+<form id="self-assess-form" method="post" action="/plans/new/self-assessment"></form>
+{% endif %}
+
+{# Methodology "Read more" modal. Body is lazy-loaded by each tile's Read-more
+   button (hx-get → #method-detail-content), then shown via showModal(). #}
+<dialog id="method-detail-modal" class="modal method-detail-modal"
+        onclick="if (event.target === this) this.close()">
+    <button type="button" class="modal-close" aria-label="{{ t('Close') }}"
+            onclick="this.closest('dialog').close()">×</button>
+    <div id="method-detail-content"></div>
+</dialog>
+
+<script>
+// Goal-first browsing: the distance tiles are the primary axis and are never
+// disabled. Selecting a goal filters the methodology gallery down to engines
+// that actually offer it (data-force-goal = exactly one, data-supported-goals
+// = a subset, neither = all distances); a selected methodology that no longer
+// fits is deselected in favour of the recommended-or-first visible tile.
+// data-fixed-schedule="1" still neutralises the day pickers (values POST, the
+// server ignores them and persists the engine's real schedule).
+(function () {
+    const RECOMMENDED = {{ (rec_m or none) | tojson }};
+    const goalRadios = document.querySelectorAll('input[name="goal_type"]');
+    const methodologyRadios = document.querySelectorAll('input[name="methodology_id"]');
+    const scheduleNote = document.getElementById('fixed-schedule-note');
+    const schedulePickers = [
+        document.getElementById('days-per-week-picker'),
+        document.getElementById('workout-days-picker'),
+    ].filter(Boolean).map(el => el.parentElement);
+
+    const variantGroups = document.querySelectorAll('.variant-group');
+
+    // ── Fixed-schedule mirror ────────────────────────────────────────
+    // The server ignores the day pickers for fixed-schedule methodologies,
+    // but leaving the user's stale picks visible contradicts the tile copy
+    // ("Five days a week" next to a picker stuck on 4). While a fixed
+    // methodology is selected, mirror its real run-day pattern (per variant
+    // where the methodology has tiers) into the dimmed pickers, anchored to
+    // the race weekday; restore the user's own picks when they switch back.
+    let pickSnapshot = null;
+
+    const readSchedule = () => ({
+        dpw: (document.querySelector('input[name="days_per_week"]:checked') || {}).value,
+        days: Array.from(document.querySelectorAll('.wd-checkbox'))
+            .filter(cb => cb.checked).map(cb => cb.value),
+        long: (document.querySelector('input[name="long_run_day"]:checked') || {}).value,
+    });
+
+    function writeSchedule(dpw, days, long, notify) {
+        const dpwRadio = document.querySelector(`input[name="days_per_week"][value="${dpw}"]`);
+        if (dpwRadio) dpwRadio.checked = true;
+        document.querySelectorAll('.wd-checkbox').forEach(cb => {
+            cb.checked = days.includes(cb.value);
+        });
+        const longRadio = document.querySelector(`input[name="long_run_day"][value="${long}"]`);
+        if (longRadio) longRadio.checked = true;
+        if (notify) {
+            // Restore path: nudge the training-day picker's own handlers so
+            // the count label and hint recalc against the user's picks.
+            const cb = document.querySelector('.wd-checkbox');
+            if (cb) cb.dispatchEvent(new Event('change', {bubbles: true}));
+        } else {
+            // Mirror path: update the labels directly — dispatching here
+            // would let syncLongRadios snap the long-run marker off a
+            // non-run anchor day (Foppen's Sunday race, Tue/Thu/Sat runs).
+            const count = document.getElementById('workout-days-count');
+            if (count) count.textContent = '(' + days.length + ' {{ t("of") }} ' + dpw + ')';
+            const hint = document.getElementById('workout-days-hint');
+            if (hint) hint.textContent = '';
+        }
+    }
+
+    function fixedOffsets(selected) {
+        if (selected.dataset.hasVariants) {
+            const v = document.querySelector(
+                `.variant-group[data-methodology="${selected.value}"] input[name="variant"]:checked`);
+            return v && v.dataset.offsets ? v.dataset.offsets.split(',').map(Number) : null;
+        }
+        return selected.dataset.fixedOffsets
+            ? selected.dataset.fixedOffsets.split(',').map(Number) : null;
+    }
+
+    function raceAnchorDow() {
+        // Fixed schedules anchor to the race weekday; fall back to the
+        // current long-run pick (default Sunday) until a date is set.
+        const val = (document.getElementById('race_date') || {}).value;
+        if (val) {
+            const d = new Date(val + 'T00:00:00');
+            if (!isNaN(d)) return (d.getDay() + 6) % 7;  // JS Sun=0 → our Mon=0
+        }
+        const long = document.querySelector('input[name="long_run_day"]:checked');
+        return long ? parseInt(long.value) : 6;
+    }
+
+    function applyLock() {
+        // ── Goal-driven tile filtering ──────────────────────────────
+        // Show only the methodologies that offer the selected distance. The
+        // goal radios are never disabled — browsing distances always works.
+        const goalChecked = document.querySelector('input[name="goal_type"]:checked');
+        const goal = goalChecked ? goalChecked.value : null;
+        methodologyRadios.forEach(r => {
+            const tileGoals = r.dataset.forceGoal
+                ? [r.dataset.forceGoal]
+                : (r.dataset.supportedGoals ? r.dataset.supportedGoals.split(',') : null);
+            const visible = !tileGoals || !goal || tileGoals.includes(goal);
+            const tile = r.closest('label.method-tile');
+            if (tile) tile.style.display = visible ? '' : 'none';
+            r.dataset.goalHidden = visible ? '' : '1';
+        });
+        // A selected methodology that doesn't fit the new distance is
+        // deselected: move to the recommended tile when it's visible, else
+        // the first visible available one. The goal stays exactly what the
+        // user clicked.
+        let selected = document.querySelector('input[name="methodology_id"]:checked');
+        if (selected && selected.dataset.goalHidden) {
+            selected.checked = false;
+            const candidates = Array.from(methodologyRadios)
+                .filter(r => !r.dataset.goalHidden && !r.disabled);
+            selected = candidates.find(r => r.value === RECOMMENDED) || candidates[0] || null;
+            if (selected) selected.checked = true;
+        }
+
+        // Variant (experience-tier) picker: show only the selected
+        // methodology's group; disable the others' inputs so they don't POST.
+        // The whole block (heading included) hides when the selected
+        // methodology has no variants — no orphan "Experience level" header.
+        const methId = selected ? selected.value : null;
+        let anyVariantGroup = false;
+        variantGroups.forEach(g => {
+            const mine = g.dataset.methodology === methId;
+            if (mine) anyVariantGroup = true;
+            g.style.display = mine ? '' : 'none';
+            g.querySelectorAll('input[name="variant"]').forEach(inp => { inp.disabled = !mine; });
+            if (mine && !g.querySelector('input[name="variant"]:checked')) {
+                const firstV = g.querySelector('input[name="variant"]');
+                if (firstV) firstV.checked = true;
+            }
+        });
+        const variantBlock = document.getElementById('variant-block');
+        if (variantBlock) variantBlock.style.display = anyVariantGroup ? '' : 'none';
+
+        // Race-specific imported plans (Foppen) keep the race date mandatory;
+        // everything else builds fine without one.
+        const requiresRace = !!(selected && selected.dataset.requiresRace);
+        const raceInput = document.getElementById('race_date');
+        const raceOptional = document.getElementById('race-date-optional');
+        const noRaceHint = document.getElementById('no-race-hint');
+        if (raceInput) raceInput.required = requiresRace;
+        if (raceOptional) raceOptional.style.display = requiresRace ? 'none' : '';
+        if (noRaceHint) noRaceHint.style.display = requiresRace ? 'none' : '';
+
+        const fixed = !!(selected && selected.dataset.fixedSchedule);
+        if (scheduleNote) scheduleNote.style.display = fixed ? '' : 'none';
+        schedulePickers.forEach(el => {
+            el.style.opacity = fixed ? '0.4' : '';
+            el.style.pointerEvents = fixed ? 'none' : '';
+        });
+
+        // Mirror the fixed schedule into the dimmed pickers / restore the
+        // user's own picks on the way back.
+        if (fixed) {
+            if (pickSnapshot === null) pickSnapshot = readSchedule();
+            const offsets = fixedOffsets(selected);
+            if (offsets) {
+                const anchor = raceAnchorDow();
+                const days = offsets.map(o => String((anchor + o) % 7));
+                writeSchedule(String(days.length), days, String(anchor), false);
+            }
+        } else if (pickSnapshot !== null) {
+            writeSchedule(pickSnapshot.dpw, pickSnapshot.days, pickSnapshot.long, true);
+            pickSnapshot = null;
+        }
+
+        // Fixed session count without fixed weekdays (Couch to 5K: always 3
+        // sessions, on days the runner picks): lock the days-per-week
+        // selector to the declared value, leave the day checkboxes free.
+        const fixedDpw = selected && selected.dataset.fixedDpw ? selected.dataset.fixedDpw : null;
+        document.querySelectorAll('input[name="days_per_week"]').forEach(r => {
+            r.disabled = !fixed && !!fixedDpw && r.value !== fixedDpw;
+        });
+        if (fixedDpw && !fixed) {
+            const target = document.querySelector(`input[name="days_per_week"][value="${fixedDpw}"]`);
+            if (target && !target.checked) {
+                target.checked = true;
+                // Reseed the training-day defaults for the new count.
+                target.dispatchEvent(new Event('change', {bubbles: true}));
+            }
+        }
+    }
+
+    goalRadios.forEach(r => r.addEventListener('change', applyLock));
+    methodologyRadios.forEach(r => r.addEventListener('change', applyLock));
+    document.querySelectorAll('input[name="variant"]').forEach(r => r.addEventListener('change', applyLock));
+    const raceDateInput = document.getElementById('race_date');
+    if (raceDateInput) raceDateInput.addEventListener('change', applyLock);
+    applyLock();
+})();
+
+// Training-day picker. Enforces "pick exactly N", keeps long_run_day inside
+// the picked set, and seeds sensible defaults via the legacy slot pattern when
+// the user changes days-per-week.
+(function () {
+    // Offsets from long_run_day for non-rest slots — mirrors plans/daniels.py _SLOT_PATTERNS.
+    const SLOT_OFFSETS = {
+        3: [0, 4, 6],
+        4: [0, 2, 4, 5],
+        5: [0, 1, 3, 4, 5],
+        6: [0, 1, 2, 3, 5, 6],
+    };
+    const checkboxes = () => Array.from(document.querySelectorAll('.wd-checkbox'));
+    const longRadios = () => Array.from(document.querySelectorAll('.wd-long-radio'));
+    const dpwInput = () => document.querySelector('input[name="days_per_week"]:checked');
+    const longInput = () => document.querySelector('input[name="long_run_day"]:checked');
+
+    function applyDefaults() {
+        const dpw = parseInt(dpwInput().value);
+        const long = longInput() ? parseInt(longInput().value) : 6;
+        // A methodology can declare its own default day spacing (Couch to
+        // 5K: two days apart so a beginner never runs back-to-back). It
+        // overrides the generic Daniels slot pattern, which would seed an
+        // easy run the day before the long run — fine for Daniels, wrong
+        // for a from-zero programme.
+        const sel = document.querySelector('input[name="methodology_id"]:checked');
+        const pref = sel && sel.dataset.dayOffsets
+            ? sel.dataset.dayOffsets.split(',').map(Number) : null;
+        const offsets = (pref && pref.length === dpw) ? pref : (SLOT_OFFSETS[dpw] || []);
+        const desired = new Set(offsets.map(o => (long + (o % 7) + 7) % 7));
+        checkboxes().forEach(cb => { cb.checked = desired.has(parseInt(cb.value)); });
+        // Keep long_run_day on the same day after re-seeding.
+        const longRadio = longRadios().find(r => parseInt(r.value) === long);
+        if (longRadio) longRadio.checked = true;
+        syncLongRadios();
+        updateHint();
+    }
+
+    function syncLongRadios() {
+        // Long-run radio is only valid for currently-checked days; if the
+        // current long isn't checked anymore, snap it to the first checked day.
+        const checkedSet = new Set(
+            checkboxes().filter(cb => cb.checked).map(cb => parseInt(cb.value))
+        );
+        const cur = longInput();
+        if (cur && !checkedSet.has(parseInt(cur.value))) {
+            const first = checkboxes().find(cb => cb.checked);
+            if (first) {
+                const radio = longRadios().find(r => r.value === first.value);
+                if (radio) radio.checked = true;
+            }
+        }
+    }
+
+    function updateHint() {
+        const checked = checkboxes().filter(cb => cb.checked).length;
+        const dpw = parseInt(dpwInput().value);
+        const count = document.getElementById('workout-days-count');
+        const hint = document.getElementById('workout-days-hint');
+        count.textContent = '(' + checked + ' {{ t("of") }} ' + dpw + ')';
+        if (checked < dpw) {
+            const n = dpw - checked;
+            hint.textContent = (n === 1 ? {{ t("Pick 1 more day.") | tojson }} : {{ t("Pick {n} more days.") | tojson }}.replace('{n}', n));
+        }
+        else if (checked > dpw) hint.textContent = {{ t("Uncheck {n}.") | tojson }}.replace('{n}', checked - dpw);
+        else hint.textContent = '';
+    }
+
+    function trimToCount() {
+        const dpw = parseInt(dpwInput().value);
+        const checked = checkboxes().filter(cb => cb.checked);
+        const longVal = longInput() ? longInput().value : null;
+        // If we're over the count, drop the most recent non-long check.
+        while (checked.length > dpw) {
+            const idx = checked.findIndex(cb => cb.value !== longVal);
+            if (idx === -1) break;
+            checked[idx].checked = false;
+            checked.splice(idx, 1);
+        }
+    }
+
+    document.querySelectorAll('input[name="days_per_week"]').forEach(r =>
+        r.addEventListener('change', applyDefaults)
+    );
+    checkboxes().forEach(cb => cb.addEventListener('change', () => {
+        trimToCount();
+        syncLongRadios();
+        updateHint();
+    }));
+    longRadios().forEach(r => r.addEventListener('change', () => {
+        // Picking long on an unchecked day auto-checks it; the count trim drops another.
+        const cb = checkboxes().find(c => c.value === r.value);
+        if (cb && !cb.checked) cb.checked = true;
+        trimToCount();
+        syncLongRadios();
+        updateHint();
+    }));
+
+    // First render — if no days are pre-checked (no form error replay), seed defaults.
+    if (!checkboxes().some(cb => cb.checked)) {
+        applyDefaults();
+    } else {
+        syncLongRadios();
+        updateHint();
+    }
+})();
+
+</script>
+{% endblock %}

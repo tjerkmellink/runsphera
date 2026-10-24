@@ -1,0 +1,35 @@
+{# Tempo-specific coach pull-quote.
+   Swapped via HTMX when the user clicks ↻ on the dashboard hero.
+   Mirrors the structure inline in index.html so the swap
+   preserves the editorial layout — see the base partial _coach_message.html
+   for the equivalent in the default theme. #}
+<div id="coach-head">
+    {# Skeleton placeholder — revealed by CSS while #coach-head (regenerate)
+       or #dashboard-main (Garmin sync / refresh) is in flight. #}
+    <div class="tp-coach-quote-sk" aria-hidden="true">
+        <span class="tp-sk"></span>
+        <span class="tp-sk"></span>
+        <span class="tp-sk"></span>
+    </div>
+    {% set _msg = coach_message or (recommendation.headline if recommendation else '') %}
+    {% if _msg %}
+    <p class="tp-coach-quote">{{ _msg }}</p>
+    {% endif %}
+    <div class="tp-coach-attr">
+        <span>— {{ t("Coach") }}</span>
+        {% if coach_generated_at %}
+        <span>·</span><span>{{ coach_generated_at }}</span>
+        {% endif %}
+        {% if llm_available %}
+        <span>·</span>
+        <button type="button"
+                class="coach-refresh"
+                title="{{ t('Regenerate coach message') }}"
+                hx-post="/coach-message/refresh"
+                hx-target="#coach-head"
+                hx-swap="outerHTML"
+                hx-disabled-elt="this"
+                hx-indicator="closest #coach-head"><span class="coach-refresh-icon">↻</span> {{ t("Regenerate") }}</button>
+        {% endif %}
+    </div>
+</div>

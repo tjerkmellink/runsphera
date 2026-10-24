@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block headline %}Connect Garmin{% endblock %}
+
+{% block subhead %}
+    {% if already_connected and stage == 'login' %}
+        Already connected. Sign in again to switch accounts or refresh credentials.
+    {% else %}
+        Sign in once — your credentials stay in memory just long enough to fetch a session token.
+        Only the token (not the password) is persisted, in <code>.garmin_tokens/</code>.
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+{% if error %}
+<div class="error" style="margin-bottom: 1rem;">{{ error }}</div>
+{% endif %}
+{% if info %}
+<div class="seed-banner" style="margin-bottom: 1rem;">{{ info }}</div>
+{% endif %}
+
+{% if stage == 'mfa' %}
+<form method="post" action="/auth/mfa" class="card" style="max-width: 480px; margin: 0 auto; padding: 1.75rem 2rem;">
+    <h2 style="margin: 0 0 0.5rem;">Enter verification code</h2>
+    <p class="muted" style="margin: 0 0 1.25rem; font-size: 0.9rem;">
+        Garmin emails a one-time 6-digit code on every fresh session.
+        Check your inbox (and spam) at <strong>{{ prefill_email }}</strong>.
+    </p>
+    <div class="form-block">
+        <label for="code" style="font-size: 0.8rem; color: var(--muted);">Verification code</label>
+        <input type="text" id="code" name="code" inputmode="numeric" pattern="[0-9]{4,8}"
+               autocomplete="one-time-code" autofocus required
+               style="font-size: 1.2rem; letter-spacing: 0.2em; text-align: center;">
+    </div>
+    <div style="display: flex; gap: 0.75rem; justify-content: space-between; margin-top: 1.25rem;">
+        <a href="/auth" class="button ghost">← Start over</a>
+        <button type="submit" class="primary">Verify &amp; connect</button>
+    </div>
+</form>
+{% else %}
+<form method="post" action="/auth/login" class="card" style="max-width: 480px; margin: 0 auto; padding: 1.75rem 2rem;">
+    <h2 style="margin: 0 0 1rem;">Sign in to Garmin Connect</h2>
+    <div class="form-block">
+        <label for="email" style="font-size: 0.8rem; color: var(--muted);">Email</label>
+        <input type="email" id="email" name="email" autocomplete="username"
+               value="{{ prefill_email }}" required autofocus>
+    </div>
+    <div class="form-block">
+        <label for="password" style="font-size: 0.8rem; color: var(--muted);">Password</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required>
+    </div>
+    <div style="font-size: 0.78rem; color: var(--muted); margin: 0.5rem 0 1.25rem;">
+        Your password is sent to Garmin once, then dropped. It's never written to disk or the database.
+    </div>
+    <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        {% if already_connected %}
+        <form method="post" action="/auth/logout" style="display: inline; margin-right: auto;">
+            <button type="submit" class="ghost">Disconnect</button>
+        </form>
+        <a href="/" class="button ghost">Cancel</a>
+        {% endif %}
+        <button type="submit" class="primary">Connect to Garmin</button>
+    </div>
+</form>
+{% endif %}
+{% endblock %}

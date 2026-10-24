@@ -1,0 +1,633 @@
+{# Tempo dashboard — editorial reskin of the base index.
+   See running_coach/web/templates/index.html for the canonical data contract:
+   we read the same context (state, runs, weather, todays_workout, etc.) but
+   render it as a magazine spread instead of a stack of utilitarian cards. #}
+{% extends "base.html" %}
+{% set ts = state.training_status %}
+{% set rdy = state.latest_readiness %}
+{% set ing = state.last_ingest %}
+
+{# Headline + status pill driven by the rules-engine coach recommendation.
+   Headline + pill labels run through t() so they pick up the current locale. #}
+{% set _rec_status = recommendation.status if recommendation else 'checkin' %}
+{% set _headlines = {
+    'go':      t('Go.'),
+    'caution': t('Caution.'),
+    'easy':    t('Easy.'),
+    'rest':    t('Rest.'),
+    'done':    t('Done.'),
+    'checkin': t('Today.'),
+} %}
+{% set _pill_labels = {
+    'go':      t('Green light'),
+    'caution': t('Caution'),
+    'easy':    t('Ease off'),
+    'rest':    t('Rest day'),
+    'done':    t('Logged'),
+} %}
+
+{% block subhead %}
+    {# Sync helper copy is Garmin-only — a runner without a connected watch
+       has nothing to sync, so the header stays clean. #}
+    {% if ing %}
+        {{ t("last ingest:") }} {{ fmt_local_dt(ing.completed_at) }} ({{ ing.ingest_type }}, {{ ing.rows_upserted }} {{ t("rows") }}{% if not ing.success %} · {{ t("error:") }} {{ ing.error }}{% endif %})
+    {% elif is_authenticated() %}
+        {{ t('no data yet — click "Sync from Garmin"') }}
+    {% endif %}
+{% endblock %}
+
+{% block header_actions %}
+    {% if is_authenticated() %}
+    <button class="primary garmin-sync"
+            hx-post="/ingest"
+            hx-target="#sync-status"
+            hx-swap="innerHTML"
+            hx-indicator="#dashboard-main, .garmin-sync"
+            hx-disabled-elt="this">
+        {{ t("Sync from Garmin") }}
+    </button>
+    {% endif %}
+{% endblock %}
+
+{% block header_status %}
+    <div id="sync-status"></div>
+{% endblock %}
+
+{% block content %}
+{#  In-place refresh: when a sync completes, /ingest returns
+    `HX-Trigger: dashboardRefresh`; this wrapper listens and
+    re-fetches `/`, extracting just its own subtree (`hx-select`)
+    and swapping itself (`outerHTML`). No full page reload —
+    scroll position + open modals stay intact. #}
+<div id="dashboard-main"
+     hx-get="/"
+     hx-trigger="dashboardRefresh from:body"
+     hx-select="#dashboard-main"
+     hx-swap="outerHTML"
+     hx-disinherit="*">
+{# First-run onboarding is handled by the Getting-started wizard
+   (#onboarding-modal in base.html), which auto-opens while
+   onboarding is unfinished. The old inline welcome card was replaced
+   by it — see docs/onboarding.md. #}
+
+{# ── HERO ──────────────────────────────────────────────────────────── #}
+<section class="tp-dash-hero">
+    <div class="tp-dash-hero-main">
+        <div class="tp-dash-eyebrow">
+            {{ fmt_date_long(today_iso)|upper }}
+            {% if home_location and home_location.display_name %}
+                · {{ home_location.display_name.split(',')[0]|upper }}
+            {% elif weather and weather.display_name %}
+                · {{ weather.display_name.split(',')[0]|upper }}
+            {% endif %}
+            {% if first_name %} · {{ t("HI") }} {{ first_name|upper }}{% endif %}
+        </div>
+
+        <div class="tp-dash-headline-row">
+            <h1 class="tp-dash-display">{{ _headlines.get(_rec_status, t('Today.')) }}</h1>
+            <div class="tp-dash-display-sk tp-sk" aria-hidden="true"></div>
+            {% if recommendation %}
+            <span class="tp-status-pill status-{{ _rec_status }}">
+                <span class="tp-status-pill-dot"></span>
+                {{ _pill_labels.get(_rec_status, _rec_status)|upper }}
+            </span>
+            {% endif %}
+        </div>
+
+        {% if coach_message or (recommendation and recommendation.headline) %}
+        {% include "_coach_message.html" %}
+        {% endif %}
+
+        {% if recommendation and recommendation.reasons %}
+        <div class="tp-coach-reasons">
+            {% for r in recommendation.reasons %}{% if r %}<span>{{ r }}</span>{% endif %}{% endfor %}
+        </div>
+        {% endif %}
+
+        {% if recommendation and recommendation.suggestion %}
+        <div class="coach-suggestion" style="margin-top: 0.85rem;">
+            {{ recommendation.suggestion }}
+            {% if swap_available and todays_workout %}
+            <form method="post" action="/plan-workouts/{{ todays_workout.id }}/apply-swap" style="display: inline; margin-left: 0.6rem;">
+                <button type="submit" class="ghost" style="font-size: 0.8rem; padding: 0.25rem 0.7rem;">{{ t("Apply swap") }}</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if weather %}
+    <button type="button" class="tp-weather-aside"
+            onclick="document.getElementById('weather-modal').showModal()"
+            aria-haspopup="dialog">
+        <div class="tp-weather-aside-head">
+            <span>{{ t("Weather · 48h") }}</span>
+            <span aria-hidden="true">{% if weather.precip_prob_pct is not none and weather.precip_prob_pct >= 40 %}☂{% else %}☀{% endif %}</span>
+        </div>
+        {% if weather.current_temp_c is not none %}
+        <div class="tp-weather-aside-temp">
+            {{ "%.0f"|format(weather.current_temp_c) }}<span class="unit">°C</span>
+        </div>
+        {% endif %}
+        <p class="tp-weather-aside-text">
+            {{ weather.weather_text }}
+            {% if weather.wind_kmh is not none %} · {{ t("wind") }} {{ "%.0f"|format(weather.wind_kmh) }} km/h{% endif %}
+            {% if weather.precip_prob_pct is not none and weather.precip_prob_pct >= 20 %} · {{ t("rain") }} {{ weather.precip_prob_pct }}%{% endif %}
+        </p>
+        {% if weather.best_window %}
+        {% set bw = weather.best_window %}
+        <div class="tp-weather-aside-best">
+            <div class="tp-weather-aside-best-label">{{ t("Best window") }}</div>
+            <div class="tp-weather-aside-best-time">{{ bw.start }} → {{ bw.end }}</div>
+        </div>
+        {% endif %}
+    </button>
+
+    {% if weather_hours %}
+        {% include "_weather_modal.html" %}
+    {% endif %}
+    {% endif %}
+</section>
+
+{# ── AUTO-VDOT SUGGESTION ──────────────────────────────────────────
+   Surfaces when the detector finds a recent race-pace effort (parkrun,
+   5k tempo, time-trial) that implies a meaningful VDOT bump from the
+   plan's currently-calibrated value. Two actions: Apply (rewrites plan
+   target paces) or Dismiss (won't re-suggest off this activity). #}
+{% if vdot_suggestion %}
+{% set _v = vdot_suggestion %}
+{% set _h = (_v.duration_s // 3600) %}
+{% set _m = ((_v.duration_s % 3600) // 60) %}
+{% set _s = (_v.duration_s % 60) %}
+<section class="tp-vdot-suggestion">
+    <div class="tp-vdot-suggestion-head">
+        <span class="tp-vdot-suggestion-kicker">🔔 {{ t("FITNESS SIGNAL") }}</span>
+    </div>
+    <p class="tp-vdot-suggestion-body">
+        {{ t("Your") }}
+        <strong>{{ _v.distance_label }}</strong>
+        {{ t("on") }} {{ fmt_date_long(_v.date) }} —
+        <strong>{% if _h %}{{ _h }}:{{ '%02d'|format(_m) }}:{{ '%02d'|format(_s) }}{% else %}{{ _m }}:{{ '%02d'|format(_s) }}{% endif %}</strong>
+        {% if _v.avg_hr %} · {{ t("avg HR") }} {{ _v.avg_hr }}{% endif %}
+        — {{ t("implies") }}
+        <strong>VDOT {{ _v.implied_vdot }}</strong>,
+        {{ t("a") }} <strong>+{{ _v.delta }}</strong> {{ t("bump from your plan's") }} {{ _v.current_vdot }}.
+        {{ t("Apply to recalibrate your plan paces?") }}
+    </p>
+    <div class="tp-vdot-suggestion-actions">
+        <form method="post" action="/plan/vdot/apply/{{ _v.activity_id }}" style="display: inline;">
+            <button type="submit" class="tp-btn primary">{{ t("Apply to plan") }}</button>
+        </form>
+        <form method="post" action="/plan/vdot/dismiss/{{ _v.activity_id }}" style="display: inline; margin-left: 0.5rem;">
+            <button type="submit" class="tp-btn">{{ t("Dismiss") }}</button>
+        </form>
+    </div>
+</section>
+{% endif %}
+
+{# ── TODAY'S WORKOUT — flagship ────────────────────────────────────── #}
+{# Priority: a real running session owns the flagship. On a rest day with an
+   optional strength session scheduled, that session IS today's training, so it
+   takes the hero (see the {% elif todays_strength %} branch). A plain rest day
+   falls through to the rest card. #}
+{% if todays_workout and todays_workout.workout_type not in ('rest', 'cross') %}
+{% set done = todays_workout.actual_activity_id %}
+{% set actual_km = (todays_workout.actual_distance_m / 1000) if todays_workout.actual_distance_m else None %}
+{% set actual_pace = (todays_workout.actual_duration_s / actual_km) if (done and actual_km) else None %}
+<section class="tp-flagship-section">
+    <div class="tp-section-head">
+        <div>
+            <p class="tp-section-head-eyebrow{% if done %} is-done{% endif %}">① {{ t("Today") }} · {{ todays_workout.workout_type or t('session') }}{% if done %} · {{ t("Done ✓") }}{% endif %}</p>
+            <h2 class="tp-section-head-title">{{ todays_workout.title }}</h2>
+        </div>
+        <a href="/plans" class="button ghost">{{ t("View plan →") }}</a>
+    </div>
+    <div class="tp-flagship-grid">
+        <div class="tp-flagship-main wtype-{{ todays_workout.workout_type }}{% if done %} is-done{% endif %}">
+            {% if done %}
+            {# Post-run summary: actual stats, with the prescription demoted to a subline. #}
+            <div class="tp-flagship-stats">
+                {% if actual_km %}
+                <div>
+                    <p class="tp-flagship-stat-label">{{ t("Distance") }}</p>
+                    <p class="tp-flagship-stat-value">
+                        {{ "%.1f"|format(actual_km) }}<span class="tp-flagship-stat-unit">km</span>
+                    </p>
+                    {% if todays_workout.target_distance_km %}
+                    <p class="tp-flagship-stat-sub">{{ t("vs {target} km target", target="%.1f"|format(todays_workout.target_distance_km)) }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% if actual_pace %}
+                <div>
+                    <p class="tp-flagship-stat-label">{{ t("Pace") }}</p>
+                    <p class="tp-flagship-stat-value">
+                        {# fmt_pace_s already appends "/km" — strip it so the
+                           <span> can carry the unit without doubling up. #}
+                        {{ fmt_pace_s(actual_pace)|replace('/km', '') }}<span class="tp-flagship-stat-unit">/km</span>
+                    </p>
+                    {% if todays_workout.target_pace_s_per_km %}
+                    <p class="tp-flagship-stat-sub">{{ t("vs {target} target", target=fmt_pace_s(todays_workout.target_pace_s_per_km)) }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% if todays_workout.actual_duration_s %}
+                <div>
+                    <p class="tp-flagship-stat-label">{{ t("Time") }}</p>
+                    <p class="tp-flagship-stat-value">
+                        {{ fmt_duration(todays_workout.actual_duration_s) }}
+                    </p>
+                    {% if todays_workout.target_duration_s %}
+                    <p class="tp-flagship-stat-sub">{{ t("vs {target} target", target=fmt_duration(todays_workout.target_duration_s)) }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% if todays_workout.actual_avg_hr %}
+                <div>
+                    <p class="tp-flagship-stat-label">{{ t("Avg HR") }}</p>
+                    <p class="tp-flagship-stat-value">
+                        {{ todays_workout.actual_avg_hr }}<span class="tp-flagship-stat-unit">bpm</span>
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+            {% if todays_workout.description %}
+            <p class="tp-flagship-desc is-planned">{{ t("Planned:") }} {{ todays_workout.description }}</p>
+            {% endif %}
+            {% else %}
+            {# Prescription: target stats for the run still ahead. #}
+            {% if todays_workout.target_distance_km or todays_workout.target_pace_s_per_km or todays_workout.target_duration_s %}
+            <div class="tp-flagship-stats">
+                {% if todays_workout.target_distance_km %}
+                <div>
+                    <p class="tp-flagship-stat-label">{{ t("Distance") }}</p>
+                    <p class="tp-flagship-stat-value">
+                        {{ "%.1f"|format(todays_workout.target_distance_km) }}<span class="tp-flagship-stat-unit">km</span>
+                    </p>
+                </div>
+                {% endif %}
+                {% if todays_workout.target_pace_s_per_km %}
+                <div>
+                    <p class="tp-flagship-stat-label">{{ t("Pace") }}</p>
+                    <p class="tp-flagship-stat-value">
+                        {# Strip fmt_pace_s's "/km" so the <span> can carry the unit. #}
+                        {{ fmt_pace_s(todays_workout.target_pace_s_per_km)|replace('/km', '') }}<span class="tp-flagship-stat-unit">/km</span>
+                    </p>
+                </div>
+                {% endif %}
+                {% if todays_workout.target_duration_s %}
+                <div>
+                    <p class="tp-flagship-stat-label">{{ t("Target time") }}</p>
+                    <p class="tp-flagship-stat-value">
+                        {{ fmt_duration(todays_workout.target_duration_s) }}
+                    </p>
+                </div>
+                {% endif %}
+                {% if active_plan %}
+                <div>
+                    <p class="tp-flagship-stat-label">{{ t("Plan") }}</p>
+                    <p class="tp-flagship-stat-value" style="font-size: 1.1rem; font-style: normal; font-family: 'JetBrains Mono', monospace;">
+                        {{ active_plan.title }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% if todays_workout.description %}
+            <p class="tp-flagship-desc">{{ todays_workout.description }}</p>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        {% include "_flagship_aside.html" %}
+    </div>
+</section>
+
+{# ── REST DAY + OPTIONAL STRENGTH — strength session owns the flagship ── #}
+{% elif todays_strength %}
+{% set s = todays_strength %}
+{% set s_done = s.completed_at %}
+{% set s_matched = s.actual_activity_id %}
+{% set _blocks = s.structure.blocks if s.structure else [] %}
+{% set _ex_count = _blocks | sum(attribute='exercises', start=[]) | length %}
+{% set _is_recovery = s.slug == 'recovery_mobility' %}
+<section class="tp-flagship-section">
+    <div class="tp-section-head">
+        <div>
+            <p class="tp-section-head-eyebrow{% if s_done %} is-done{% endif %}">① {{ t("Today") }} · {{ t("Active recovery") if _is_recovery else t("Strength") }}{% if s_done %} · {{ t("Done ✓") }}{% endif %}</p>
+            <h2 class="tp-section-head-title">{{ s.title }}</h2>
+        </div>
+        <a href="/plans" class="button ghost">{{ t("View plan →") }}</a>
+    </div>
+    <div class="tp-flagship-grid">
+        <div class="tp-flagship-main wtype-rest is-strength{% if s_done %} is-done{% endif %}">
+            {# The stats body opens the same detail modal as the plan chip. #}
+            <div class="tp-strength-open is-clickable"
+                 hx-get="/plan-strength/{{ s.session_id }}"
+                 hx-target="#plan-strength-content"
+                 hx-swap="innerHTML"
+                 hx-on::after-request="if(event.detail.successful) document.getElementById('plan-strength-modal').showModal()"
+                 title="{{ t('Open session') }}">
+                <div class="tp-flagship-stats">
+                    {% if s_done and s_matched and s.actual_duration_s %}
+                    {# Matched to a synced activity → real stats. #}
+                    <div>
+                        <p class="tp-flagship-stat-label">{{ t("Time") }}</p>
+                        <p class="tp-flagship-stat-value">{{ fmt_duration(s.actual_duration_s) }}</p>
+                        <p class="tp-flagship-stat-sub">{{ s.duration_min_lo }}–{{ s.duration_min_hi }} {{ t("min planned") }}</p>
+                    </div>
+                    {% if s.actual_avg_hr %}
+                    <div>
+                        <p class="tp-flagship-stat-label">{{ t("Avg HR") }}</p>
+                        <p class="tp-flagship-stat-value">{{ s.actual_avg_hr }}<span class="tp-flagship-stat-unit">bpm</span></p>
+                    </div>
+                    {% endif %}
+                    {% if s.actual_calories %}
+                    <div>
+                        <p class="tp-flagship-stat-label">{{ t("Calories") }}</p>
+                        <p class="tp-flagship-stat-value">{{ s.actual_calories }}<span class="tp-flagship-stat-unit">kcal</span></p>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    {# Prescription (or manually-done without a matched activity). #}
+                    <div>
+                        <p class="tp-flagship-stat-label">{{ t("Duration") }}</p>
+                        <p class="tp-flagship-stat-value">{{ s.duration_min_lo }}–{{ s.duration_min_hi }}<span class="tp-flagship-stat-unit">min</span></p>
+                    </div>
+                    <div>
+                        <p class="tp-flagship-stat-label">{{ t("Blocks") }}</p>
+                        <p class="tp-flagship-stat-value">{{ _blocks | length }}</p>
+                    </div>
+                    <div>
+                        <p class="tp-flagship-stat-label">{{ t("Exercises") }}</p>
+                        <p class="tp-flagship-stat-value">{{ _ex_count }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <p class="tp-flagship-desc">
+                    {% if s_done %}{{ t("Bodyweight session done — tap for the full breakdown.") }}{% else %}{{ t("Rest day for running. This bodyweight session keeps the engine strong — tap for the full breakdown.") }}{% endif %}
+                </p>
+            </div>
+            {# Inline mark-done for sessions done without pushing to the watch. #}
+            {% if not s_done %}
+            <div class="tp-flagship-foot">
+                <button type="button" class="button primary"
+                        hx-post="/plan-strength/{{ s.session_id }}/complete"
+                        hx-swap="none"
+                        hx-on::after-request="if(event.detail.successful) location.reload()">
+                    {{ t("Mark done ✓") }}
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        {% include "_flagship_aside.html" %}
+    </div>
+</section>
+{% elif active_plan %}
+<section class="tp-flagship-section">
+    <div class="tp-section-head">
+        <div>
+            <p class="tp-section-head-eyebrow">① {{ t("Today") }} · {{ active_plan.title }}</p>
+            <h2 class="tp-section-head-title">{{ t("Rest day.") }}</h2>
+        </div>
+        <a href="/plans" class="button ghost">{{ t("View plan →") }}</a>
+    </div>
+    <p style="color: var(--muted); max-width: 38rem;">{{ t("Recovery is part of the plan. Hydrate, eat well, walk easy. Tomorrow's session starts here.") }}</p>
+</section>
+{% else %}
+{# No active plan: the flagship slot becomes the create-your-first-plan CTA
+   so a fresh (possibly Garmin-less) user isn't left staring at empty
+   analytics with no obvious next step. #}
+<section class="tp-flagship-section">
+    <div class="tp-section-head">
+        <div>
+            <p class="tp-section-head-eyebrow">① {{ t("Today") }}</p>
+            <h2 class="tp-section-head-title">{{ t("No training plan yet.") }}</h2>
+        </div>
+    </div>
+    <p style="color: var(--muted); max-width: 38rem;">
+        {{ t("Pick a goal — a 10K, a marathon, or simply staying fit — and the coach builds a week-by-week schedule around your fitness.") }}
+    </p>
+    <a href="/plans/new" class="button primary" style="margin-top: 0.6rem; display: inline-block;">{{ t("Find my plan") }} →</a>
+</section>
+{% endif %}
+
+{# ── FUEL TODAY — compact tile linking to the Fuel tab ──────────────── #}
+{% if todays_fuel %}
+{% set _ft = todays_fuel.targets %}
+{% set _fh = todays_fuel.hydration %}
+<a href="/fuel" class="tp-fuel-tile" style="display: block; text-decoration: none; color: inherit; margin-bottom: 1.5rem;">
+    <div class="card" style="display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; flex-wrap: wrap;">
+        <div>
+            <p class="tp-section-head-eyebrow">② {{ t("Today") }} · {{ t("Fuel") }}</p>
+            <h3 style="margin: 0.2rem 0 0;">{{ t("Eat for the {kind}", kind=t(_ft.day_type_label)) }}</h3>
+        </div>
+        <div style="display: flex; gap: 1.6rem; flex-wrap: wrap;">
+            {% if _ft.energy_kcal %}
+            <div><p class="tp-flagship-stat-label">{{ t("Energy") }}</p><p class="tp-flagship-stat-value" style="font-size: 1.4rem;">{{ "{:,}".format(_ft.energy_kcal) }}<span class="tp-flagship-stat-unit">kcal</span></p></div>
+            {% endif %}
+            <div><p class="tp-flagship-stat-label">{{ t("Carbs") }}</p><p class="tp-flagship-stat-value" style="font-size: 1.4rem;">{{ "{:,}".format(_ft.carbs_g) }}<span class="tp-flagship-stat-unit">g</span></p></div>
+            <div><p class="tp-flagship-stat-label">{{ t("Hydration") }}</p><p class="tp-flagship-stat-value" style="font-size: 1.4rem;">~{{ _fh.total_l }}<span class="tp-flagship-stat-unit">L</span></p></div>
+            {% if todays_fuel.fuel_run %}
+            <div><p class="tp-flagship-stat-label">{{ t("Gels") }}</p><p class="tp-flagship-stat-value" style="font-size: 1.4rem;">{{ t("every {n}'", n=todays_fuel.fuel_run.gel_interval_min) }}</p></div>
+            {% endif %}
+        </div>
+    </div>
+</a>
+{% endif %}
+
+{# ── TODAY'S NOTE (mood + diary inline editor) ─────────────────────── #}
+{% include "_today_note_editor.html" %}
+
+{# ── BODY check-in: daily prompt + status widget ───────────────────── #}
+{% include "_body_daily_prompt.html" %}
+{% include "_body_dashboard_widget.html" %}
+
+{# ── STATS WALL — 4 big italic numbers on paper-alt strip ───────────── #}
+<div class="tp-stats-wall-section">
+    <div class="tp-section-head">
+        <div>
+            <p class="tp-section-head-eyebrow">③ {{ t("The numbers") }}</p>
+            <h2 class="tp-section-head-title">{{ t("You, by the digits.") }}</h2>
+        </div>
+        {% if ts and ts.calendar_date %}
+        <span class="tp-section-head-meta">{{ t("UPDATED {date}", date=fmt_date_long(ts.calendar_date)) }}</span>
+        {% endif %}
+    </div>
+    <div class="tp-stats-wall">
+        <div class="tp-stats-wall-cell">
+            <p class="tp-stats-wall-label">{{ t("Training status") }}</p>
+            <p class="tp-stats-wall-value" style="font-size: clamp(1.4rem, 3vw, 2.2rem);">
+                {{ (ts.training_status_phrase or "—").split("_")[0].title() if ts else "—" }}
+            </p>
+            <p class="tp-stats-wall-unit">{{ t("7d trend") }}</p>
+            <p class="tp-stats-wall-sub">{{ t("as of {date}", date=(fmt_date_long(ts.calendar_date) if ts else "—")) }}</p>
+        </div>
+        <div class="tp-stats-wall-cell">
+            <p class="tp-stats-wall-label">{{ t("VO₂ max") }}</p>
+            <p class="tp-stats-wall-value">{{ "%.0f"|format(ts.vo2max_precise) if ts and ts.vo2max_precise else "—" }}</p>
+            <p class="tp-stats-wall-unit">ml / kg / min</p>
+            <p class="tp-stats-wall-sub">{{ t("measured {date}", date=(fmt_date_long(ts.vo2max_date) if ts and ts.vo2max_date else "—")) }}</p>
+        </div>
+        <div class="tp-stats-wall-cell">
+            <p class="tp-stats-wall-label">{{ t("Readiness") }}</p>
+            <p class="tp-stats-wall-value">{{ rdy.score if rdy else "—" }}</p>
+            <p class="tp-stats-wall-unit">/ 100</p>
+            <p class="tp-stats-wall-sub">
+                {{ rdy.level if rdy else "—" }}
+                {% if rdy and rdy.feedback_short %} · {{ rdy.feedback_short.replace("_", " ") }}{% endif %}
+            </p>
+        </div>
+        <div class="tp-stats-wall-cell">
+            <p class="tp-stats-wall-label">{{ t("Acute / chronic") }}</p>
+            <p class="tp-stats-wall-value">{{ "%.2f"|format(ts.acwr_ratio) if ts and ts.acwr_ratio is not none else "—" }}</p>
+            <p class="tp-stats-wall-unit">{{ t("load ratio") }}</p>
+            <p class="tp-stats-wall-sub">
+                {{ ts.acwr_status if ts and ts.acwr_status else "—" }}
+                {% if ts and ts.daily_load_acute %} · {{ "%.0f / %.0f"|format(ts.daily_load_acute, ts.daily_load_chronic) }}{% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+{# ── CHARTS — mileage + HR zones ────────────────────────────────────── #}
+{# HR zones is rendered as 5 vertical bars from raw `zones` totals (Z1 left →
+   Z5 right, bars grow bottom→top), in Garmin Connect's zone colors. #}
+{% set _zone_total_s = (zones.z1 + zones.z2 + zones.z3 + zones.z4 + zones.z5) if zones else 0 %}
+{% set _zone_defs = [
+    ('z1', 'Z1', 'rgb(166, 166, 166)'),
+    ('z2', 'Z2', 'rgb(59, 151, 243)'),
+    ('z3', 'Z3', 'rgb(64, 195, 93)'),
+    ('z4', 'Z4', 'rgb(242, 119, 22)'),
+    ('z5', 'Z5', 'rgb(224, 44, 44)'),
+] %}
+<div class="tp-charts-grid">
+    <div class="tp-chart-card">
+        <p class="tp-chart-card-label">{{ t("Weekly mileage · 12 weeks") }}</p>
+        {{ weekly_chart|safe }}
+    </div>
+    <div class="tp-chart-card">
+        <p class="tp-chart-card-label">{{ t("HR zones · 7 days") }}</p>
+        {% if _zone_total_s > 0 %}
+        <div class="tp-zone-bars">
+            {% for key, label, color in _zone_defs %}
+            {% set pct = (100.0 * zones[key] / _zone_total_s) if _zone_total_s else 0 %}
+            <div class="tp-zone-col">
+                <span class="tp-zone-pct">{{ '%.0f'|format(pct) }}%</span>
+                <div class="tp-zone-track">
+                    <div class="tp-zone-fill" style="height: {{ '%.1f'|format(pct) }}%; background: {{ color }};"></div>
+                </div>
+                <span class="tp-zone-label" style="color: {{ color }};">{{ label }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty">{{ t("No HR-zone data in the last 7 days.") }}</div>
+        {% endif %}
+    </div>
+</div>
+
+{# ── ACUTE TRAINING LOAD — 28-day daily 7-day-rolling load (black line)
+   inside a moving green "Optimal Range" band (chronic × 0.8 .. × 1.5).
+   Mirrors Garmin Connect's own training-load chart so the runner can
+   spot under- and over-reaching at a glance. ─────────────────────── #}
+<div class="tp-charts-grid tp-charts-grid--single">
+    <div class="tp-chart-card">
+        <p class="tp-chart-card-label">{{ t("Acute training load · 28 days") }}</p>
+        {{ acute_load_chart|safe }}
+    </div>
+</div>
+
+{# ── WEEKLY RECAP — Tempo partial adds the editorial attribution footer
+   that matches the daily coach hero. ─────────────────────────────────── #}
+{% include "_weekly_recap.html" %}
+
+{# ── THIS WEEK, WRAPPED — current training-week stats + streak ───────── #}
+{% include "_week_wrapped.html" %}
+
+{# ── RECENT RUNS ────────────────────────────────────────────────────── #}
+<section class="tp-recent-section">
+    <div class="tp-section-head">
+        <div>
+            <p class="tp-section-head-eyebrow">⑤ {{ t("Recent") }}</p>
+            <h2 class="tp-section-head-title">{{ t("Last out the door.") }}</h2>
+        </div>
+    </div>
+
+    {% if runs %}
+    <div id="recent-runs-panel">
+        {% include "_recent_runs.html" %}
+    </div>
+    {% else %}
+    <div class="empty">
+        {% if is_authenticated() %}
+        {{ t("No runs yet. Click \"Sync from Garmin\" to load activity history.") }}
+        {% else %}
+        {{ t("No run history — this list fills from a connected Garmin watch. Your plan progress lives on the Plans tab.") }}
+        {% endif %}
+    </div>
+    {% endif %}
+</section>
+
+</div>{# /#dashboard-main — dialogs live outside this wrapper so a
+        dashboardRefresh swap doesn't destroy them mid-display. #}
+
+<dialog id="run-detail-modal" class="modal"
+        onclick="if (event.target === this) this.close()">
+    <button class="modal-close" onclick="this.closest('dialog').close()" aria-label="Close">×</button>
+    <div id="run-detail-content"></div>
+</dialog>
+
+{# Event-detail modal — loaded by HTMX from the race side-card on the dashboard. #}
+<dialog id="event-detail-modal" class="event-modal">
+    <div id="event-detail-body"></div>
+</dialog>
+
+{# Strength-session modal — loaded by HTMX from the rest-day strength flagship.
+   Same dialog + target as the plan page so the GET /plan-strength/{id} body
+   (and its complete / push controls) render identically here. #}
+{% if todays_strength %}
+<dialog id="plan-strength-modal" class="modal"
+        onclick="if (event.target === this) this.close()">
+    <button class="modal-close" onclick="this.closest('dialog').close()" aria-label="Close">×</button>
+    <div id="plan-strength-content"></div>
+</dialog>
+{% endif %}
+
+{# When a Garmin sync pulls in a brand-new run, /ingest fires a
+   `newRunDetected` event with the run's activity_id. Auto-open that
+   run's detail modal — same target + dialog as clicking the row in the
+   recent-runs table — so a runner who just finished sees their run
+   front-and-centre the moment the app loads. Registered once here
+   (outside #dashboard-main, so a dashboardRefresh swap won't re-bind). #}
+<script>
+(() => {
+    document.body.addEventListener('newRunDetected', (e) => {
+        const id = e.detail && e.detail.activityId;
+        if (!id) return;
+        htmx.ajax('GET', '/runs/' + id, {
+            target: '#run-detail-content',
+            swap: 'innerHTML',
+        }).then(() => {
+            const modal = document.getElementById('run-detail-modal');
+            if (modal && !modal.open) modal.showModal();
+        });
+    });
+})();
+</script>
+
+{% if auto_sync_due %}
+{# Stale data (>4h since last Garmin sync). Fire the visible sync
+   button programmatically a moment after page paint, so the user
+   sees the same spinner + in-place refresh as a manual click. #}
+<script>
+(() => {
+    setTimeout(() => {
+        const btn = document.querySelector('button[hx-post="/ingest"]');
+        if (btn && !btn.disabled) btn.click();
+    }, 1200);
+})();
+</script>
+{% endif %}
+{% endblock %}

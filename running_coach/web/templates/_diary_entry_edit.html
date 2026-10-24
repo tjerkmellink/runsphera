@@ -1,0 +1,50 @@
+{# Tempo edit-form partial. Swaps the display card via HTMX outerHTML.
+   Outer layout matches _diary_entry_card.html so the row position in the
+   timeline stays put as you edit. #}
+{% set _day = e.entry_date[8:10] %}
+{% set _mon = fmt_month_short(e.entry_date)|upper %}
+{% set _dow = fmt_dow_short(e.entry_date)|upper %}
+<article class="tp-diary-entry" id="diary-entry-{{ e.id }}">
+    <div class="tp-diary-entry-date">
+        <span class="tp-day">{{ _day }}</span>
+        <span class="tp-mon">{{ _mon }}</span>
+        <span class="tp-dow">{{ _dow }}</span>
+    </div>
+    <div class="tp-diary-entry-mood {% if e.mood %}mood-{{ e.mood }}{% else %}mood-none{% endif %}">
+        {% if e.mood %}{{ mood_emoji(e.mood) }}{% else %}—{% endif %}
+    </div>
+    <div class="tp-diary-entry-card is-editing">
+        <form hx-post="/diary/entries/{{ e.id }}"
+              hx-target="#diary-entry-{{ e.id }}"
+              hx-swap="outerHTML">
+            <div class="tp-diary-mood" style="margin-bottom: 0.85rem;">
+                <span class="tp-diary-mood-label">Mood</span>
+                {% for v in [1, 2, 3, 4, 5] %}
+                <label class="tp-diary-mood-pill {% if e.mood == v %}selected{% endif %}"
+                       data-mood="{{ v }}" title="{{ mood_label(v) }}">
+                    <input type="radio" name="mood" value="{{ v }}" {% if e.mood == v %}checked{% endif %}>
+                    {{ mood_emoji(v) }}
+                </label>
+                {% endfor %}
+                <label class="tp-diary-mood-pill {% if not e.mood %}selected{% endif %}"
+                       data-mood="" title="no rating">
+                    <input type="radio" name="mood" value="" {% if not e.mood %}checked{% endif %}>—
+                </label>
+            </div>
+            <textarea name="body" rows="3"
+                      style="width:100%; border:1px solid var(--rule); background:var(--paper-alt);
+                             border-radius:8px; padding:0.6rem 0.75rem; font:inherit; font-size:0.92rem;
+                             line-height:1.5; resize:vertical; color:var(--text);">{{ e.body }}</textarea>
+            <div style="display:flex; justify-content:flex-end; align-items:center; gap:0.5rem; margin-top:0.65rem;">
+                <button type="button" class="tp-btn"
+                        hx-get="/diary/entries/{{ e.id }}"
+                        hx-target="#diary-entry-{{ e.id }}"
+                        hx-swap="outerHTML">Cancel</button>
+                <button type="submit" class="tp-btn primary">Save</button>
+            </div>
+            <p style="font-size:0.7rem; color:var(--muted); margin:0.5rem 0 0; font-family:'JetBrains Mono',monospace; letter-spacing:0.05em;">
+                Empty body and no mood + save deletes the entry.
+            </p>
+        </form>
+    </div>
+</article>

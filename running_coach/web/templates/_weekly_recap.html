@@ -1,0 +1,35 @@
+{# Tempo weekly-recap card. Same editorial attribution footer as the daily
+   coach hero — keeps both LLM-generated voice surfaces visually consistent.
+   See _coach_message.html in this dir for the matching dashboard treatment. #}
+{% if weekly_recap %}
+<section class="weekly-recap" id="weekly-recap">
+    <div class="weekly-recap-head">
+        <span class="weekly-recap-label">{{ t("Weekly recap") }}</span>
+        {# Locale-aware range. `weekly_recap.week_label` is built in
+           commentary.py in English (it also feeds the LLM prompt); we
+           reformat from the ISO bounds here so the visible label
+           matches the active UI language. #}
+        <span class="muted weekly-recap-range">
+            {{ fmt_date_range(weekly_recap.week_start_iso, weekly_recap.week_end_iso) }}
+        </span>
+    </div>
+    <div class="weekly-recap-body">{{ weekly_recap.text }}</div>
+    <div class="tp-coach-attr weekly-recap-attr">
+        <span>— {{ t("Coach") }}</span>
+        {% if weekly_recap_generated_at %}
+        <span>·</span><span>{{ weekly_recap_generated_at }}</span>
+        {% endif %}
+        {% if llm_available %}
+        <span>·</span>
+        <button type="button"
+                class="coach-refresh"
+                title="{{ t('Regenerate this week\'s recap') }}"
+                hx-post="/weekly-recap/refresh"
+                hx-target="#weekly-recap"
+                hx-swap="outerHTML"
+                hx-disabled-elt="this"
+                hx-indicator="this"><span class="coach-refresh-icon">↻</span> {{ t("Regenerate") }}</button>
+        {% endif %}
+    </div>
+</section>
+{% endif %}

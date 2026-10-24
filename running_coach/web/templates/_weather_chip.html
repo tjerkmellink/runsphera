@@ -1,0 +1,47 @@
+{# Small weather strip on the dashboard. Only renders when a location is set
+   and the forecast was reachable. Clicking opens the 48-h modal. #}
+<button type="button" class="weather-chip" onclick="document.getElementById('weather-modal').showModal()" aria-haspopup="dialog">
+    <div class="weather-now">
+        {% if weather.current_temp_c is not none %}
+        <span class="weather-temp">{{ "%.0f"|format(weather.current_temp_c) }}°C</span>
+        {% endif %}
+        <span class="weather-text">{{ weather.weather_text }}</span>
+    </div>
+    <div class="weather-detail">
+        {% if weather.high_c is not none and weather.low_c is not none %}
+        <span title="High / low today">
+            <span class="muted">H</span> {{ "%.0f"|format(weather.high_c) }}° ·
+            <span class="muted">L</span> {{ "%.0f"|format(weather.low_c) }}°
+        </span>
+        {% endif %}
+        {% if weather.wind_kmh is not none %}
+        <span title="Wind speed">
+            <span class="muted">Wind</span> {{ "%.0f"|format(weather.wind_kmh) }} km/h
+        </span>
+        {% endif %}
+        {% if weather.precip_prob_pct is not none %}
+        <span title="Chance of precipitation today">
+            <span class="muted">Rain</span> {{ weather.precip_prob_pct }}%
+        </span>
+        {% endif %}
+    </div>
+    {% if weather.display_name %}
+    <div class="weather-where muted">{{ weather.display_name }}</div>
+    {% endif %}
+    {% if weather.best_window %}
+    {% set bw = weather.best_window %}
+    <div class="weather-best">
+        <span class="weather-best-label">Best window today</span>
+        <strong>{{ bw.start }}–{{ bw.end }}</strong>
+        {% if bw.avg_temp_c is not none %} · {{ "%.0f"|format(bw.avg_temp_c) }}°C{% endif %}
+        {% if bw.weather_text and bw.weather_text != '—' %} · {{ bw.weather_text|lower }}{% endif %}
+        {% if bw.avg_wind_kmh is not none and bw.avg_wind_kmh >= 10 %} · {{ "%.0f"|format(bw.avg_wind_kmh) }} km/h wind{% endif %}
+        {% if bw.max_precip_pct is not none and bw.max_precip_pct >= 20 %} · {{ bw.max_precip_pct }}% rain{% endif %}
+    </div>
+    {% endif %}
+    <span class="weather-modal-hint-inline muted">click for 48h →</span>
+</button>
+
+{% if weather_hours %}
+    {% include "_weather_modal.html" %}
+{% endif %}

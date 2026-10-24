@@ -1,0 +1,35 @@
+{# Body status — dashboard widget. Two shapes:
+
+   - top_issues populated: show up to 2 issues with severity dots,
+     region + side eyebrow, and a deeplink to /body for the full
+     picture.
+   - all_clear: a quiet positive ("All clear · 9 days running")
+     when there are no active issues.
+
+   Hidden entirely for first-runners (no body data yet) — the
+   Body tab's onboarding zero-state is the better entry point. #}
+{% if body_summary and body_summary.any_body_data %}
+<a href="/body" class="tp-body-widget {% if body_summary.all_clear %}is-clear{% endif %}">
+    <div class="tp-body-widget-head">
+        <span class="tp-body-widget-eyebrow">{{ t("Body") }}</span>
+        {% if body_summary.all_clear %}
+        <span class="tp-body-widget-clear">{{ t("All clear ✓") }}</span>
+        {% else %}
+        <span class="tp-body-widget-count">{{ body_summary.active_count }} {{ t("active") }}</span>
+        {% endif %}
+    </div>
+    {% if body_summary.top_issues %}
+    <ul class="tp-body-widget-list">
+        {% for i in body_summary.top_issues %}
+        <li class="tp-body-widget-row">
+            <span class="tp-body-widget-dot sev-{{ i.severity_band_num }}"></span>
+            <span class="tp-body-widget-row-region">
+                {% if i.side != 'midline' %}{{ t(side_label(i.side)) }} · {% endif %}{{ t(slug_label(i.region)) }}
+            </span>
+            <span class="tp-body-widget-row-sev s{{ i.severity_band_num }}">{{ i.current_severity }}<small>/10</small></span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</a>
+{% endif %}

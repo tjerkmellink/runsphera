@@ -1,0 +1,3509 @@
+[
+  {
+    "source": "personal-running-coach",
+    "name": "Freedom Run Wageningen",
+    "race_date": "2026-05-17",
+    "city": "Wageningen",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "De Freedom Run Wageningen is meer dan een hardloopevenement: het is een viering van vrijheid en verbondenheid. In de stad van de bevrijding op 5 mei 1945 lopen we voor elkaar én voor gelijke kansen. De Lions Club Wageningen organiseert de run ten bate van Stichting Kind en Kans, die kinderen uit gezinnen met beperkte middelen laat meedoen aan schoolactiviteiten. Iedereen is welkom om mee te rennen voor vrijheid en een toekomst waarin geen enkel kind aan de zijlijn staat.",
+    "organizer_url": "https://www.freedomrunwageningen.nl/",
+    "hero_image_url": "https://primary.jwwb.nl/public/q/g/h/temp-uanodqtrwgiljftokkwv/dji_0483-standard.jpg",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 7.5,
+        "label": "7,5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 15.0,
+        "label": "15 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "1e Schiphol Marathon Ronde om de Haarlemmermeer",
+    "race_date": "2026-05-23",
+    "city": "Schiphol-Oost",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "Doe mee met de Schipholloop en beleef een uniek hardloopevenement. Kies uit de (halve) Schiphol Marathon of Ultraloop en schrijf je in.",
+    "organizer_url": "https://schipholloop.nl/",
+    "distances": [
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      },
+      {
+        "km": 61.0,
+        "label": "61 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "DIOS Lenteloop 2026",
+    "race_date": "2026-05-23",
+    "city": "Den Hoorn",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Maak je klaar voor de DIOS Lenteloop! Het feestje waar eigenlijk iedere hardloper bij moet zijn. Mis het niet en schrijf je nu in!",
+    "organizer_url": "https://www.dioslentefeest.nl/lenteloop/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.0,
+        "label": "2 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "IJsselsteinloop",
+    "race_date": "2026-05-23",
+    "city": "IJsselstein",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "Loop mee met de 43e IJsselsteinloop op zaterdag 23 mei 2026! 5KM - 10KM - Halve Marathon & een jeugdloop!",
+    "organizer_url": "https://www.ijsselsteinloop.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.0,
+        "label": "2 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "4 en 10 mijl van Sneek",
+    "race_date": "2026-05-31",
+    "city": "Sneek",
+    "province": "FR",
+    "country_code": "NL",
+    "description": "De Mar-athon van Sneek en de 4 & 10 Mijl van Sneek komen samen in één groots evenement. GrootMedia neemt het bestaande hardloopevent Mar-athon over en voegt dit samen met de vertrouwde sfeer en het karakter van de 4 & 10 Mijl. Het beste van beide werelden.",
+    "organizer_url": "https://marathonsneek.nl/",
+    "hero_image_url": "https://marathonsneek.nl/wp-content/uploads/2026/01/563cb4e9-6a87-407b-8c8e-6c7e44fe94c6_thumb1920-YbNvogGD0eCPpMW8.avif",
+    "distances": [
+      {
+        "km": 6.4,
+        "label": "6,4 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Dichtbij Vrijstad Vianen Loop",
+    "race_date": "2026-05-31",
+    "city": "Vianen",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "Bewegen en genieten! 31 mei 2026 — Over Sponsors Meest gestelde vragen Evenement Uitslagen Inschrijven Direct inschrijven Bewegen en genieten! 31 mei 2026 Vrijstad Vianen Loop",
+    "organizer_url": "https://www.vrijstadvianenloop.nl/",
+    "hero_image_url": "https://lirp.cdn-website.com/ea467bcc/dms3rep/multi/opt/DSC05581-1920w.jpeg",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.0,
+        "label": "2 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Dobbeloop",
+    "race_date": "2026-05-31",
+    "city": "Nootdorp",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "De Dobbeloop is een maandelijkse recreatieve wedstrijdloop, georganiseerd door de Nootdorpse IJsclub. Hij wordt gehouden in het natuurgebied rondom de Dobbeplas tussen Pijnacker en Nootdorp. Het parcours is vrijwel geheel autovrij en verhard door asfalt. De lopers worden begeleid door fietsers, pijlen en bemande posten.",
+    "organizer_url": "https://www.nootdorpseijsclub.nl/hardlopen/dobbeloop",
+    "distances": [
+      {
+        "km": 0.8,
+        "label": "0,8 km"
+      },
+      {
+        "km": 1.5,
+        "label": "1,5 km"
+      },
+      {
+        "km": 3.2,
+        "label": "3,2 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 15.0,
+        "label": "15 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "EA run",
+    "race_date": "2026-05-31",
+    "city": "Eastermar",
+    "province": "FR",
+    "country_code": "NL",
+    "description": "De EA Run is dé jaarlijkse hardloopwedstrijd van Eastermar. Het evenement bestaat uit meerdere hardloopafstanden en wordt aangevuld met een wandeltocht, waardoor het toegankelijk is voor een brede doelgroep. De EA Run is meer dan alleen sport: met foodtrucks, live muziek en de unieke sfeer van een watersportdorp is het een compleet en gezellig evenement voor deelnemers én toeschouwers.",
+    "organizer_url": "https://earun.nl/",
+    "hero_image_url": "https://earun.nl/wp-content/uploads/2026/01/HEADER-scaled.png",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 16.093,
+        "label": "10 Engelse mijl"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Liemerse Landloop",
+    "race_date": "2026-05-31",
+    "city": "Zevenaar",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "“Geweldig dat we dit jaar voor de 25e keer de Liemerse Landloop kunnen houden!” De organisatie is er trots op. Na de corona ging in 2022 de Ooyselandloop door als Liemerse Landloop. Van 350 deelnemers in 2022 naar 800 deelnemers in 2025!\n\nNaast de prestatie gaat het bij de Liemerse Landloop ook om sfeer en gezelligheid. Van toplopers en fanatieke hardlopers tot minder geoefend en beginnend, iedereen is even welkom. De organisatie doet al jaren haar best om iedereen een ‘warm bad’ te geven. Meer dan 70 vrijwilligers heten je van harte welkom en doen er alles aan om het veilig, sportief en gezellig te maken.",
+    "organizer_url": "https://liemerselandloop.nl/",
+    "hero_image_url": "https://liemerselandloop.nl/wp-content/uploads/DSC02833V2-aspect-ratio-2402-1124-1920x898.jpg",
+    "distances": [
+      {
+        "km": 0.5,
+        "label": "0,5 km"
+      },
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 3.0,
+        "label": "3 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Quintusloop",
+    "race_date": "2026-05-31",
+    "city": "Hengelo",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "Over de mooiste verharde en onverharde wegen van de Achterhoek",
+    "organizer_url": "https://quintusloop.nl/",
+    "hero_image_url": "https://quintusloop.nl/wp-content/uploads/2019/11/foto76_2018.jpg",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Staete Makelaars Jeroen Boschloop",
+    "race_date": "2026-06-04",
+    "city": "'s-Hertogenbosch",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "Staete Makelaars Jeroen Boschloop 2026   Inschrijving Jeroen Boschloop 2026 loopt lekker Na de succesvolle 20e editie vorig jaar, is er ook in 2026 weer een Jeroen Boschloop. Op donderdag ...",
+    "organizer_url": "https://jeroenboschloop.nl/",
+    "distances": [
+      {
+        "km": 0.6,
+        "label": "0,6 km"
+      },
+      {
+        "km": 1.2,
+        "label": "1,2 km"
+      },
+      {
+        "km": 1.8,
+        "label": "1,8 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 8.5,
+        "label": "8,5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Twenterandrun",
+    "race_date": "2026-06-05",
+    "city": "Vriezenveen",
+    "province": "OV",
+    "country_code": "NL",
+    "description": "Leuk dat je geïnteresseerd bent in ons hardlopen evenement Twenterandrun! Elk jaar verwelkomen we talloze enthousiaste hardlopers uit Twente en ver daarbuiten.",
+    "organizer_url": "https://twenterandrun.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 1.5,
+        "label": "1,5 km"
+      },
+      {
+        "km": 2.5,
+        "label": "2,5 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Doetse Triathlon",
+    "race_date": "2026-06-06",
+    "city": "Giessenburg",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Doe mee aan de Doetse Triathlon in Giessenburg! Zwem, fiets en loop in een sportieve en gezellige sfeer. In samenwerking met Beter Doen & BWP Runners.",
+    "organizer_url": "https://dedoetsekom.nl/doetsetriathlon",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Halve marathon Ermelo",
+    "race_date": "2026-06-06",
+    "city": "Ermelo",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "HME 2026 is uitverkocht — Zaterdag 6 juni 2026 wordt de 14e Halve Marathon van Ermelo gehouden",
+    "organizer_url": "https://halvemarathonermelo.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.0,
+        "label": "2 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Linie1629 Ultra",
+    "race_date": "2026-06-06",
+    "city": "'s-Hertogenbosch",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "Ben jij een ervaren marathonloper en wil je meer? Ben jij een ervaren marathonloper en ben je benieuwd wat er ‘achter de 42k ligt’?",
+    "organizer_url": "https://linie1629ultra.nl/",
+    "hero_image_url": "https://linie1629ultra.nl/wp-content/uploads/2022/12/fort.webp",
+    "distances": [
+      {
+        "km": 50.0,
+        "label": "50 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Obstakel Run Bootcamp",
+    "race_date": "2026-06-06",
+    "city": "Eefde",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "Dit gave evenement wil je niet missen! Een parcours met oefeningen &amp; stoere obstakels die alles van je vragen. Bij de eindstreep krijg jij de echte FINISHER patch!",
+    "organizer_url": "https://www.rickharmsen.nl/obstakel-run-2026/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 15.0,
+        "label": "15 km"
+      },
+      {
+        "km": 20.0,
+        "label": "20 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Palingrun",
+    "race_date": "2026-06-06",
+    "city": "Volendam",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "Doe mee aan de Palingrun in Volendam op 6 juni 2026. Voor kids, bedrijven en fanatieke hardlopers (+wandelaars)!",
+    "organizer_url": "https://palingrun.nl/",
+    "distances": [
+      {
+        "km": 8.0,
+        "label": "8 km"
+      },
+      {
+        "km": 16.093,
+        "label": "10 Engelse mijl"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "De Drie Dorpenloop",
+    "race_date": "2026-06-07",
+    "city": "Kortenhoef",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "The Skinbar Driedorpenloop – Waar sport en sfeer samenkomen!",
+    "organizer_url": "https://driedorpenloop.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 15.0,
+        "label": "15 km"
+      },
+      {
+        "km": 20.0,
+        "label": "20 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "LoveLife Run Hilversum",
+    "race_date": "2026-06-07",
+    "city": "Hilversum",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "Zet je onmacht om in kracht, kom ook in actie voor Fight cancer en haal geld op voor kankeronderzoek!",
+    "organizer_url": "https://www.fightcancer.nl/event/lovelife-run-hilversum/home",
+    "hero_image_url": "https://d3vmt89mfvweui.cloudfront.net/baae912e10847e4e03b4ab8b089038e2.jpg",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Wateringse veld loopfestijn en Zomerfestijn",
+    "race_date": "2026-06-07",
+    "city": "Den Haag",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Loopfestijn Wateringse Veld. Doe jij mee dit jaar? Lekker bewegen en ook nog eens een goed doel kunnen steunen? We zien je graag!",
+    "organizer_url": "https://loopfestijn.wateringseveld.nl/",
+    "distances": [
+      {
+        "km": 0.5,
+        "label": "0,5 km"
+      },
+      {
+        "km": 2.0,
+        "label": "2 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Bedriegertjestrail",
+    "race_date": "2026-06-10",
+    "city": "Rozendaal",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "De Bedriegertjeslopers vormen een enthousiaste groep hardlopers die wekelijks samenkomen in de prachtige omgeving van de Posbank, in de buurt van Rozendaal, Arnhem en Velp. Wil je ervaren wat de Bedriegertjeslopers te bieden hebben? Kom gerust op maandag of zaterdag langs en loop met ons mee! Voor meer informatie kun je contact met ons opnemen via info@bedriegertjeslopers.nl.",
+    "organizer_url": "https://bedriegertjeslopers.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.0,
+        "label": "2 km"
+      },
+      {
+        "km": 6.0,
+        "label": "6 km"
+      },
+      {
+        "km": 11.0,
+        "label": "11 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Bornsche MatenLoop",
+    "race_date": "2026-06-12",
+    "city": "Borne",
+    "province": "OV",
+    "country_code": "NL",
+    "description": "Het parcours van de Bornsche Maten Loop, waarin verharde en gravel paden elkaar afwisselen, loopt om de prachtige wijk de Bornsche Maten.",
+    "organizer_url": "https://bornschematenloop.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "FMCG Halve Marathon Relay",
+    "race_date": "2026-06-12",
+    "city": "Amsterdam",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "Strijd met je collega",
+    "organizer_url": "https://fmcgrelay.nl",
+    "distances": [
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Biertrail Gorp en Roovert - Roovertsche Leij",
+    "race_date": "2026-06-13",
+    "city": "Goirle",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "Biertrail Gorp en Roovert – 13 juni 2026 In 2026 staat er opnieuw een mooie biertrail op het programma. Dit keer gaan we trailen op de grens tussen Nederland en België, rondom de Roovertsche Leij. We hebben een mooie route uitgezet door Gorp en Roovert. Uiteraard wordt er onderweg bier geproefd en staat brouwerij Nicolaas uit Goirle bij de start & finish met een aantal van hun eigen bieren. Bovendien zou een trail geen trail zijn als we niet ook zouden",
+    "organizer_url": "https://bierbattle.nl/biertrail-gorp-en-roovert/",
+    "hero_image_url": "https://bierbattle.nl/wp-content/uploads/2026/03/biertrail-header.png",
+    "distances": [
+      {
+        "km": 12.0,
+        "label": "12 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Deurne City Run",
+    "race_date": "2026-06-13",
+    "city": "Deurne",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "Het schitterende centrum van Deurne met de vele winkels en erg gezellige horecagelegenheden is opnieuw het decor van de Deurne City Run. Samen met de gezamenlijke horeca van Deurne wordt een avondvullend programma georganiseerd. Met een gevarieerde opzet in afstanden en onderdelen, belooft de Deurne City Run van 2026 ook weer een schitterende editie te worden! Op het programma staat de Finstream ouder/kind Run, de 10 km Knapen Trailers estafetteloop en de 5 km Houthandel Fransen individueel!",
+    "organizer_url": "https://www.deurnecityrun.nl/",
+    "hero_image_url": "https://www.deurnecityrun.nl/wp-content/uploads/2026/03/2025-06-07-Deurne-City-Run_Fotoclub-Optika_HR-00017.jpg",
+    "distances": [
+      {
+        "km": 0.5,
+        "label": "0,5 km"
+      },
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Hooge Vuursche Trail",
+    "race_date": "2026-06-13",
+    "city": "Baarn",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "De Hooge Vuursche Trail is een trail op de Utrechtse Heuvelrug met een 7 - 13 en een 21km afstand.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Hooge-Vuursche-Trail-13-06-2026",
+    "distances": [
+      {
+        "km": 7.0,
+        "label": "7 km"
+      },
+      {
+        "km": 13.0,
+        "label": "13 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Urban Haring Run 2026",
+    "race_date": "2026-06-14",
+    "city": "Vlaardingen",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "URBAN HARING RUN & FIT FESTIVAL — Herontdek Vlaardingen",
+    "organizer_url": "https://urbanharingrun.nl/",
+    "distances": [
+      {
+        "km": 2.5,
+        "label": "2,5 km"
+      },
+      {
+        "km": 6.0,
+        "label": "6 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Bernhoven Loopt Warm",
+    "race_date": "2026-06-17",
+    "city": "Uden",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "Doe mee op woensdagavond 17 juni 2026 met Bernhoven Loopt Warm en kom in beweging voor het goede doel!  Samen met collega’s, familie, vrienden en inwoners uit de regio wandelen of hardlopen we voor de Infuuts en de Voortuin.\n\nIedere stap telt. Of je nu gaat voor de 5 km wandeling of een langere hardloopafstand, meedoen is belangrijker dan winnen.",
+    "organizer_url": "https://www.vriendenvanbernhoven.nl/blw/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "B Business Run",
+    "race_date": "2026-06-19",
+    "city": "Amsterdam",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "Participate in the B. Business Run 2025. An energetic event where sports, fun and the B. community come together on and around the grounds of B. Amsterdam.",
+    "organizer_url": "https://b-amsterdam.com/en/b-members/business-run/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "De ZorgSpecialist Grachtenloop",
+    "race_date": "2026-06-19",
+    "city": "Haarlem",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "De Zorgspecialist Grachtenloop 19 juni 2026 Snel naar De grachtenloop wordt georganiseerd door SportSupport Volg ons op instagram Onze sponsors",
+    "organizer_url": "https://www.grachtenloop.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Midzomernachtcross",
+    "race_date": "2026-06-19",
+    "city": "Amstelveen",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "Midzomernachtcross 19 juni 2026 — De inschrijvingen voor de 44ste editie van de Midzomernachtcross zijn geopend!",
+    "organizer_url": "https://www.midzomernachtcross.nl/",
+    "distances": [
+      {
+        "km": 1.6,
+        "label": "1,6 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 16.093,
+        "label": "10 Engelse mijl"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Vuurtorenloop Hoek van Holland",
+    "race_date": "2026-06-19",
+    "city": "Hoek van Holland",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Na de geslaagde editie afgelopen jaar kijken we uit naar de derde Eneco Vuurtorenloop Hoek van Holland op 19 juni! Dat wordt een fijne race en natuurlijk na afloop weer flink genieten tijdens de afterparty.",
+    "organizer_url": "https://www.vuurtorenloophoekvanholland.nl/",
+    "hero_image_url": "https://www.vuurtorenloophoekvanholland.nl/wp-content/uploads/2016/09/26-VTL-Website-header-1200x679-1.png",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 6.0,
+        "label": "6 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Marathon Sneek",
+    "race_date": "2026-06-20",
+    "city": "Sneek",
+    "province": "FR",
+    "country_code": "NL",
+    "description": "De Mar-athon van Sneek en de 4 & 10 Mijl van Sneek komen samen in één groots evenement. GrootMedia neemt het bestaande hardloopevent Mar-athon over en voegt dit samen met de vertrouwde sfeer en het karakter van de 4 & 10 Mijl. Het beste van beide werelden.",
+    "organizer_url": "https://marathonsneek.nl/",
+    "hero_image_url": "https://marathonsneek.nl/wp-content/uploads/2026/01/563cb4e9-6a87-407b-8c8e-6c7e44fe94c6_thumb1920-YbNvogGD0eCPpMW8.avif",
+    "distances": [
+      {
+        "km": 6.4,
+        "label": "6,4 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Moerdijk FUN run",
+    "race_date": "2026-06-20",
+    "city": "Moerdijk",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "Wie zijn wij? — Stichting Sport & Vitaliteit Moerdijk is ontstaan vanuit de kracht van een lokaal hardloopevenement “Moerdijk fun adventure run”. Wat begon als een sportief initiatief om mensen in beweging te brengen, groeide al snel uit tot iets groters. We zagen hoeveel energie, verbinding en enthousiasme sport kan losmaken binnen onze gemeenschap.",
+    "organizer_url": "https://sportenvitaliteitmoerdijk.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.5,
+        "label": "2,5 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 7.5,
+        "label": "7,5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 12.5,
+        "label": "12,5 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Pierewaai Trail Beachrun IJmuiden",
+    "race_date": "2026-06-20",
+    "city": "IJmuiden",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "strand en duin loop IJmuiden aan Zee",
+    "organizer_url": "https://pierewaaitrail.nl/",
+    "distances": [
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 15.0,
+        "label": "15 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      },
+      {
+        "km": 60.0,
+        "label": "60 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Sightseeingrun Veendam",
+    "race_date": "2026-06-20",
+    "city": "Veendam",
+    "province": "GR",
+    "country_code": "NL",
+    "description": "In 2014 had Veendam de primeur van de eerste Sightseeing Run van Nederland. De Sightseeing Run “Broez’n deur andermans Hoez’n” is een recreatieve hardloopwedstrijd waarbij deelnemers dwars door een aantal gebouwen en bezienswaardigheden lopen. Meer informatie over het evenement vind je op deze website!",
+    "organizer_url": "https://www.sightseeingrunveendam.nl/",
+    "distances": [
+      {
+        "km": 2.0,
+        "label": "2 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "VechtdalTrail 2026",
+    "race_date": "2026-06-20",
+    "city": "Ommen",
+    "province": "OV",
+    "country_code": "NL",
+    "description": "Enjoy new trails",
+    "organizer_url": "https://vechtdaltrail.nl/",
+    "distances": [
+      {
+        "km": 15.0,
+        "label": "15 km"
+      },
+      {
+        "km": 22.0,
+        "label": "22 km"
+      },
+      {
+        "km": 30.0,
+        "label": "30 km"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      },
+      {
+        "km": 60.0,
+        "label": "60 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "WIEZOLOOP",
+    "race_date": "2026-06-20",
+    "city": "Wierden",
+    "province": "OV",
+    "country_code": "NL",
+    "description": "Op zaterdag 20 juni 2026 wordt in Wierden de 25e editie van de Internationale Wiezoloop georganiseerd.",
+    "organizer_url": "https://wiezoloop.nl/",
+    "distances": [
+      {
+        "km": 0.8,
+        "label": "0,8 km"
+      },
+      {
+        "km": 2.5,
+        "label": "2,5 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Bavoloop Rijsbergen",
+    "race_date": "2026-06-21",
+    "city": "Rijsbergen",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "De 37e editie van de Bavoloop — Bavoloop Praktische informatie Afstanden Trailrun Praktische informatie Sponsoren Contact X Schrijf je in De 37e editie van de Bavoloop Beleef op zondag 21 juni hét hardloopevenement van Rijsbergen. Een sfeervol parcours door het dorp voor lopers van elk niveau.",
+    "organizer_url": "https://bavoloop.nl/",
+    "hero_image_url": "https://bavoloop.nl/wp-content/uploads/2026/03/505778448_1468339810792217_7700395971407095904_n.jpg",
+    "distances": [
+      {
+        "km": 2.5,
+        "label": "2,5 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Dom Verdan Loop",
+    "race_date": "2026-06-21",
+    "city": "Reutum",
+    "province": "OV",
+    "country_code": "NL",
+    "description": "De Dom Verdan Loop is terug! Op zondag 21 juni 2026 kun je weer genieten van verschillende afstanden door de prachtige omgeving in en rondom Reutum, voor zowel hardlopers als wandelaars.",
+    "organizer_url": "https://www.domverdan.nl/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Midzomernacht Halve Marathon",
+    "race_date": "2026-06-21",
+    "city": "Zaltbommel",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "Welkom bij de Zaltbommel DutchRunners! — De Zaltbommel DutchRunners, ZDR in de ‘volksmond’, bestaat uit een gezellige groep lopers van elk niveau. Onder deskundige leiding van ervaren KNAU-trainers wordt er iedere dinsdagavond training gegeven op diverse locaties.",
+    "organizer_url": "https://zaltbommeldutchrunners.nl/",
+    "distances": [
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "De Ronde van Nieuwveen",
+    "race_date": "2026-06-25",
+    "city": "Nieuwveen",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Op donderdagavond 26 juni 2025 wordt de hardloopwedstrijd de Ronde van Nieuwveen gehouden. Schrijf je nu in en zorg dat je erbij bent!",
+    "organizer_url": "https://derondevannieuwveen.nl/",
+    "distances": [
+      {
+        "km": 0.4,
+        "label": "0,4 km"
+      },
+      {
+        "km": 0.8,
+        "label": "0,8 km"
+      },
+      {
+        "km": 1.7,
+        "label": "1,7 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 15.0,
+        "label": "15 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Hardloopfeest door Oud-Beijerland",
+    "race_date": "2026-06-26",
+    "city": "Oud-Beijerland",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Ren 5 of 10 kilometer in het centrum van Oud-Beijerland op 26 juni. Geniet van muziek en beleef een uniek hardloopfeest.",
+    "organizer_url": "https://hardloopfeest.nl/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Westenholterun 2026",
+    "race_date": "2026-06-26",
+    "city": "Zwolle",
+    "province": "OV",
+    "country_code": "NL",
+    "description": "De inschrijving voor 2026 is gestart! \n\nLoop ook mee met de 7e editie van de Westenholterun op vrijdagavond 26 juni 2026!  Klik hier voor het inschrijfformulier         Klik hier voor het inschrijfformulier    \nDe 7e editie van de Westenholterun:\nvrijdag",
+    "organizer_url": "https://www.westenholterun.nl/",
+    "hero_image_url": "https://www.westenholterun.nl/wp-content/uploads/2025/07/WhatsApp-Image-2025-07-01-at-22.05.23.jpeg",
+    "distances": [
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Brabantse Ultra Trail - BUT100",
+    "race_date": "2026-06-27",
+    "city": "Leende",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "De Brabantse Ultra Trail (BUT100) is een hardloop evenement door de natuur waarbij de deelnemers 50, 75 of 100km lopen.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Brabantse-Ultra-Trail-BUT100-27-06-2026",
+    "distances": [
+      {
+        "km": 50.0,
+        "label": "50 km"
+      },
+      {
+        "km": 75.0,
+        "label": "75 km"
+      },
+      {
+        "km": 100.0,
+        "label": "100 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Midzomer Marathon",
+    "race_date": "2026-06-27",
+    "city": "Apeldoorn",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "27 juni 2026 — Zomer. Lange dagen. Heerlijk lopen.",
+    "organizer_url": "https://midzomermarathon.hardloop-events.nl/",
+    "hero_image_url": "https://midzomermarathon.hardloop-events.nl/wp-content/uploads/2025/01/64208FEC-1A1E-49D8-B1F6-072B5F95C5C1_1_201_a-2048x1152.jpeg",
+    "distances": [
+      {
+        "km": 7.5,
+        "label": "7,5 km"
+      },
+      {
+        "km": 14.0,
+        "label": "14 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 28.0,
+        "label": "28 km"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Vechtloop",
+    "race_date": "2026-06-28",
+    "city": "Weesp",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "Gezellig hardloopevent langs de Vecht en door de mooie binnenstad van Weesp - 2,5 / 5 / 10KM - Doe mee! | Deelname kinderen gratis.",
+    "organizer_url": "https://vechtloop.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.5,
+        "label": "2,5 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "ZUIDPOLDER TRAIL",
+    "race_date": "2026-06-28",
+    "city": "Barendrecht",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Zuidpolder Trail is geen massaloop. Het is 13,5 km ontspanning. Smalle paden door natuurgebied, langs het water en wat hoogtemeters. Geen opstoppingen, geen druk parcours, gewoon buiten hardlopen.",
+    "organizer_url": "https://buitenhardlopen.nl/",
+    "distances": [
+      {
+        "km": 13.5,
+        "label": "13,5 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "UIlenstede VU Polderloop",
+    "race_date": "2026-07-02",
+    "city": "Amstelveen",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "Uilenstede VU Polderloop - Amsterdam Loopt Harder met Phanos",
+    "organizer_url": "https://vupolderloop.nl/",
+    "hero_image_url": "https://vupolderloop.nl/wp-content/uploads/sites/2/2016/02/slide0.jpg",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "RunX Summer Run",
+    "race_date": "2026-07-03",
+    "city": "Spaarndam",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "Loop mee met de 5e RunX Summer Run op vrijdag 3 juli 2026 in Spaarndam. Kies voor 5 of 10 km hardlopen op een zomerparcours. Schrijf je in!",
+    "organizer_url": "https://runx.nl/5e-runx-summer-run/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Landgoed Morren Run",
+    "race_date": "2026-07-04",
+    "city": "Oosterwolde",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "Landgoed Morren Run is een marathon in Oosterwolde GLD. Het parcours loopt voor een deel over het mooie Landgoed Morren.",
+    "organizer_url": "https://landgoedmorrenrun.nl",
+    "distances": [
+      {
+        "km": 2.5,
+        "label": "2,5 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Leenderbos Trail",
+    "race_date": "2026-07-05",
+    "city": "Leende",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "De Leenderbos Trail is een hardloopevenement welke uniek is vanwege de diversiteit van het gebied. Er zijn routes van 9, 18 en 27km.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Leenderbos-Trail-05-07-2026",
+    "distances": [
+      {
+        "km": 9.0,
+        "label": "9 km"
+      },
+      {
+        "km": 18.0,
+        "label": "18 km"
+      },
+      {
+        "km": 27.0,
+        "label": "27 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Amerongse Berg Trail",
+    "race_date": "2026-07-12",
+    "city": "Overberg",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "De Amerongse Berg Trail is een hardloopevenement waar deelnemers prachtige routes verkennen in de bossen rond Amerongen.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Amerongse-Berg-Trail-12-07-2026",
+    "distances": [
+      {
+        "km": 12.0,
+        "label": "12 km"
+      },
+      {
+        "km": 17.0,
+        "label": "17 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Lingezegen Night Run",
+    "race_date": "2026-07-17",
+    "city": "Elst",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "7 hardloopwedstrijden in 2026 in Park Lingezegen, Elst. 100% verhard en vlak parcours. Kies uit 3, 5 of 10 km. Chipregistratie en Lingezegen League.",
+    "organizer_url": "https://lingezegenrun.nl/",
+    "distances": [
+      {
+        "km": 3.0,
+        "label": "3 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Moore DRV Run Maasdijk",
+    "race_date": "2026-07-25",
+    "city": "Maasdijk",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "De gezelligste hardloopwedstrijd van het Westland is tijdens het Zomerspektakel in Maasdijk. Moore DRV Run Maasdijk vindt plaats over de afstand van 10 kilometer in en rondom Maasdijk.",
+    "organizer_url": "https://www.mooredrvrunmaasdijk.nl/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Veluwse Ultra Trail - VUT100",
+    "race_date": "2026-07-25",
+    "city": "Elspeet",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "De Veluwse Ultra Trail (VUT100) is een evenement waarbij de deelnemers 50km, 75km of 100km lopen. De VUT100 heeft 2 unieke lussen.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Veluwse-Ultra-Trail-VUT100-25-07-2026",
+    "distances": [
+      {
+        "km": 50.0,
+        "label": "50 km"
+      },
+      {
+        "km": 75.0,
+        "label": "75 km"
+      },
+      {
+        "km": 100.0,
+        "label": "100 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Groesbeek Trail",
+    "race_date": "2026-08-01",
+    "city": "Berg en Dal",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "De Groesbeek Trail is een hardloopevenement waar deelnemers prachtige routes verkennen in de bossen bij Bergen en Dal en Groesbeek.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Groesbeek-Trail-01-08-2026",
+    "distances": [
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 30.0,
+        "label": "30 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Halve Marathon Lauwersoog-Ulrum",
+    "race_date": "2026-08-01",
+    "city": "Ulrum",
+    "province": "GR",
+    "country_code": "NL",
+    "description": "Iedere zomer wordt de Halve Marathon Lauwersoog – Ulrum gelopen. Een sportief evenement dwars door het prachtige natuurgebied Lauwersoog.",
+    "organizer_url": "https://halvemarathon.nl/",
+    "distances": [
+      {
+        "km": 6.4,
+        "label": "6,4 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Stakenberg Trail",
+    "race_date": "2026-08-15",
+    "city": "Elspeet",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "De routes van de Stakenberg Trail gaan over de prachtige heidevelden van de Noord-Veluwe tussen Elspeet, Vierhouten en Nunspeet,.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Stakenberg-Trail-15-08-2026",
+    "distances": [
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 30.0,
+        "label": "30 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Vechtloop Maarssen",
+    "race_date": "2026-08-25",
+    "city": "Maarssen",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "De Vechtloop 2026 is op dinsdag 25 augustus. Voorinschrijving is mogelijk vanaf 1 mei.…",
+    "organizer_url": "https://www.vechtloop-maarssen.nl/",
+    "distances": [
+      {
+        "km": 1.5,
+        "label": "1,5 km"
+      },
+      {
+        "km": 3.0,
+        "label": "3 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Rozendaalse Veldloop",
+    "race_date": "2026-08-26",
+    "city": "Rozendaal",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "De Bedriegertjeslopers vormen een enthousiaste groep hardlopers die wekelijks samenkomen in de prachtige omgeving van de Posbank, in de buurt van Rozendaal, Arnhem en Velp. Wil je ervaren wat de Bedriegertjeslopers te bieden hebben? Kom gerust op maandag of zaterdag langs en loop met ons mee! Voor meer informatie kun je contact met ons opnemen via info@bedriegertjeslopers.nl.",
+    "organizer_url": "https://bedriegertjeslopers.nl/",
+    "distances": [
+      {
+        "km": 6.0,
+        "label": "6 km"
+      },
+      {
+        "km": 12.0,
+        "label": "12 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Austerlitz Trail",
+    "race_date": "2026-08-29",
+    "city": "Zeist",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "We starten en finishen op de KNVB Campus midden in de Staatsbossen bij Zeist. Daar kun je zelf kiezen of je 1, 2, of 3 lussen gaat lopen.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Austerlitz-Trail-29-08-2026",
+    "distances": [
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 30.0,
+        "label": "30 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Dorpsloop Hoevelaken",
+    "race_date": "2026-08-29",
+    "city": "Hoevelaken",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "Hét sportieve hoogtepunt van Hoevelaken voor jong en oud. Of je nu gaat voor een persoonlijke record of voor de gezelligheid: zorg dat je erbij bent!",
+    "organizer_url": "https://dorpsdag-hoevelaken.nl/programma/dorpsloop-2026/",
+    "distances": [
+      {
+        "km": 0.9,
+        "label": "0,9 km"
+      },
+      {
+        "km": 1.8,
+        "label": "1,8 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Heiderun",
+    "race_date": "2026-08-29",
+    "city": "Ede",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "Op 24 september 2022 wordt de Edese heide een hardloop spektakel voor jong en oud!",
+    "organizer_url": "https://www.heiderun.nl/",
+    "distances": [
+      {
+        "km": 0.7,
+        "label": "0,7 km"
+      },
+      {
+        "km": 1.4,
+        "label": "1,4 km"
+      },
+      {
+        "km": 6.0,
+        "label": "6 km"
+      },
+      {
+        "km": 12.0,
+        "label": "12 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Austerlitz Ultra",
+    "race_date": "2026-08-30",
+    "city": "Zeist",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "We vertrekken vanaf de KNVB Campus midden in de Staatsbossen bij Zeist. Daar vandaan doorkruisen alle deelnemers de prachtige bossen.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Austerlitz-Ultra-30-08-2026",
+    "distances": [
+      {
+        "km": 50.0,
+        "label": "50 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Dorpsloop Teteringen",
+    "race_date": "2026-08-30",
+    "city": "Teteringen",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "Dorpsloop Teteringen 30 augustus 2026 — Inschrijven Wandeltocht Schrijf je hier in voor de Snoeren Footfashion wandeltocht of MyFysioYourGym Walk & Wheels (inschrijvingen nog niet geopend)Inschrijven Kober Kinderloop Schrijf je hier in voor de Kober Kinderloop!Laatste berichten",
+    "organizer_url": "https://www.dorpsloop.nl/",
+    "hero_image_url": "https://www.dorpsloop.nl/wp-content/uploads/2016/06/lopers3_21004579046_o-min.jpg",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "N70 Trail - Welcome to the Dutch Alps",
+    "race_date": "2026-08-30",
+    "city": "Nijmegen",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "N70 Trail — 30 Augustus 2026",
+    "organizer_url": "https://n70trail.nl/",
+    "hero_image_url": "https://n70trail.nl/wp-content/uploads/2023/02/42A4ECD9-582F-4465-8451-9BD2BC036A24_1_201_a.jpeg",
+    "distances": [
+      {
+        "km": 7.0,
+        "label": "7 km"
+      },
+      {
+        "km": 14.0,
+        "label": "14 km"
+      },
+      {
+        "km": 21.0,
+        "label": "21 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Valkenburg Half Marathon",
+    "race_date": "2026-08-30",
+    "city": "Valkenburg",
+    "province": "LI",
+    "country_code": "NL",
+    "description": "Zondag 31 augustus is de volgende editie van de Valkenburg Half Marathon!",
+    "organizer_url": "https://www.valkenburghalfmarathon.nl",
+    "distances": [
+      {
+        "km": 0.5,
+        "label": "0,5 km"
+      },
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 16.093,
+        "label": "10 Engelse mijl"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Loop naar de pomp",
+    "race_date": "2026-09-05",
+    "city": "Noordeloos",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Het Hardloop competitie circuit van de regio Drechtsteden. Hardloop wedstrijden gebundeld in een loopcircuit. Negen wedstrijden in totaal",
+    "organizer_url": "https://stardgrl.nl/",
+    "distances": [
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Proef Rondje Stroe",
+    "race_date": "2026-09-05",
+    "city": "Stroe",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "Uitslagen Programma Kidsrun 5 en 10 kilometer Bedrijvenloop Praktische informatie Parcours Nieuws Sponsors Foto’s Goede doelen Uitslagen Programma Kidsrun 5 en 10 kilometer Bedrijvenloop Praktische informatie Parcours Nieuws Sponsors Foto’s Goede doelen Uitslagen Programma Kidsrun 5 en 10 kilometer Bedrijvenloop Praktische informatie Parcours Nieuws Sponsors Foto’s Goede doelen Uitslagen Programma Kidsrun 5 en 10 kilometer Bedrijvenloop Praktische informatie Parcours Nieuws Sponsors Foto’s Goede doelen 5 SEPTEMBER 2026 Supporter van hardlopers en goede doelen SCHRIJF JE NU IN PROEF RONDJE STROE START OVER Gezelligheid voorop Presteren en genieten gaan prima samen Proef Rondje Stroe is dé gelegenheid om te genieten van het hardlopen, de prachtige omgeving van heide en weilanden, en natuurlijk van de gezelligheid met eten, drinken en live muziek.",
+    "organizer_url": "https://proefrondjestroe.nl/",
+    "hero_image_url": "https://proefrondjestroe.nl/wp-content/uploads/2025/09/25-09-06Jeroen-VisserDSC00713-e1757777233936.jpg",
+    "distances": [
+      {
+        "km": 0.6,
+        "label": "0,6 km"
+      },
+      {
+        "km": 1.2,
+        "label": "1,2 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Veluwsetrailrun",
+    "race_date": "2026-09-05",
+    "city": "Ermelo",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "'wat sterk is uit innerlijke overtuiging faalt nooit' — Deze website gebruikt cookies en verzamelt daarmee informatie over het gebruik van de website om deze te analyseren en om er voor te zorgen dat je voor jou relevante informatie en advertenties te zien krijgt. Door hiernaast op akkoord te klikken, geef je aan akkoord te zijn met het gebruik van cookies en het verzamelen van informatie aan de hand daarvan door ons en door derden.",
+    "organizer_url": "https://www.veluwsetrailrun.nl/",
+    "hero_image_url": "https://www.veluwsetrailrun.nl/assets/files/foto-2025.960x0x0x100.png",
+    "distances": [
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 15.0,
+        "label": "15 km"
+      },
+      {
+        "km": 22.0,
+        "label": "22 km"
+      },
+      {
+        "km": 30.0,
+        "label": "30 km"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      },
+      {
+        "km": 60.0,
+        "label": "60 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "30 van Amsterdam Noord",
+    "race_date": "2026-09-06",
+    "city": "Amsterdam",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "INSCHRIJVEN-VOORINSCHRIJVING deels vol",
+    "organizer_url": "https://www.30vanamsterdamnoord.nl",
+    "distances": [
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 30.0,
+        "label": "30 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "DeTikkendeKlokChallengenl Last Runner Standing",
+    "race_date": "2026-09-06",
+    "city": "Zandvoort",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "HART ♥ LOPEN op het iconische circuit Zandvoort&nbsp;10 uur lang, met elk uur een nieuw startschot. Ben je op tijd terug? Dan rust je even uit en start je opnieuw. Zo ver als jij wilt — van één ronde wandelen tot een volledige marathon of een dubbele...",
+    "organizer_url": "https://www.detikkendeklokchallenge.nl/",
+    "distances": [
+      {
+        "km": 4.2,
+        "label": "4,2 km"
+      },
+      {
+        "km": 8.4,
+        "label": "8,4 km"
+      },
+      {
+        "km": 12.6,
+        "label": "12,6 km"
+      },
+      {
+        "km": 16.8,
+        "label": "16,8 km"
+      },
+      {
+        "km": 21.0,
+        "label": "21 km"
+      },
+      {
+        "km": 25.2,
+        "label": "25,2 km"
+      },
+      {
+        "km": 29.4,
+        "label": "29,4 km"
+      },
+      {
+        "km": 33.8,
+        "label": "33,8 km"
+      },
+      {
+        "km": 38.0,
+        "label": "38 km"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "DijkenSport",
+    "race_date": "2026-09-06",
+    "city": "Beneden-Leeuwen",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "In het eerste weekend van september kun je tijdens DijkenSport.nl weer Sportief Genieten in het Land van Maas en Waal.",
+    "organizer_url": "https://dijkensport.nl/nl/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Stichting Almere PoortRun",
+    "race_date": "2026-09-06",
+    "city": "Almere",
+    "province": "FL",
+    "country_code": "NL",
+    "description": "Hardlopen,Verbinden & Beleving — info@almerepoortrun.nl Cascadepark, Almere Poort Jki-instagram-1-light Home Afstanden Activiteiten Over Ons Sponsors & Vrijwilligers Contact Koop kaarten Hardlopen,Verbinden & Beleving Welkom bij de Almere PoortRun! Na het grote succes van de eerste editie is het nu tijd voor editie twee: een uniek hardloopevenement waar sport, food en verbinding centraal staan.",
+    "organizer_url": "https://almerepoortrun.nl/",
+    "hero_image_url": "https://almerepoortrun.nl/wp-content/uploads/2026/02/Poort-Run-2025-496.jpg",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 16.093,
+        "label": "10 Engelse mijl"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Hulckesteijnloop - Landgoed Energy Up",
+    "race_date": "2026-09-09",
+    "city": "Zeewolde",
+    "province": "FL",
+    "country_code": "NL",
+    "description": "Hardloopevenement op Landgoed Energy Up in Zeewolde. Vier afstanden van 5 tot 14 km door het Hulkesteinse Bos. Yoga, sauna, camping. 9 september 2026.",
+    "organizer_url": "https://hulckesteijnloop.nl/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 7.0,
+        "label": "7 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 14.0,
+        "label": "14 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Rusheuvelloop",
+    "race_date": "2026-09-09",
+    "city": "Oss",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "Met het crossseizoen voor de deur nog één keer in je korte broek genieten van de nazomer en het beste uit jezelf halen op de 5 of de 10 kilometer of de jeugdloop? Dat kan op woensdagavond 9 september bij de Rusheuvelloop; het slotakkoord van het Maasland Run Classics circuit 2026. Na afloop van deze laatste wedstrijd is de prijsuitreiking voor het totaalklassement.",
+    "organizer_url": "https://www.avoss78.nl/index.php?page=342&sid=1",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Fish Potato Run",
+    "race_date": "2026-09-12",
+    "city": "Emmeloord",
+    "province": "FL",
+    "country_code": "NL",
+    "description": "In 2026 start de Fish Potato Run op de 2e zaterdag van september (12 september) vanuit de gezellige historische vissershaven van Urk en loopt door het unieke polderlandschap van de Noordoostpolder.",
+    "organizer_url": "https://www.fishpotatorun.nl/",
+    "distances": [
+      {
+        "km": 6.4,
+        "label": "6,4 km"
+      },
+      {
+        "km": 12.8,
+        "label": "12,8 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Oegema Logistics Bissinghrun",
+    "race_date": "2026-09-12",
+    "city": "Ommen",
+    "province": "OV",
+    "country_code": "NL",
+    "description": "Oegema Logistics+ Bissinghrun Zaterdag 12 september 2026 — Over ACOLidmaatschapZonder vrijwilligers geen club!De clubAccommodatieSportmassage bij ACOBaanrecordsHuisregels en statutenHistorieEvenementenEvenementenkalenderSalbam LemelerbergloopACO CrossloopFysio Track meetingACO ScholierenloopVechtdalTrailAthletics Champs OmmenOegema Logistics+ BissinghrunNieuwsTrainingenJeugdtrainingenFrame Running OmmenNordic walkingSportief wandelenConditietrainingACO plusBewust hardlopenFoto'sContactLid wordenVolg ons: Oegema Logistics+ Bissinghrun Zaterdag 12 september 2026 De Oegema Logistics+ Bissinghrun, met start en finish in het gezellige centrum van Ommen wordt georganiseerd door ACO van Elderen. De organisatie vindt het belangrijk dat iedereen zoveel mogelijk beweegt en wil aanzetten tot een gezonde en actieve levensstijl. Hardlopen past daar prima bij, dat geldt voor jong en oud! De Oegema Logistics+ Bissinghrun is een wedstrijd waar iedereen op haar of zijn eigen niveau kan deelnemen.",
+    "organizer_url": "https://www.acovanelderen.nl/evenementen/bissinghrun/",
+    "distances": [
+      {
+        "km": 1.3,
+        "label": "1,3 km"
+      },
+      {
+        "km": 8.5,
+        "label": "8,5 km"
+      },
+      {
+        "km": 16.093,
+        "label": "10 Engelse mijl"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Stratenloop Sevenum",
+    "race_date": "2026-09-12",
+    "city": "Sevenum",
+    "province": "LI",
+    "country_code": "NL",
+    "description": "Stratenloop Sevenum is terug! Schrijf je in voor de ouder-kindloop, kidsrun, scholenloop, 5 km of 10 km. Beleef sport, sfeer en samenhorigheid. Word vrijwilliger of sponsor en doe mee!",
+    "organizer_url": "https://www.stratenloopsevenum.nl/",
+    "hero_image_url": "https://i.ytimg.com/vi/ab2jTlgXM3k/maxresdefault.jpg?sqp=-oaymwEmCIAKENAF8quKqQMa8AEB-AG-B4AC0AWKAgwIABABGGUgWChHMA8=&rs=AOn4CLCjxjbKmTqYuOAB99JWk0u_hoMOGg",
+    "distances": [
+      {
+        "km": 0.3,
+        "label": "0,3 km"
+      },
+      {
+        "km": 0.7,
+        "label": "0,7 km"
+      },
+      {
+        "km": 1.3,
+        "label": "1,3 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "De Sluizenloop",
+    "race_date": "2026-09-13",
+    "city": "Nieuwegein",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "Deelnemen programma parcours prijzen inschrijfformulier bereikbaarheid reglement persoonsgegevens Uitslagen 2026 2025 2024 2023 2022 Foto’s 2026 2025 2024 Nieuwsbrieven 2026-1 2025-6 2025-5 2025-4 2025-3 2025-2 Sponsors Info geschiedenis over ons contact Deelnemen programma parcours prijzen inschrijfformulier bereikbaarheid reglement persoonsgegevens Uitslagen 2026 2025 2024 2023 2022 Foto’s 2026 2025 2024 Nieuwsbrieven 2026-1 2025-6 2025-5 2025-4 2025-3 2025-2 Sponsors Info geschiedenis over ons contact Inschrijven Inschrijven Menu Hardlopen langs het Water, over Sluizen en Bruggen Beleef de 50e editie van de Sluizenloop in Vreeswijk 13 september 2026 Bewegen doet wonderen voor je lichaam én voor je geest. Daarom wil Atverni, dé atletiekvereniging van Nieuwegein, zoveel mogelijk inwoners van Nieuwegein en omliggende gemeenten aan het hardlopen krijgen. Want samen sporten is leuker, motiverender en gezonder.",
+    "organizer_url": "https://sluizenloop.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.0,
+        "label": "2 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Maasduinen Trail",
+    "race_date": "2026-09-13",
+    "city": "Arcen",
+    "province": "LI",
+    "country_code": "NL",
+    "description": "De Maasduinen Trail is een hardloopevenement waar deelnemers prachtige routes verkennen aan de oevers van de Maas in Noord-Limburg.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Maasduinen-Trail-13-09-2026",
+    "distances": [
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 30.0,
+        "label": "30 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Markenbinnenrun",
+    "race_date": "2026-09-13",
+    "city": "Markenbinnen",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "foto",
+    "organizer_url": "https://markenbinnenrun.jimdofree.com/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 16.093,
+        "label": "10 Engelse mijl"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Quikrun",
+    "race_date": "2026-09-13",
+    "city": "Roosendaal en Nispen",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "Op 14 september a.s. zal de 11e editie van de Quikrun gehouden worden vanaf het Sportpark Vierhoeven. Schrijf je nu in!",
+    "organizer_url": "https://www.quikrun.nl/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "11e Kwintelooyen Run",
+    "race_date": "2026-09-19",
+    "city": "Rhenen",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "19-09-2026 — GOEDE DOELENQ-dreamsStichting Netwerk voor JouPROGRAMMAUITSLAGEN CONTACTPARCOURS 11e editie Kwintelooyen Run 19-09-2026Goede doelen Editie 2026:Q-dreams Q-Dreams zet zich in voor kinderen en jongvolwassenen met een ernstige meervoudige beperking. Deze kinderen zijn volledig afhankelijk van anderen, en voor hen is niets vanzelfsprekend.",
+    "organizer_url": "https://www.kwintelooyenrun.nl",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 15.0,
+        "label": "15 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Condensloop",
+    "race_date": "2026-09-19",
+    "city": "Leeuwarden",
+    "province": "FR",
+    "country_code": "NL",
+    "description": "Condensloop — Zaterdag 19 september 2026",
+    "organizer_url": "https://lopeninleeuwarden.nl/lopen/condensloop/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.8,
+        "label": "2,8 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Kempenland Trail",
+    "race_date": "2026-09-19",
+    "city": "Eersel",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "Een hardloopevenement over mooie en afwisselende routes. De Kempen is een prachtig natuurgebied, met bijzondere stukken heide en bossen.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Kempenland-Trail-19-09-2026",
+    "distances": [
+      {
+        "km": 7.0,
+        "label": "7 km"
+      },
+      {
+        "km": 14.0,
+        "label": "14 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Werkhoven Loopt 2026",
+    "race_date": "2026-09-19",
+    "city": "Werkhoven",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "Elke 3e zaterdag van september wordt in Werkhoven (Utrecht) Werkhoven Loopt georganiseerd. 1 of 2 km voor kinderen en 5 of 10 km hardlopen voor volwassenen.",
+    "organizer_url": "https://werkhovenloopt.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.0,
+        "label": "2 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Zombies are coming",
+    "race_date": "2026-09-25",
+    "city": "Amsterdam",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "De zombies komen. — Op het verkeerde moment in Amsterdam.",
+    "organizer_url": "https://www.zombiesarecoming.run/",
+    "distances": [
+      {
+        "km": 180.0,
+        "label": "180 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Gelderse Poort Ultra",
+    "race_date": "2026-09-26",
+    "city": "Berg en Dal",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "Een ultra  rond de uiterwaarden bij Nijmegen, een prachtig uitgestrekt gebied met ontzettend veel water en afwisselende natuur",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Gelderse-Poort-Ultra-26-09-2026",
+    "distances": [
+      {
+        "km": 50.0,
+        "label": "50 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Hill Repeat Madness 4-uurs trailrunuitdaging",
+    "race_date": "2026-09-26",
+    "city": "Nuenen",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "In september 2025 was terug van weggeweest: ons hoogtemeterfeestje Hill Repeat Madness! Vier uur lang buitenspelen op onze thuisbasis 't Dak van Brabant in Nuenen, en dan zoveel mogelijk rondes lopen. Solo, of in een team van 2 of 3 lopers die elkaar afwisselden. Wat een topmiddag (letterlijk en figuurlijk) was dat! Ruim 70 deelnemers liepen 4 uur lang hun rondes van 2,5 kilometer lang met ruim 70 hoogtemeters per ronde en volledig onverhard. En dat onder een lekker zonnetje, en in een supergezellige sfeer. We hebben genoten!",
+    "organizer_url": "https://www.trailrunnersbrabant.nl/madness"
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "de Crob Run",
+    "race_date": "2026-09-26",
+    "city": "Haaften",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "Ervaar de sfeer van De Crob Run Welkom bij De Crob Run, het evenement dat hardloopliefhebbers inspireert. Ontdek onze unieke route en de prachtige omgeving van de Betuwe. Schrijf je […]",
+    "organizer_url": "https://crobrun.nl/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "100 Bruggenloop Leiden",
+    "race_date": "2026-09-27",
+    "city": "Leiden",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Welkom bij de 100 Bruggenloop in Leiden. Je wandelt of rent over 100 bruggen: van een eeuwenoude boogbrug tot gloednieuwe Singelparkbrug.",
+    "organizer_url": "https://www.100bruggenloop.nl/",
+    "distances": [
+      {
+        "km": 8.0,
+        "label": "8 km"
+      },
+      {
+        "km": 12.0,
+        "label": "12 km"
+      },
+      {
+        "km": 20.0,
+        "label": "20 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "AMAK-loop",
+    "race_date": "2026-09-27",
+    "city": "Akersloot",
+    "province": "NH",
+    "country_code": "NL",
+    "organizer_url": "http://www.amakakersloot.nl/",
+    "distances": [
+      {
+        "km": 0.8,
+        "label": "0,8 km"
+      },
+      {
+        "km": 1.6,
+        "label": "1,6 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 15.0,
+        "label": "15 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Earth Race - Forest Edition",
+    "race_date": "2026-09-27",
+    "city": "Amsterdam",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "Discover your next adventure with EARTH RACE -  Forest Edition. Join us for an exciting new edition that connects you with nature and people who share the same mission.",
+    "organizer_url": "https://earthrace.eu/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Ehrmann Posbankloop",
+    "race_date": "2026-09-27",
+    "city": "Velp",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "De prachtige Posbankloop is vernoemd naar een bankje op de top van de schitterende beklimming van de Posbank, dat haar naam heeft te danken aan oud-ANWB-voorzitter G.A. Pos (1866-1933). Pos stond bekend als een groot liefhebber en promotor van het voor Nederland unieke natuurgebied.",
+    "organizer_url": "https://deposbankloop.nl/",
+    "distances": [
+      {
+        "km": 0.5,
+        "label": "0,5 km"
+      },
+      {
+        "km": 0.9,
+        "label": "0,9 km"
+      },
+      {
+        "km": 1.5,
+        "label": "1,5 km"
+      },
+      {
+        "km": 6.0,
+        "label": "6 km"
+      },
+      {
+        "km": 15.0,
+        "label": "15 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Geuzenloop Zoetermeer",
+    "race_date": "2026-09-27",
+    "city": "Zoetermeer",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Road Runners Zoetermeer organiseert op zondag 28 september 2025 voor de 21e keer de Geuzenloop Zoetermeer. Doe jij mee? Schrijf je hier in.",
+    "organizer_url": "https://www.geuzendag.nl/site/hardlopen",
+    "distances": [
+      {
+        "km": 0.8,
+        "label": "0,8 km"
+      },
+      {
+        "km": 1.6,
+        "label": "1,6 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "HeteRUN",
+    "race_date": "2026-09-27",
+    "city": "Heteren",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "De 8e editie van de HeteRUN, hét hardloopevenement van Heteren voor jong en oud, zal dit jaar op zondag 21 september 2025 van start gaan!",
+    "organizer_url": "https://www.heterun.nl/",
+    "distances": [
+      {
+        "km": 0.5,
+        "label": "0,5 km"
+      },
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Heyu VathorstRun",
+    "race_date": "2026-09-27",
+    "city": "Hooglanderveen",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "De Heyu VathorstRun is een jaarlijks terugkomend evenement waarbij de saamhorigheid voorop staat. Vathorst en omgeving in beweging brengen. In 2026 beleef jij de VathorstRun op zondag 27 september!",
+    "organizer_url": "https://vathorstrun.nl/",
+    "hero_image_url": "https://vathorstrun.nl/wp-content/uploads/2026/03/HVV_2212-scaled.jpg",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 16.093,
+        "label": "10 Engelse mijl"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Run2Day Halve van Haarlem",
+    "race_date": "2026-09-27",
+    "city": "Haarlem",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "Run2Day Halve van Haarlem 27 september 2026 Inschrijving geopend! snel naar Halve van Haarlem wordt georganiseerd door SportSupport Volg ons op instagram Onze sponsors Doe ook mee met",
+    "organizer_url": "https://www.halvevanhaarlem.nl/",
+    "distances": [
+      {
+        "km": 0.7,
+        "label": "0,7 km"
+      },
+      {
+        "km": 1.4,
+        "label": "1,4 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Tilburg Ten Miles",
+    "race_date": "2026-09-27",
+    "city": "Tilburg",
+    "country_code": "NL",
+    "description": "De Tilburg Ten Miles is het gezelligste loopfeest van Midden-Brabant. Sinds 1988 lopen deelnemers jaarlijks door de versierde straten.",
+    "organizer_url": "https://tilburgtenmiles.nl/",
+    "distances": [
+      {
+        "km": 16.1,
+        "label": "10 miles"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Dwars Door Duizend",
+    "race_date": "2026-10-02",
+    "city": "Dieren",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "Dwars Door Duizend wordt georganiseerd als onderdeel van stichting Trail & Running Club Utrechtse Heuvelrug (TRCU). \n\nWil je samen voorbereiden voor Dwars Door Duizend? \n\nDan ben je bij TRCU aan het goede adres! Naast Dwars Door Duizend organiseerd TRCU wekelijks diverse activiteiten op de trails, zoals trainingen en weekenden weg!",
+    "organizer_url": "https://dwarsdoorduizend.nl/",
+    "hero_image_url": "https://dwarsdoorduizend.nl/wp-content/uploads/2025/07/WhatsApp-Image-2025-07-31-at-11.27.07-3.jpeg",
+    "distances": [
+      {
+        "km": 100.0,
+        "label": "100 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Petzl Night Trail",
+    "race_date": "2026-10-02",
+    "city": "Leersum",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "De Petzl Night Trail op Landgoed Ginkelduin is een Trail Event op de Utrechtse Heuvelrug met een 6km trail die je 1, 2 of 3x kunt lopen.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Petzl-Night-Trail-02-10-2026",
+    "distances": [
+      {
+        "km": 6.0,
+        "label": "6 km"
+      },
+      {
+        "km": 12.0,
+        "label": "12 km"
+      },
+      {
+        "km": 18.0,
+        "label": "18 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Esterun 2026",
+    "race_date": "2026-10-03",
+    "city": "Escharen",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "EsteRun — Hardloop- en wandelevenement voor het goede doel",
+    "organizer_url": "https://www.esterun.nl/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Isoniq Urk Marathon",
+    "race_date": "2026-10-03",
+    "city": "Urk",
+    "province": "FL",
+    "country_code": "NL",
+    "description": "Loopgroep Urk organiseert zaterdag 3 oktober ’26 de tweede editie\nvan de Isoniq Urk Marathon. De enige marathon van Flevoland.\nNaast de hele marathon (42.2km) is er ook een halve marathon (21.1km)",
+    "organizer_url": "https://www.urkmarathon.nl/",
+    "hero_image_url": "https://www.urkmarathon.nl/wp-content/uploads/2026/01/Urk-Marathon_small-2048x683.jpg",
+    "distances": [
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Leersumse Veld Trail",
+    "race_date": "2026-10-03",
+    "city": "Leersum",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "De Leersumse Veld Trail is een trail op de Utrechtse Heuvelrug met een 11 en een 21km afstand.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Leersumse-Veld-Trail-03-10-2026",
+    "distances": [
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Pieken en Dalen Festival",
+    "race_date": "2026-10-03",
+    "city": "Doorn",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "Op zaterdag 3 oktober 2026 vindt het allereerste Pieken+Dalen Festival plaats van Stichting DiabetesPlus bij RCN het Grote Bos in Doorn. We strijken n...",
+    "organizer_url": "https://www.piekenendalenfestival.nl/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Rondje om de Koepel",
+    "race_date": "2026-10-03",
+    "city": "Lunteren",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "Rondje om de Koepel telt® is misschien wel het mooiste hardloopevenement van Lunteren en wijde omgeving. Hardlopen langs het Middelpunt van Nederland, over de Goudsberg en door het Lunterse Buurtbos met zijn prachtige Koepel. Alles bij elkaar een geweldig mooi Rondje om de Koepel.",
+    "organizer_url": "https://rondjeomdekoepel.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Lexis Notarissen Crossloop Zuidwolde",
+    "race_date": "2026-10-04",
+    "city": "Zuidwolde",
+    "province": "DR",
+    "country_code": "NL",
+    "description": "GA JIJ DE UITDAGING AAN? DOE MEE, OVERWIN DE FALIEBERG ÉN JEZELF! NIEUW: DE WANDELING DE VOLGENDE EDITIE IS OP: Zondag 4 OKTOBER 2026 DE INSCHRIJVING IS GEOPEND! PROGRAMMA: 11.00 Wandeling 5km 13.00 Canicross 5KM 14.00 Kidsrun 6-9 (1.25KM) 14.20 Kidsrun 10-12 (2.5kM) 15.00 Crossloop 5KM 15.05 Crossloop 10KM Uitslagen 2024 Uitslagen 2025 Inschrijven 2026 INFORMATIE Iedere 1e zondag van oktober organiseert de Loopgroep Zuidwolde de Lexis Notarissen Crossloop. De route gaat over de onverharde paden door het Faliebergbos, rond de Entekoele, richting de ultieme scherprechter: de beklimming van de Falieberg. Voor zowel de startende en de geoefende loper een flinke kuitenbijter! Start en finish zijn bij Camping De Entekoele. Het parcours is geschikt voor ieder niveau van loper. Van jong tot oud, iedereen is welkom om mee te lopen! Daag jezelf uit en schrijf je in!",
+    "organizer_url": "https://loopgroepzuidwolde.nl/crossloop/",
+    "distances": [
+      {
+        "km": 1.3,
+        "label": "1,3 km"
+      },
+      {
+        "km": 2.5,
+        "label": "2,5 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Rondje Bergen",
+    "race_date": "2026-10-04",
+    "city": "Bergen",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "Rondje Bergen, de gezelligste loop van het seizoen. Op de eerste zondag in oktober. Afstanden: 1km jeugdloop, 5km, 10km en 10 Engelse mijlen.",
+    "organizer_url": "https://www.rondjebergen.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.0,
+        "label": "2 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Janlouterloop",
+    "race_date": "2026-10-10",
+    "city": "Vlaardingen",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Op zaterdag 10 oktober a.s. organiseert AV Fortuna in de Vlaardingse Broekpolder voor het tweede achtereenvolgende jaar de Janlouterloop. De Loop wordt gehouden ter nagedachtenis aan onze trainer Jan Louter, die in 2024 overleed aan alvleesklierkanker. Naast drie hardloopafstanden (5-, 10- en 15 kilometer) is er dit jaar ook de mogelijkheid een afstand te",
+    "organizer_url": "https://janlouterloop.nl/",
+    "hero_image_url": "https://janlouterloop.nl/wp-content/uploads/2025/11/54941760038_59db010737_o.jpg",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 15.0,
+        "label": "15 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Amerongse Berg Trail",
+    "race_date": "2026-10-11",
+    "city": "Overberg",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "De Amerongse Berg Trail is een hardloopevenement waar deelnemers prachtige routes verkennen in de bossen rond Amerongen.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Amerongse-Berg-Trail-11-10-2026",
+    "distances": [
+      {
+        "km": 12.0,
+        "label": "12 km"
+      },
+      {
+        "km": 17.0,
+        "label": "17 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Oostvaardersrun",
+    "race_date": "2026-10-11",
+    "city": "Lelystad",
+    "province": "FL",
+    "country_code": "NL",
+    "description": "De negende editie van de Oostvaardersrun staat dit jaar gepland voor zondag 11 oktober 2026.\n\nDe lente heeft net zijn intrede gedaan en we hebben nog een mooie zomer voor de boeg waarin er volop getraind kan worden voor je deelname aan de O\n\nTijdens de 8e editie van de Oostvaardersrun in 2025, hebben bijna 350 sportievelingen deelgenomen aan dit recreatieve hardloop evenement door de schitterende natuur vlakbij de Oostvaardersplassen bij Lelystad.",
+    "organizer_url": "https://oostvaardersrun.nl/",
+    "hero_image_url": "https://oostvaardersrun.nl/wp-content/uploads/2024/01/thumbnail_IMG_7228.jpg",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.5,
+        "label": "2,5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 16.0,
+        "label": "16 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "MOLENHOEKS MAKKIE running the hills",
+    "race_date": "2026-10-18",
+    "city": "Molenhoek",
+    "province": "LI",
+    "country_code": "NL",
+    "description": "Molenhoeks Makkie: 5, 10 en 15 km hardlopen in de kop van Noord-Limburg. Uitdagende wedstrijd voor liefhebbers en wedstrijdatleten.",
+    "organizer_url": "https://www.molenhoeksmakkie.nl/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 15.0,
+        "label": "15 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Haarlerbergtrail",
+    "race_date": "2026-10-31",
+    "city": "Haarle",
+    "province": "OV",
+    "country_code": "NL",
+    "description": "7de Haarlerbergloop zondag 13 november 2016",
+    "organizer_url": "https://www.haarlerbergloop.nl/",
+    "distances": [
+      {
+        "km": 11.0,
+        "label": "11 km"
+      },
+      {
+        "km": 16.0,
+        "label": "16 km"
+      },
+      {
+        "km": 22.0,
+        "label": "22 km"
+      },
+      {
+        "km": 30.0,
+        "label": "30 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Lage Vuursche Ultra",
+    "race_date": "2026-10-31",
+    "city": "Baarn",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "Je vindt tijdens deze Lage Vuursche Ultra veelal loofbos en naaldbos en boomsoorten als de berk, eik en lijsterbes en veel single tracks.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Lage-Vuursche-Ultra-31-10-2026",
+    "distances": [
+      {
+        "km": 50.0,
+        "label": "50 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "DrechtStadLoop",
+    "race_date": "2026-11-01",
+    "city": "Dordrecht",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Handloopwedstrijd in Dordrecht",
+    "organizer_url": "https://drechtstadloop.nl/",
+    "hero_image_url": "https://drechtstadloop.nl/site/media/drechtstadloop-2025-3-2400x1134.jpg",
+    "distances": [
+      {
+        "km": 0.4,
+        "label": "0,4 km"
+      },
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Haarlerbergloop",
+    "race_date": "2026-11-01",
+    "city": "Haarle",
+    "province": "OV",
+    "country_code": "NL",
+    "description": "7de Haarlerbergloop zondag 13 november 2016",
+    "organizer_url": "https://www.haarlerbergloop.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.0,
+        "label": "2 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Halve van het Gooi",
+    "race_date": "2026-11-01",
+    "city": "Naarden",
+    "province": "NH",
+    "country_code": "NL",
+    "description": "Doe jij mee aan de halve marathon, kwart marathon, kids run of wandeltocht? Zondag 1 november 2026, start & finish Het Arsenaal, Naarden Vesting.",
+    "organizer_url": "https://halvevanhetgooi.nl/",
+    "distances": [
+      {
+        "km": 0.5,
+        "label": "0,5 km"
+      },
+      {
+        "km": 1.5,
+        "label": "1,5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "NN Marathon The Hague",
+    "race_date": "2026-11-01",
+    "city": "Den Haag",
+    "country_code": "NL",
+    "description": "Marathon The Hague NN Marathon The Hague 1 november 2026 Een marathon is meer dan kilometers.Het is een beweging. Een ontmoeting. Een moment waarop duizenden mensen dezelfde richting kiezen. Bij NN Marathon The Hague lopen we samen, ieder met zijn eigen verhaal, tempo en motivatie, maar verbonden door één krachtige stap vooruit. Doe mee. Beweeg […]",
+    "organizer_url": "https://nnmarathonthehague.nl/",
+    "hero_image_url": "https://nnmarathonthehague.nl/wp-content/uploads/sites/64/2026/04/LDDK-20260315-0075.jpg",
+    "distances": [
+      {
+        "km": 42.195,
+        "label": "Marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "TT Marathon",
+    "race_date": "2026-11-01",
+    "city": "Assen",
+    "province": "DR",
+    "country_code": "NL",
+    "description": "Sta jij op 1 november 2026 aan de start? Beleef de TT Marathon waar snelheid, historie en natuur samenkomen. Schrijf je nu in!",
+    "organizer_url": "https://tt-marathon.nl/",
+    "hero_image_url": "https://tt-marathon.nl/wp-content/uploads/2026/04/61c4a832650b14aedbf24b13ea751f37dadfc586-scaled.jpeg",
+    "distances": [
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Trailrun someren",
+    "race_date": "2026-11-01",
+    "city": "Someren",
+    "province": "NB",
+    "country_code": "NL",
+    "description": "Deelnemers informatie — JOEK",
+    "organizer_url": "https://joek.nl/trailrun/",
+    "distances": [
+      {
+        "km": 4.0,
+        "label": "4 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Broekhuis Zandenplasloop",
+    "race_date": "2026-11-07",
+    "city": "Nunspeet",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "De Zandenplasloop in Nunspeet, Gelderland, heeft een snel parcours rond de Zandenplas en door het Zandenbos. In 2022 liepen 9 dames onder de 40 minuten waarvan een zelfs onder de 35 minuten. Bij de Heren een man onder de 30 minuten, 36 mannen onder de 35 minuten en 137 onder de 40 minuten. Zowel de 5km en 10km zijn officieel opgemeten en gecertificeerd door de Atletiekunie. De tijdregistratie gebeurt door middel van elektronische tijdwaarneming.",
+    "organizer_url": "https://zandenplasloop.nl/",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Dorps Run Renswoude",
+    "race_date": "2026-11-07",
+    "city": "Renswoude",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "Aankondiging editie 2026 — --> Home FAQ Foto’s Algemene informatie Volgende run 7 november 2026 Volgende run 7 november 2026 Start & Finish: Sporthal \"De hokhorst\"",
+    "organizer_url": "https://www.dorpsrunrenswoude.nl/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.0,
+        "label": "21 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Lage Vuursche Trail",
+    "race_date": "2026-11-07",
+    "city": "Baarn",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "De Lage Vuursche Trail is een hardloopevenement over uitdagende en verrassende paden waarbij je zelf kiest of je 1, 2 of 3 lussen loopt.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Lage-Vuursche-Trail-07-11-2026",
+    "distances": [
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 30.0,
+        "label": "30 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Halve Marathon Gouda",
+    "race_date": "2026-11-08",
+    "city": "Gouda",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "De Halve Marathon Gouda vindt plaats op de tweede zondag van november. De onderdelen zijn een halve marathon, een 10 km en de kidsloop.",
+    "organizer_url": "https://halvemarathongouda.nl/",
+    "distances": [
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Garmin Zevenheuvelenloop",
+    "race_date": "2026-11-15",
+    "city": "Nijmegen",
+    "country_code": "NL",
+    "description": "De 15 kilometer lange Zevenheuvelenloop staat bekend als dé wedstrijd met het mooiste parcours van Nederland. Ieder jaar komen er duizenden lopers uit binnen- en buitenland naar Nijmegen om hier te lopen en te ervaren hoe het is om samen met de wereldtop aan de start te staan.",
+    "organizer_url": "https://zevenheuvelenloop.nl",
+    "hero_image_url": "https://cdn.sanity.io/images/y92pharz/production/d141dd2deb9030a00c0d261830b7aa74ef5523e8-1600x1067.jpg?w=800&fit=crop&crop=entropy&auto=format",
+    "distances": [
+      {
+        "km": 15.0,
+        "label": "15 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Hollands Duin Trail",
+    "race_date": "2026-11-21",
+    "city": "Noordwijk",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Een hardloopevenement waar trailrunners starten in de duinen van Noordwijk en via de duinen richting de bossen lopen.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Hollands-Duin-Trail-21-11-2026",
+    "distances": [
+      {
+        "km": 6.0,
+        "label": "6 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 30.0,
+        "label": "30 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Lingezegen Run - Last Man Standing",
+    "race_date": "2026-11-22",
+    "city": "Elst",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "7 hardloopwedstrijden in 2026 in Park Lingezegen, Elst. 100% verhard en vlak parcours. Kies uit 3, 5 of 10 km. Chipregistratie en Lingezegen League.",
+    "organizer_url": "https://lingezegenrun.nl/",
+    "distances": [
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 16.093,
+        "label": "10 Engelse mijl"
+      },
+      {
+        "km": 20.0,
+        "label": "20 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 25.0,
+        "label": "25 km"
+      },
+      {
+        "km": 30.0,
+        "label": "30 km"
+      },
+      {
+        "km": 35.0,
+        "label": "35 km"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      },
+      {
+        "km": 50.0,
+        "label": "50 km"
+      },
+      {
+        "km": 60.0,
+        "label": "60 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Utrechtse Heuvelrug Ultra Trail - winter",
+    "race_date": "2026-11-28",
+    "city": "Leersum",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "De Utrechtse Heuvelrug is een prachtig uitgestrekt gebied met ontzettend veel afwisselende natuur. De UHUT100 winter bestaat uit 2 rondes.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Utrechtse-Heuvelrug-Ultra-Trail-Winter-UHUT100-28-11-2026",
+    "distances": [
+      {
+        "km": 50.0,
+        "label": "50 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Spijkenisse Spark Marathuon",
+    "race_date": "2026-11-29",
+    "city": "Spijkenisse",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Informatie 20e Spijkenisse marathon op 29 november 2026:  Start momenten:    Programma   Aanvang   Marathon   10.30 uur   Halve marathon   11.00 uur   10 km   11.15 uur   5 km   11.15 uur    Voor inschrijven en informatie klik hier",
+    "organizer_url": "https://www.avspark.nl/index.php?page=32&sid=1",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Nijverdalsebergcross",
+    "race_date": "2026-12-06",
+    "city": "Hellendoorn",
+    "province": "OV",
+    "country_code": "NL",
+    "description": "Menu Menu Home Nieuws Foto’s & Video Uitslagen Contact De volgende Nijverdalsebergcross is op zondag 6 december 2026",
+    "organizer_url": "https://nijverdalsebergcross.nl/",
+    "distances": [
+      {
+        "km": 1.5,
+        "label": "1,5 km"
+      },
+      {
+        "km": 2.5,
+        "label": "2,5 km"
+      },
+      {
+        "km": 2.9,
+        "label": "2,9 km"
+      },
+      {
+        "km": 4.3,
+        "label": "4,3 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 7.2,
+        "label": "7,2 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Galgenberg Trail",
+    "race_date": "2026-12-13",
+    "city": "Amerongen",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "De Galgenberg Trail bestaat uit 3 lussen waarbij je loopt over heide, bospaden en single tracks en ook een aantal hoogtemeters tegenkomt.",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Galgenberg-Trail-13-12-2026",
+    "distances": [
+      {
+        "km": 9.0,
+        "label": "9 km"
+      },
+      {
+        "km": 18.0,
+        "label": "18 km"
+      },
+      {
+        "km": 27.0,
+        "label": "27 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Hollands Duin Ultra",
+    "race_date": "2026-12-19",
+    "city": "Noordwijk",
+    "province": "ZH",
+    "country_code": "NL",
+    "description": "Deze ultra in de Dutch Ultra Series gaat door de duinen vanaf het gezellige Nederzandt bij Noordwijk. Prachtig en uniek vanwege de duin",
+    "organizer_url": "https://www.trail-events.eu/EVENT-Hollands-Duin-Ultra-19-12-2026",
+    "distances": [
+      {
+        "km": 50.0,
+        "label": "50 km"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Linschotenloop",
+    "race_date": "2026-12-19",
+    "city": "Linschoten",
+    "province": "UT",
+    "country_code": "NL",
+    "description": "De Linschotenloop is er voor iedereen. Of je nu een getrainde marathonloper bent en je PR wilt verbeteren, of een sportief rondje wilt hardlopen met vrienden of familie, iedereen is welkom!",
+    "organizer_url": "https://www.linschotenloop.com/",
+    "distances": [
+      {
+        "km": 1.0,
+        "label": "1 km"
+      },
+      {
+        "km": 2.0,
+        "label": "2 km"
+      },
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Two Rivers Marathon",
+    "race_date": "2027-03-21",
+    "city": "Zaltbommel",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "Ooit ontstaan als trainingsmarathon voor deelnemers naar de Two Oceans Marathon en Comrades Marathon. De Two Rivers Marathon is een officiële qualifier voor deze wereldberoemde races. Inmiddels ook druk bezocht door andere Two Oceans én Comrades-lopers. Maar zeker ook door andere marathon liefhebbers. Dit evenement biedt je een unieke beleving. Gemoedelijk, persoonlijk en gezellig. Dit wordt bijzonder door de deelnemers gewaardeerd. De bier en braai na de finish zijn legendarisch!",
+    "organizer_url": "https://tworiversmarathon.nl/",
+    "hero_image_url": "https://tworiversmarathon.nl/wp-content/uploads/2025/09/2rivers-2025-BL-05977-e1757016453802.jpg",
+    "distances": [
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      },
+      {
+        "km": 42.195,
+        "label": "marathon"
+      }
+    ]
+  },
+  {
+    "source": "personal-running-coach",
+    "name": "Freedom Run Wageningen",
+    "race_date": "2027-05-23",
+    "city": "Wageningen",
+    "province": "GE",
+    "country_code": "NL",
+    "description": "De Freedom Run Wageningen is meer dan een hardloopevenement: het is een viering van vrijheid en verbondenheid. In de stad van de bevrijding op 5 mei 1945 lopen we voor elkaar én voor gelijke kansen. De Lions Club Wageningen organiseert de run ten bate van Stichting Kind en Kans, die kinderen uit gezinnen met beperkte middelen laat meedoen aan schoolactiviteiten. Iedereen is welkom om mee te rennen voor vrijheid en een toekomst waarin geen enkel kind aan de zijlijn staat.",
+    "organizer_url": "https://www.freedomrunwageningen.nl/",
+    "hero_image_url": "https://primary.jwwb.nl/public/q/g/h/temp-uanodqtrwgiljftokkwv/dji_0483-standard.jpg?enable-io=true&fit=bounds&width=1920&height=1920",
+    "distances": [
+      {
+        "km": 5.0,
+        "label": "5 km"
+      },
+      {
+        "km": 10.0,
+        "label": "10 km"
+      },
+      {
+        "km": 15.0,
+        "label": "15 km"
+      },
+      {
+        "km": 21.098,
+        "label": "halve marathon"
+      }
+    ]
+  }
+]

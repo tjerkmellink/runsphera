@@ -1,0 +1,69 @@
+# Secrets
+.env
+
+# Garmin auth token cache
+.garmin_tokens/
+
+# Raw data dumps (regeneratable, can be large)
+data/raw/
+
+# Locally-downloaded event hero images (regeneratable via re-enrichment)
+data/event_images/
+
+# Ad-hoc probe scripts created during debug sessions
+_probe.py
+
+# Desktop launcher's stdout/stderr (pythonw has no console to print to)
+data/desktop.log
+
+# WebView2 browser profile for the desktop window (cache, cookies)
+data/webview/
+
+# SQLite databases (regeneratable from Garmin)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Local DB backups (e.g. pre-migration snapshots)
+*.bak
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Claude Code workspace — per-machine settings, permissions and skills.
+# Entirely local; nothing in here is shared through the repo.
+.claude/
+
+# Agent-skill working context (product-marketing.md and friends).
+# Positioning scratch space, per-machine like .claude/.
+.agents/
+
+# Playwright MCP session artifacts
+.playwright-mcp/
+
+# Generated launcher shortcut (icon + taskbar identity)
+RunSphera.lnk
+
+# Raw brand/design exports (large AI image dumps; masters used by the build
+# live elsewhere under brand/). Keep the folder, ignore its heavy contents.
+brand/source/*
+!brand/source/.gitkeep
+
+# Agent instructions — canonical copies live in the private archive repo.
+# Present on disk so coding agents read them; never published.
+CLAUDE.md
+AGENTS.md

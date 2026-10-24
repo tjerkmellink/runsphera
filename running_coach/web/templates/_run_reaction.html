@@ -1,0 +1,74 @@
+{# Coach voice for the run-detail modal — the single source for every state
+   (loaded / lazy-loading / unavailable). Rendered inline by _run_detail.html
+   and swapped in whole by /runs/<id>/reaction and .../reaction/refresh.
+   The id and the verdict chip both live on the wrapper so one swap replaces
+   quote *and* byline together — otherwise the pre-rendered chip survives the
+   swap and the modal shows two of them.
+   Context: activity_id, reaction, reaction_pending, reaction_generated_at,
+   llm_available, verdict. #}
+{% if reaction %}
+<div class="tprd-coach-body" id="run-reaction-{{ activity_id }}">
+    <p class="tprd-coach-quote"><span class="q">“</span>{{ reaction }}<span class="q">”</span></p>
+    <div class="tprd-coach-by">
+        {% include "_run_verdict_chip.html" %}
+        <span>— {{ t("Coach")|upper }}</span>
+        {% if reaction_generated_at %}
+        <span>·</span><span>{{ reaction_generated_at }}</span>
+        {% endif %}
+        {% if llm_available %}
+        <span>·</span>
+        <button type="button"
+                class="coach-refresh"
+                title="{{ t('Regenerate the coach\'s take on this run') }}"
+                hx-post="/runs/{{ activity_id }}/reaction/refresh"
+                hx-target="#run-reaction-{{ activity_id }}"
+                hx-swap="outerHTML"
+                hx-disabled-elt="this"
+                hx-indicator="this"><span class="coach-refresh-icon">↻</span> {{ t("Regenerate") }}</button>
+        {% endif %}
+    </div>
+</div>
+{% elif reaction_pending and llm_available %}
+{# First view with no cached debrief: placeholder that fetches itself. #}
+<div class="tprd-coach-body" id="run-reaction-{{ activity_id }}"
+     hx-get="/runs/{{ activity_id }}/reaction"
+     hx-trigger="load"
+     hx-swap="outerHTML">
+    <p class="tprd-coach-quote tprd-coach-loading">{{ t("Coach is reading the file…") }}</p>
+    {% if verdict %}
+    <div class="tprd-coach-by">{% include "_run_verdict_chip.html" %}</div>
+    {% endif %}
+</div>
+{% elif reaction_pending %}
+{# No coach configured at all — stay quiet, the chip carries the verdict. #}
+<div class="tprd-coach-body" id="run-reaction-{{ activity_id }}">
+    {% if verdict %}
+    <div class="tprd-coach-by">{% include "_run_verdict_chip.html" %}</div>
+    {% endif %}
+</div>
+{% else %}
+{# The lazy fetch came back empty: the call failed silently (API credit
+   depleted, network blip, no key). Say so rather than leaving the modal
+   blank where the spinner used to be. #}
+<div class="tprd-coach-body" id="run-reaction-{{ activity_id }}">
+    <p class="tprd-coach-quote tprd-coach-loading">
+        {{ t("Coach voice is unavailable right now. Check Settings → Coach voice.") }}
+    </p>
+    {% if verdict or llm_available %}
+    <div class="tprd-coach-by">
+        {% include "_run_verdict_chip.html" %}
+        {% if llm_available %}
+        {# Provider IS configured, so the failure is transient — offer a retry. #}
+        <button type="button"
+                class="coach-refresh"
+                title="{{ t('Try again') }}"
+                hx-post="/runs/{{ activity_id }}/reaction/refresh"
+                hx-target="#run-reaction-{{ activity_id }}"
+                hx-swap="outerHTML"
+                hx-disabled-elt="this"
+                hx-indicator="this"><span class="coach-refresh-icon">↻</span> {{ t("Try again") }}</button>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

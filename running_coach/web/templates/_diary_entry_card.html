@@ -1,0 +1,55 @@
+{# Tempo display partial for one diary entry. HTMX target = #diary-entry-<id>.
+   Layout: [date]  [mood emoji]  [card with headline + body + chips].
+   Date and mood live OUTSIDE the card; a vertical timeline rail runs down
+   the feed between them. The body is split into a punchy headline (first
+   line / first sentence) + a muted remainder, mirroring the design. #}
+{% set _dow = fmt_dow_short(e.entry_date)|upper %}
+{% set _day = e.entry_date[8:10] %}
+{% set _mon = fmt_month_short(e.entry_date)|upper %}
+{% set _split = split_headline(e.body) %}
+{% set _headline_src = e.linked_workout_title or e.linked_activity_name or _split[0] %}
+{% set _body_rest = _split[1] if (e.linked_workout_title or e.linked_activity_name) and e.body else _split[1] %}
+<article class="tp-diary-entry" id="diary-entry-{{ e.id }}">
+    <div class="tp-diary-entry-date">
+        <span class="tp-day">{{ _day }}</span>
+        <span class="tp-mon">{{ _mon }}</span>
+        <span class="tp-dow">{{ _dow }}</span>
+    </div>
+    <div class="tp-diary-entry-mood {% if e.mood %}mood-{{ e.mood }}{% else %}mood-none{% endif %}"
+         title="{{ mood_label(e.mood) if e.mood else 'no mood' }}">
+        {% if e.mood %}{{ mood_emoji(e.mood) }}{% else %}—{% endif %}
+    </div>
+    <div class="tp-diary-entry-card">
+        <button type="button" class="tp-diary-entry-edit"
+                title="Edit this entry" aria-label="Edit"
+                hx-get="/diary/entries/{{ e.id }}/edit"
+                hx-target="#diary-entry-{{ e.id }}"
+                hx-swap="outerHTML">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+        </button>
+        {% if _headline_src %}
+        <p class="tp-diary-entry-headline">{{ _headline_src }}</p>
+        {% endif %}
+        {% if (e.linked_workout_title or e.linked_activity_name) and e.body %}
+        <p class="tp-diary-entry-text">{{ e.body }}</p>
+        {% elif _body_rest %}
+        <p class="tp-diary-entry-text">{{ _body_rest }}</p>
+        {% endif %}
+        <div class="tp-diary-entry-chips">
+            {% if e.linked_workout_type %}
+            <span class="tp-diary-entry-chip wtype-{{ e.linked_workout_type }}">
+                {{ e.linked_workout_type|capitalize }}
+            </span>
+            {% endif %}
+            {% if e.linked_activity_distance_m %}
+            <span class="tp-diary-entry-chip">
+                {{ '%.0f'|format(e.linked_activity_distance_m / 1000.0) }} km
+            </span>
+            {% endif %}
+        </div>
+    </div>
+</article>

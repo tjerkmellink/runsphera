@@ -1,0 +1,16 @@
+{# Active body issues — wrapper partial. HTMX target for the body
+   write routes. The wrapper div carries the ID so server responses
+   can swap it via outerHTML. Empty state lives inline here. #}
+<div id="body-active-issues" class="tp-body-issue-grid">
+{% if active_issues %}
+    {% for i in active_issues %}
+        {% with issue=i %}{% include "_body_active_issue_card.html" %}{% endwith %}
+    {% endfor %}
+{% else %}
+    <div class="card tp-body-empty" style="grid-column: 1 / -1;">
+        <div class="ico">✓</div>
+        <h3>{{ t("All clear.") }}</h3>
+        <p>{{ t("Nothing flagged right now. Log something the moment it starts whispering — early beats sorry.") }}</p>
+    </div>
+{% endif %}
+</div>

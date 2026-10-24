@@ -1,0 +1,99 @@
+{# Tempo week row — single-line editorial card: phase pill / week label on the
+   left, 7 mini day cells in the middle, total km italic on the right. #}
+{% set _today = today_iso %}
+{% set _is_this_week = (week.week_start <= _today and (week.week_end or week.week_start) >= _today) or
+                       (week.workouts and (week.workouts[0].planned_date <= _today and week.workouts[-1].planned_date >= _today)) %}
+<div class="tp-plan-week {% if _is_this_week %}is-today{% endif %}" id="week-{{ week.week_number }}">
+    <div class="tp-plan-week-label">
+        {# Phase pill carries the same colour as this week's segment in the
+           block map (tokens in base.html) — the week number stays plain so
+           the colour reads as one signal, not two. #}
+        <div class="tp-plan-week-phase">
+            <span class="tp-plan-week-phase-pill phase-{{ week.week_phase }}">{{ t(week.week_phase)|upper }}</span>
+            <span>WK {{ week.week_number }}</span>
+            {% if _is_this_week %}<span class="this-week">{{ t("THIS WEEK") }}</span>{% endif %}
+        </div>
+        <h3 class="tp-plan-week-num">{{ t("Week {n}", n=week.week_number) }}</h3>
+        <div class="tp-plan-week-sub">
+            <div>{{ fmt_date_long(week.week_start) }}</div>
+            {% set adh = week_adherence(week, today_iso) %}
+            {% if adh.due > 0 %}
+            <div>{{ adh.done }}/{{ adh.planned }} {{ t("done") }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="tp-plan-week-days">
+        {% for w in week.workouts %}
+        {% set _status = workout_status(w, today_iso) %}
+        {% set _strength = (strength_by_date or {}).get(w.planned_date) %}
+        <div class="tp-plan-day-wrap">
+            <button type="button"
+                    class="tp-plan-day wtype-{{ w.workout_type }}
+                           {% if w.planned_date == today_iso %}is-today{% endif %}
+                           {% if w.workout_type == 'rest' %}is-rest{% endif %}
+                           is-{{ _status }}"
+                    id="day-{{ w.id }}"
+                    title="{{ w.title }}{% if w.target_distance_km %} · {{ '%.1f'|format(w.target_distance_km) }} km{% endif %}{% if w.target_pace_s_per_km %} · {{ fmt_pace_s(w.target_pace_s_per_km) }}{% endif %}"
+                    hx-get="/plan-workouts/{{ w.id }}"
+                    hx-target="#plan-workout-content"
+                    hx-swap="innerHTML"
+                    hx-on::after-request="if(event.detail.successful) document.getElementById('plan-workout-modal').showModal()">
+                <div class="tp-plan-day-dow">{{ day_label(w.day_of_week)[:3]|upper }}</div>
+                <div class="tp-plan-day-type">{{ t(w.workout_type|capitalize) }}</div>
+                {% if w.target_distance_km and w.workout_type != 'rest' %}
+                <div class="tp-plan-day-km">{{ '%.0f'|format(w.target_distance_km) }}K</div>
+                {% else %}
+                <div class="tp-plan-day-km">—</div>
+                {% endif %}
+                {# Execution score ring — only on done workouts; rest/cross
+                   return None from execution_score.compute(). #}
+                {% with es=w.execution_score, size=26 %}
+                    {% include "_exec_score_ring.html" %}
+                {% endwith %}
+            </button>
+            {# Optional strength chip — appears on rest days that have a
+               strength session attached (the plan-level toggle is on
+               and the scheduler placed one here). Sibling button so
+               clicking it opens the strength modal independent of the
+               rest-day cell. #}
+            {% if _strength %}
+            <button type="button"
+                    class="tp-plan-strength-chip {% if _strength.completed_at %}is-done{% endif %}"
+                    title="{{ _strength.title }} · {{ _strength.duration_min_lo }}–{{ _strength.duration_min_hi }} min"
+                    hx-get="/plan-strength/{{ _strength.session_id }}"
+                    hx-target="#plan-strength-content"
+                    hx-swap="innerHTML"
+                    hx-on::after-request="if(event.detail.successful) document.getElementById('plan-strength-modal').showModal()">
+                {% if _strength.completed_at %}✓{% else %}💪{% endif %}
+            </button>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="tp-plan-week-total">
+        {{ '%.0f'|format(week.total_km) }}<span class="unit">{{ t("km · {n} sess", n=week.n_sessions) }}</span>
+    </div>
+
+    {# Push is a Garmin feature — hidden entirely for Garmin-less runners. #}
+    {% if plan_status == 'active' and is_authenticated() and week_has_pushable(week) %}
+    <div class="tp-plan-week-actions">
+        <button class="tp-btn"
+                hx-post="/plans/{{ plan_id }}/weeks/{{ week.week_number }}/push"
+                hx-target="#week-{{ week.week_number }}"
+                hx-swap="outerHTML"
+                hx-disabled-elt="this"
+                title="{{ t('Push every pushable workout in this week to Garmin') }}">
+            {{ t("Push this week →") }}
+        </button>
+    </div>
+    {% endif %}
+
+    {% if push_result is defined and push_result %}
+    <div class="tp-plan-notes" style="grid-column: 1 / -1; margin: 0.6rem 0 0;">
+        {{ t("Pushed") }} <strong>{{ push_result.pushed }}</strong> · {{ t("skipped") }} {{ push_result.skipped }}
+        {% if push_result.failed %} · {{ t("failed") }} {{ push_result.failed|length }}{% endif %}
+    </div>
+    {% endif %}
+</div>

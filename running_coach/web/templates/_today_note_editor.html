@@ -1,0 +1,39 @@
+{# Today-note editor — visually identical to the diary page's
+   `tp-diary-form` so the runner sees the same "How do you feel" entry
+   surface on both the dashboard and `/diary`. HTMX target stays the
+   same: the save endpoint re-renders this partial in place. #}
+<section class="tp-diary-form" id="today-note">
+    <form hx-post="/diary/today"
+          hx-target="#today-note"
+          hx-swap="outerHTML">
+        <div class="tp-diary-form-head">
+            <span class="tp-diary-form-label">{{ t("Today") }} · {{ fmt_date_long(today_iso) }}</span>
+            {% if saved %}
+            <span class="tp-diary-form-date">{{ t("Saved ✓") }}</span>
+            {% elif today_diary %}
+            <span class="tp-diary-form-date">{{ t("last updated") }} {{ today_diary.updated_at[11:16] if today_diary.updated_at else '' }}</span>
+            {% endif %}
+        </div>
+        <textarea name="body" rows="3"
+                  placeholder="{{ t("What's on your mind today? How are the legs feeling? Sleep, stress, weather, anything.") }}">{{ today_diary.body if today_diary else '' }}</textarea>
+        <div class="tp-diary-form-footer">
+            <div class="tp-diary-mood">
+                <span class="tp-diary-mood-label">{{ t("Mood") }}</span>
+                {% for v in [1, 2, 3, 4, 5] %}
+                <label class="tp-diary-mood-pill{% if today_diary and today_diary.mood == v %} selected{% endif %}"
+                       data-mood="{{ v }}" title="{{ mood_label(v) }}">
+                    <input type="radio" name="mood" value="{{ v }}"
+                           {% if today_diary and today_diary.mood == v %}checked{% endif %}>
+                    {{ mood_emoji(v) }}
+                </label>
+                {% endfor %}
+                <label class="tp-diary-mood-pill{% if not (today_diary and today_diary.mood) %} selected{% endif %}"
+                       data-mood="" title="{{ t('no rating') }}">
+                    <input type="radio" name="mood" value=""
+                           {% if not (today_diary and today_diary.mood) %}checked{% endif %}>—
+                </label>
+            </div>
+            <button type="submit" class="tp-btn primary">{{ t("Save") }}</button>
+        </div>
+    </form>
+</section>

@@ -1,0 +1,261 @@
+{# Tempo plans page — editorial reskin of the active plan + archive.
+   Mirrors the data contract from running_coach/web/templates/plans.html. #}
+{% extends "base.html" %}
+
+{% block subhead %}
+    {% if active %}
+        {{ t("active plan · {goal}", goal=t(goal_labels.get(active.goal_type, active.goal_type))) }}
+        {% if active.race_date %} · {{ t("race {date}", date=fmt_date_long(active.race_date)) }}{% endif %}
+    {% else %}
+        {{ t("no active plan") }}
+    {% endif %}
+{% endblock %}
+
+{% block header_actions %}
+    <a href="/plans/new" class="button">{{ t("+ New plan") }}</a>
+{% endblock %}
+
+{% block content %}
+{% set _cleanup_err = request.query_params.get('error') %}
+{% if _cleanup_err == 'strength_kept' %}
+{% set _kept = request.query_params.get('kept', '0')|int %}
+<div class="error" style="margin-bottom: 1.25rem;">
+    {{ t("{n} strength session(s) are still on your watch and were kept — remove them from the session first, or reconnect Garmin and try again.", n=_kept) }}
+</div>
+{% endif %}
+{% if _cleanup_err in ('garmin_cleanup', 'garmin_orphaned') %}
+{% set _failed = request.query_params.get('failed', '0')|int %}
+<div class="error" style="margin-bottom: 1.25rem;">
+    {% if _cleanup_err == 'garmin_cleanup' %}
+        {{ t("Couldn't remove {n} workout(s) from Garmin — they're still on your watch. Deactivate again to retry.", n=_failed) }}
+    {% else %}
+        {{ t("Couldn't remove {n} workout(s) from Garmin before deleting the plan. Remove them by hand in Garmin Connect.", n=_failed) }}
+    {% endif %}
+</div>
+{% endif %}
+{% if request.query_params.get('saved') == 'recalibrated' %}
+<div class="tp-plan-notes" style="margin-bottom: 1.25rem;">
+    {% set _nu = request.query_params.get('n_updated', '0')|int %}
+    {% set _nd = request.query_params.get('n_desc_healed', '0')|int %}
+    {% set _ns = request.query_params.get('n_garmin_stale', '0')|int %}
+    {% if _nu %}
+        <strong>{{ _nu }}</strong> {{ plural(_nu, "future workout re-paced from your current VDOT.", "future workouts re-paced from your current VDOT.") }}
+    {% endif %}
+    {% if _nd %}
+        {{ t("Refreshed stale pace numbers in") }} <strong>{{ _nd }}</strong> {{ plural(_nd, "workout description.", "workout descriptions.") }}
+    {% endif %}
+    {% if not _nu and not _nd %}{{ t("Nothing to recalibrate — already in sync.") }}{% endif %}
+    {% set _rp = request.query_params.get('n_re_pushed', '0')|int %}
+    {% if _rp %} {{ t("{n} re-pushed to Garmin.", n=_rp) }}{% endif %}
+    {% if _ns %}<br><strong>{{ t("{n} could not be updated on Garmin — the old pace is still on your watch. Try again once Garmin is reachable.", n=_ns) }}</strong>{% endif %}
+</div>
+{% elif request.query_params.get('saved') == 'reshaped' %}
+<div class="tp-plan-notes" style="margin-bottom: 1.25rem;">
+    {% set _na = request.query_params.get('n_added', '0')|int %}
+    {% set _gc = request.query_params.get('garmin_cleaned', '0')|int %}
+    {{ t("Plan reshaped:") }} <strong>{{ _na }}</strong> {{ plural(_na, "upcoming workout rebuilt on the new schedule.", "upcoming workouts rebuilt on the new schedule.") }}
+    {{ t("Past weeks and completed runs were kept.") }}
+    {% if _gc %} {{ t("{n} pushed workouts removed from Garmin — re-push the weeks you want on the watch.", n=_gc) }}{% endif %}
+    {% set _gf = request.query_params.get('garmin_failed', '0')|int %}
+    {% if _gf %}<br><strong>{{ t("{n} could not be removed from Garmin — delete them by hand in Garmin Connect.", n=_gf) }}</strong>{% endif %}
+</div>
+{% elif request.query_params.get('reshape_error') %}
+<div class="tp-plan-notes" style="margin-bottom: 1.25rem; border-color: var(--bad, #ef4444);">
+    {{ t("Couldn't reshape the plan:") }} {{ request.query_params.get('reshape_error') }}
+</div>
+{% elif request.query_params.get('saved') == 'vdot_updated' and active %}
+<div class="tp-plan-notes" style="margin-bottom: 1.25rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+    <span>
+        {{ t("VDOT updated to") }} <strong>{{ request.query_params.get('new_vdot') }}</strong>
+        ({{ t("was {old}", old=request.query_params.get('old_vdot')) }}).
+        {{ t("Recalibrate paces to apply the new prescriptions across future workouts.") }}
+    </span>
+    <button type="button" class="tp-btn primary"
+            hx-get="/plans/{{ active.id }}/edit"
+            hx-target="#plan-settings-content"
+            hx-swap="innerHTML"
+            hx-on::after-request="if(event.detail.successful) document.getElementById('plan-settings-modal').showModal()">
+        {{ t("Open plan settings →") }}
+    </button>
+</div>
+{% endif %}
+
+{% if active %}
+    {% set methodology = methodology_lookup.get(active.methodology) %}
+    {% set total_km = active_weeks|sum(attribute='total_km') %}
+    {% set n_weeks = active_weeks|length %}
+
+    {# ── HERO ────────────────────────────────────────────────────── #}
+    <section class="tp-plan-hero">
+        <div>
+            <div class="tp-plan-hero-eyebrow">
+                {{ t("ACTIVE PLAN · {n} WEEKS", n=n_weeks) }}
+                {% if methodology %} · {{ methodology.name|upper }}{% endif %}
+            </div>
+            <h1 class="tp-plan-hero-title">{{ active.title }}</h1>
+            <p class="tp-plan-hero-desc">
+                {{ t("{n} days/week, long run on {day}s.", n=active.days_per_week, day=day_label(active.long_run_day)) }}
+                {{ t("Started {date}.", date=active.created_at[:10]) }}
+                {# Effort-based plans (C25K, Foppen) carry no VDOT paces — a
+                   "calibrated to VDOT" claim would be meaningless there. #}
+                {% set _vdot_based = not methodology or methodology.uses_vdot_paces %}
+                {% if active.vdot_at_start and _vdot_based %} {{ t("Calibrated to VDOT {vdot} at start.", vdot='%.0f'|format(active.vdot_at_start)) }}{% endif %}
+            </p>
+        </div>
+        <div class="tp-plan-hero-actions">
+            <button type="button" class="tp-btn primary"
+                    hx-get="/plans/{{ active.id }}/edit"
+                    hx-target="#plan-settings-content"
+                    hx-swap="innerHTML"
+                    hx-on::after-request="if(event.detail.successful) document.getElementById('plan-settings-modal').showModal()"
+                    title="{{ t('Edit plan title and notes') }}">{{ t("Edit plan") }}</button>
+            <form method="post" action="/plans/{{ active.id }}/match" class="tp-btn-inline-form">
+                <button type="submit" class="tp-btn" title="{{ t('Re-run adherence matching') }}">{{ t("Re-match") }}</button>
+            </form>
+            <form method="post" action="/plans/{{ active.id }}/deactivate"
+                  class="tp-btn-inline-form"
+                  data-confirm="{{ t('Deactivate this plan? It will move to the archive and you can start a new one.') }}"
+                  data-confirm-yes="{{ t('Yes, deactivate') }}">
+                <button type="submit" class="tp-btn">{{ t("Archive") }}</button>
+            </form>
+        </div>
+    </section>
+
+    {# Plan notes are intentionally not shown here — they live in the Edit-plan
+       modal only, to keep the plans page uncluttered. #}
+
+    {# ── STATS STRIP ─────────────────────────────────────────────── #}
+    <section class="tp-plan-stats">
+        <div class="tp-plan-stat-cell">
+            <p class="tp-plan-stat-label">{{ t("Goal") }}</p>
+            <p class="tp-plan-stat-value">
+                {% if active.target_time_s %}{{ fmt_duration(active.target_time_s) }}{% else %}—{% endif %}
+            </p>
+            <p class="tp-plan-stat-sub">{{ t(goal_labels.get(active.goal_type, active.goal_type))|lower }}</p>
+        </div>
+        <div class="tp-plan-stat-cell">
+            {% if _vdot_based %}
+            <p class="tp-plan-stat-label">VDOT</p>
+            <p class="tp-plan-stat-value">{% if active.vdot_at_start %}{{ '%.0f'|format(active.vdot_at_start) }}{% else %}—{% endif %}</p>
+            <p class="tp-plan-stat-sub">{{ t("at start") }}</p>
+            {% else %}
+            {# Effort-based plans have no VDOT calibration — showing the seed
+               number would imply paces that don't exist. #}
+            <p class="tp-plan-stat-label">{{ t("Pacing") }}</p>
+            <p class="tp-plan-stat-value">—</p>
+            <p class="tp-plan-stat-sub">{{ t("by effort") }}</p>
+            {% endif %}
+        </div>
+        <div class="tp-plan-stat-cell">
+            <p class="tp-plan-stat-label">{{ t("Total") }}</p>
+            <p class="tp-plan-stat-value">{{ '%.0f'|format(total_km) }}</p>
+            <p class="tp-plan-stat-sub">{{ t("km · {n} wks", n=n_weeks) }}</p>
+        </div>
+        <div class="tp-plan-stat-cell">
+            <p class="tp-plan-stat-label">{{ t("Adherence") }}</p>
+            <p class="tp-plan-stat-value">
+                {% if adherence and adherence.due_so_far > 0 %}{{ adherence.completion_pct }}%{% else %}—{% endif %}
+            </p>
+            <p class="tp-plan-stat-sub">
+                {% if adherence and adherence.due_so_far > 0 %}{{ t("{n}/{due} done", n=adherence.done, due=adherence.due_so_far) }}{% else %}{{ t("not yet") }}{% endif %}
+            </p>
+        </div>
+        <div class="tp-plan-stat-cell">
+            <p class="tp-plan-stat-label">{{ t("Days") }}</p>
+            <p class="tp-plan-stat-value">
+                {% if days_to_race is not none %}{% if days_to_race >= 0 %}{{ days_to_race }}{% else %}{{ -days_to_race }}{% endif %}{% else %}—{% endif %}
+            </p>
+            <p class="tp-plan-stat-sub">
+                {% if days_to_race is not none %}{% if days_to_race >= 0 %}{{ t("to race") }}{% else %}{{ t("since race") }}{% endif %}{% else %}{{ t("no race date") }}{% endif %}
+            </p>
+        </div>
+    </section>
+
+    {# ── PHASE BAR ───────────────────────────────────────────────── #}
+    <section class="tp-plan-phasebar">
+        <div class="tp-plan-phasebar-head">
+            <span>{{ t("Block map · {n} weeks", n=n_weeks) }}</span>
+            <span>{{ '%.0f'|format(total_km) }} {{ t("km · {n} wks", n=n_weeks) }}</span>
+        </div>
+        <div class="tp-plan-phasebar-track">
+            {% for week in active_weeks %}
+            {% set _is_today = (week.workouts and week.workouts[0].planned_date <= today_iso and week.workouts[-1].planned_date >= today_iso) %}
+            <div class="tp-plan-phasebar-seg phase-{{ week.week_phase }} {% if _is_today %}is-today{% endif %}"
+                 title="W{{ week.week_number }} · {{ t(week.week_phase)|capitalize }} · {{ '%.0f'|format(week.total_km) }} km"></div>
+            {% endfor %}
+        </div>
+        <div class="tp-plan-phasebar-legend">
+            {% for phase in ['base', 'build', 'peak', 'taper', 'race', 'maintain'] %}
+            <span><span class="swatch" style="background: var(--phase-{{ phase }});"></span>{{ t(phase) }}</span>
+            {% endfor %}
+        </div>
+    </section>
+
+    {# ── WEEKS ───────────────────────────────────────────────────── #}
+    {% with weeks=active_weeks, plan_id=active.id, plan_status=active.status %}
+        {% include "_weeks_section.html" %}
+    {% endwith %}
+{% else %}
+    <section class="tp-plan-empty">
+        <h2>{{ t("No active plan.") }}</h2>
+        <p>{{ t("Create one to get a methodology-driven schedule built around your current fitness.") }}</p>
+        <a href="/plans/new" class="button">{{ t("+ Create your first plan") }}</a>
+    </section>
+{% endif %}
+
+{# Modal host — populated via HTMX when a day cell is clicked. #}
+<dialog id="plan-workout-modal" class="modal"
+        onclick="if (event.target === this) this.close()">
+    <button class="modal-close" onclick="this.closest('dialog').close()" aria-label="{{ t('Close') }}">×</button>
+    <div id="plan-workout-content"></div>
+</dialog>
+
+{# Plan-settings modal — populated when the user clicks "Edit plan". #}
+<dialog id="plan-settings-modal" class="modal"
+        onclick="if (event.target === this) this.close()">
+    <button class="modal-close" onclick="this.closest('dialog').close()" aria-label="{{ t('Close') }}">×</button>
+    <div id="plan-settings-content"></div>
+</dialog>
+
+{# Optional-strength session detail modal. Loaded via HTMX from the
+   strength chip on a rest-day cell. #}
+<dialog id="plan-strength-modal" class="modal"
+        onclick="if (event.target === this) this.close()">
+    <button class="modal-close" onclick="this.closest('dialog').close()" aria-label="{{ t('Close') }}">×</button>
+    <div id="plan-strength-content"></div>
+</dialog>
+
+{% if archive %}
+<section class="tp-plan-archive">
+    <h2>{{ t("Previous plans") }}</h2>
+    {% for p in archive %}
+    <div class="archive-row">
+        <div>
+            <a href="/plans/{{ p.id }}"><strong>{{ p.title }}</strong></a>
+            <div class="muted" style="font-size: 0.8rem;">
+                {{ t(goal_labels.get(p.goal_type, p.goal_type)) }}
+                · {{ methodology_lookup.get(p.methodology).name if methodology_lookup.get(p.methodology) else p.methodology }}
+                · {{ t("created {date}", date=p.created_at[:10]) }}
+                {% if p.deactivated_at %} · {{ t("ended {date}", date=p.deactivated_at[:10]) }}{% endif %}
+            </div>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <a href="/plans/{{ p.id }}" class="tp-btn">{{ t("View") }}</a>
+            <form method="post" action="/plans/{{ p.id }}/reactivate" class="tp-btn-inline-form">
+                <button type="submit" class="tp-btn"
+                        title="{{ t('Make this the active plan (swaps out the current one)') }}">{{ t("Reactivate") }}</button>
+            </form>
+            {# Mounts on the row, not this button cluster — the cluster is a
+               non-wrapping flex row and the strip would squeeze the buttons. #}
+            <form method="post" action="/plans/{{ p.id }}/delete" class="tp-btn-inline-form"
+                  data-confirm="{{ t('Delete this plan permanently? This removes the plan and all its workouts.') }}"
+                  data-confirm-yes="{{ t('Yes, delete') }}"
+                  data-confirm-into=".archive-row">
+                <button type="submit" class="tp-btn danger" title="{{ t('Delete this plan permanently') }}">{{ t("Delete") }}</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

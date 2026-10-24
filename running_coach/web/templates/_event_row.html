@@ -1,0 +1,52 @@
+{# One race event card. Used inside the month list on /calendar.
+   Clicking anywhere on the row body (except the action buttons) opens the
+   detail modal via HTMX. #}
+<article class="event-row is-clickable {% if event.id in favorited_ids %}is-favorited{% endif %}"
+         id="event-{{ event.id }}"
+         hx-get="/calendar/events/{{ event.id }}/detail"
+         hx-target="#event-detail-body"
+         hx-swap="innerHTML"
+         hx-on::after-request="document.getElementById('event-detail-modal').showModal()">
+    <div class="event-date">
+        <div class="event-date-day">{{ event.race_date[8:10] }}</div>
+        <div class="event-date-mon">{{ fmt_month_short(event.race_date) }}</div>
+        <div class="event-date-dow muted">{{ fmt_dow_short(event.race_date) }}</div>
+    </div>
+    <div class="event-body">
+        <div class="event-head">
+            <h3 class="event-name">{{ event.name }}</h3>
+            <div class="event-loc muted">
+                {% if event.city %}{{ event.city }}{% endif %}
+                {% if event.province %}<span class="event-prov">{{ event.province }}</span>{% endif %}
+            </div>
+        </div>
+        <div class="event-distances">
+            {% for d in event.distances %}
+            <span class="event-dist-pill" data-km="{{ d.km }}">{{ d.label }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="event-actions" onclick="event.stopPropagation()">
+        {# Save / Remove. #}
+        {% if event.id in favorited_ids %}
+        <span class="event-saved-pill" title="On your calendar">✓ saved</span>
+        {% else %}
+        <form method="post" action="/calendar/events/{{ event.id }}/favorite" class="inline-form">
+            <button type="submit" class="ghost event-save" title="Add to your calendar">＋ Save</button>
+        </form>
+        {% endif %}
+        {# Create-plan affordances — one per supported plan distance. #}
+        {% for d in event.distances %}
+            {% if goal_type_for_distance(d.km) %}
+            <a class="button ghost event-plan-link"
+               href="/plans/new?from_event={{ event.id }}&distance_km={{ d.km }}&distance_label={{ d.label }}"
+               title="Create a plan toward the {{ d.label }}">
+                Plan {{ d.label }}
+            </a>
+            {% endif %}
+        {% endfor %}
+        {% if event.organizer_url %}
+        <a class="event-detail-link" href="{{ event.organizer_url }}" target="_blank" rel="noopener" title="Organiser site">↗</a>
+        {% endif %}
+    </div>
+</article>

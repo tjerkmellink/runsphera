@@ -1,0 +1,90 @@
+{# Tempo diary — editorial reskin.
+   Data contract: {weeks, n_entries, streak, nav_active, today_iso,
+                   prefill_date, error} #}
+{% extends "base.html" %}
+
+{% block content %}
+{% if error == 'bad_date' %}
+<div class="error" style="margin-bottom: 1rem;">That date didn't parse — please pick a real calendar date.</div>
+{% elif error == 'empty' %}
+<div class="error" style="margin-bottom: 1rem;">An entry needs a note, a mood, or both.</div>
+{% endif %}
+
+{# ── HERO ───────────────────────────────────────────────────────── #}
+<section class="tp-diary-hero">
+    <div>
+        <div class="tp-diary-hero-eyebrow">
+            // THE LOG
+            · {{ n_entries }} ENTR{{ "IES" if n_entries != 1 else "Y" }}
+            {% if streak and streak.current %} · STREAK {{ streak.current }} DAY{{ "S" if streak.current != 1 else "" }}{% endif %}
+        </div>
+        <h1 class="tp-diary-hero-title">Dear me, today.</h1>
+    </div>
+    {% if streak and streak.current %}
+    <div class="tp-diary-streak">
+        <p class="tp-diary-streak-num">{{ streak.current }}<span class="label">day streak</span></p>
+        <p class="tp-diary-streak-sub">
+            Longest: {{ streak.longest }}
+            {% if streak.longest_month %} · {{ streak.longest_month }}{% endif %}
+        </p>
+    </div>
+    {% endif %}
+</section>
+
+{# ── TODAY'S ENTRY FORM ─────────────────────────────────────────── #}
+<section class="tp-diary-form">
+    <form method="post" action="/diary/new">
+        <div class="tp-diary-form-head">
+            <span class="tp-diary-form-label">{{ t("Today") }} · {{ fmt_date_long(today_iso) }}</span>
+        </div>
+        <textarea name="body" rows="3"
+                  placeholder="{{ t('How did it go? What did you notice? What\'s worth remembering?') }}"></textarea>
+        <div class="tp-diary-form-footer">
+            <div style="display:flex; align-items:center; gap:1.25rem; flex-wrap:wrap;">
+                <div class="tp-diary-mood">
+                    <span class="tp-diary-mood-label">{{ t("Mood") }}</span>
+                    {% for v in [1, 2, 3, 4, 5] %}
+                    <label class="tp-diary-mood-pill" data-mood="{{ v }}" title="{{ mood_label(v) }}">
+                        <input type="radio" name="mood" value="{{ v }}">
+                        {{ mood_emoji(v) }}
+                    </label>
+                    {% endfor %}
+                    <label class="tp-diary-mood-pill selected" data-mood="" title="{{ t('no rating') }}">
+                        <input type="radio" name="mood" value="" checked>—
+                    </label>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <label style="font-family:'JetBrains Mono',monospace; font-size:0.6rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted);">
+                        {{ t("For date") }}
+                    </label>
+                    <input type="date" name="entry_date" class="tp-diary-form-date-field"
+                           value="{{ prefill_date }}" max="{{ today_iso }}" required>
+                </div>
+            </div>
+            <button type="submit" class="tp-btn primary">{{ t("Save entry") }}</button>
+        </div>
+    </form>
+</section>
+
+{# ── PAST ENTRIES ────────────────────────────────────────────────── #}
+{% if weeks %}
+<section class="tp-diary-section-head">
+    <h2 class="tp-diary-section-label">← The past · recent</h2>
+    <div class="tp-diary-section-actions">
+        <a href="/diary?prefill={{ (today_iso[:7] + '-01') }}" class="tp-diary-backfill">← Backfill a day</a>
+    </div>
+</section>
+<div class="tp-diary-feed">
+    {% for week in weeks %}
+        {% for e in week.entries %}
+                            {% include "_diary_entry_card.html" %}
+        {% endfor %}
+    {% endfor %}
+</div>
+{% else %}
+<section class="tp-diary-empty">
+    <h2>Nothing here yet.</h2>
+    <p>Add an entry above, or open any run from the dashboard and use the "How did it go?" field.</p>
+</section>
+{% endif %}
+{% endblock %}

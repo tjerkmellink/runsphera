@@ -1,0 +1,50 @@
+{# Inline confirm strip for swapping a calendar event into the active plan.
+   Loaded via HTMX into #event-swap-zone in the event detail modal after the
+   user picks a distance. Same visual pattern as the reshape confirm in
+   _plan_settings_modal.html — no native popups. On success the server sends
+   HX-Redirect to /plans so the runner lands on the plan with the race day
+   in place. #}
+<div class="event-swap-confirm"
+     style="margin-top: 0.75rem; padding: 0.75rem 0.9rem;
+            border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+            border-radius: 8px; background: color-mix(in srgb, var(--accent) 7%, var(--card));">
+    <form hx-post="/calendar/events/{{ event.id }}/swap-into-plan">
+        <input type="hidden" name="distance_km" value="{{ distance_km }}">
+        <input type="hidden" name="distance_label" value="{{ distance_label }}">
+        <p class="tp-pw-actions-desc" style="margin: 0 0 0.6rem 0;">
+            {% if swap_ctx.target.workout_type == 'rest' %}
+            {{ t('Add "{name}" ({label}) to your plan? It lands on {date} — currently a rest day.',
+                 name=event.name, label=distance_label or ('%g km'|format(distance_km)),
+                 date=fmt_date_long(swap_ctx.target.planned_date)) }}
+            {% else %}
+            {{ t('Add "{name}" ({label}) to your plan? It replaces "{title}" on {date}.',
+                 name=event.name, label=distance_label or ('%g km'|format(distance_km)),
+                 title=swap_ctx.target.title,
+                 date=fmt_date_long(swap_ctx.target.planned_date)) }}
+            {% endif %}
+        </p>
+        {% if swap_ctx.extra_candidates %}
+        <label style="display: block; margin-bottom: 0.5rem;">
+            <span class="muted" style="font-size: 0.8rem;">{{ t("Also swap out a session that week") }}</span>
+            <select name="displaced_workout_id" class="tp-pw-input" style="width: 100%; margin-top: 0.25rem;">
+                <option value="">{{ t("Nothing else — keep the rest of the week") }}</option>
+                {% for c in swap_ctx.extra_candidates %}
+                <option value="{{ c.id }}" {% if c.id == swap_ctx.proposed_extra_id %}selected{% endif %}>
+                    {{ day_label(c.day_of_week) }} {{ fmt_date_short(c.planned_date) }} — {{ c.title }}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+        <p class="muted" style="font-size: 0.78rem; margin: 0 0 0.6rem 0;">
+            {{ t("The session you swap out becomes a rest day. You can undo the whole swap later from the plan.") }}
+        </p>
+        {% endif %}
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+            <button type="button" class="ghost"
+                    onclick="document.getElementById('event-swap-zone').innerHTML=''">
+                {{ t("Cancel") }}
+            </button>
+            <button type="submit" class="primary">{{ t("Yes, add to plan") }}</button>
+        </div>
+    </form>
+</div>

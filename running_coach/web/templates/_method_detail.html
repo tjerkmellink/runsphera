@@ -1,0 +1,91 @@
+{# Long-form "Read more" body for a methodology tile. Rendered into
+   #method-detail-content on /plans/new and shown via <dialog>.showModal().
+   `m` = MethodologyInfo, `ex` = MethodologyExplainer | None. When `ex` is None
+   we fall back to the tile's own description so the button still works. #}
+<article class="md-detail">
+    <header class="md-masthead">
+        <div class="md-hero" aria-hidden="true">
+            <span class="md-art art-light" style="background-image: url('/static/heroes/{{ m.id }}-light.png');"></span>
+            <span class="md-art art-dark" style="background-image: url('/static/heroes/{{ m.id }}-dark.png');"></span>
+        </div>
+        <div class="md-head-body">
+            {% if m.badge %}
+            <span class="method-badge md-badge"><span class="dot" style="background: var(--{{ m.badge_phase }});"></span>{{ t(m.badge) }}</span>
+            {% endif %}
+            <h2 class="md-title">{{ m.name }}</h2>
+            <p class="md-tagline">{% if ex %}{{ ex.tagline }}{% else %}{{ t(m.tagline) }}{% endif %}</p>
+            {% if ex and ex.credit %}
+            <p class="md-credit">{{ ex.credit }}</p>
+            {% endif %}
+            <div class="method-chips md-chips">
+                {% for value, label in m.stat_chips %}
+                <span class="method-chip"><span class="k">{{ value }}</span>{% if label %} {{ t(label) }}{% endif %}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </header>
+
+    <div class="md-content">
+        {% if ex %}
+            {% for para in ex.lead %}
+            <p class="md-lead">{{ para | safe }}</p>
+            {% endfor %}
+
+            {% for s in ex.sections %}
+            <section class="md-section">
+                <h3 class="md-section-title">{{ s.heading }}</h3>
+                {% for para in s.paragraphs %}
+                <p>{{ para | safe }}</p>
+                {% endfor %}
+                {% if s.bullets %}
+                <ul class="md-bullets">
+                    {% for b in s.bullets %}
+                    <li>{{ b | safe }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if s.illustration %}
+                {% set ill = s.illustration %}
+                {% set key = m.id ~ '-' ~ ill.slug %}
+                {% set light = '/static/method-detail/' ~ key ~ '-light.png' %}
+                {% set dark = '/static/method-detail/' ~ key ~ '-dark.png' %}
+                <figure class="md-illus" data-slug="{{ key }}">
+                    {% if key in illus_ready %}
+                    <img class="md-illus-art art-light" src="{{ light }}" alt="{{ ill.concept }}" loading="lazy">
+                    <img class="md-illus-art art-dark" src="{{ dark }}" alt="{{ ill.concept }}" loading="lazy">
+                    {% else %}
+                    {# Placeholder box until a rendered asset is dropped in. To
+                       ship the real image, generate the prompt below and save
+                       {{ key }}-{light,dark}.png in static/method-detail/. #}
+                    <div class="md-illus-ph">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                            <rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5-5L5 20"/>
+                        </svg>
+                        <div class="md-illus-cap"><b>{{ t("Illustration:") }}</b> {{ ill.concept }}</div>
+                        <details class="md-illus-prompt">
+                            <summary>{{ t("Generation prompt") }}</summary>
+                            <p>{{ ill.prompt }}{{ illustration_style }}</p>
+                            <p class="md-illus-file">Save as <code>static/method-detail/{{ key }}-light.png</code> (+ <code>-dark.png</code>).</p>
+                        </details>
+                    </div>
+                    {% endif %}
+                </figure>
+                {% endif %}
+            </section>
+            {% endfor %}
+        {% else %}
+            {# No long-form content authored yet — graceful fallback. #}
+            <p class="md-lead">{{ t(m.description) }}</p>
+            <section class="md-section">
+                <h3 class="md-section-title">{{ t("Best for") }}</h3>
+                <p>{{ t(m.best_for) }}</p>
+            </section>
+            <p class="md-soon-note">{{ t("A fuller guide to this plan is on the way.") }}</p>
+        {% endif %}
+    </div>
+
+    <footer class="md-foot">
+        <button type="button" class="ghost md-close-btn"
+                onclick="this.closest('dialog').close()">{{ t("Close") }}</button>
+    </footer>
+</article>

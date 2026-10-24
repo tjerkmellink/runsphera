@@ -1,0 +1,16 @@
+{# Prescription-verdict chip — "▼ 1 s/km · inside window". Rendered inside
+   the coach block's attribution row, both in _run_detail.html's inline
+   reaction states and in the _run_reaction.html swap partial (so a
+   regenerate keeps the chip). Context: `verdict` = {delta, good} | None,
+   from analytics.run_verdict / run_detail. #}
+{% if verdict %}
+{% set n = verdict.delta|abs %}
+<span class="tprd-verdict{{ ' over' if not verdict.good }}">
+  {%- if verdict.delta == 0 %}{{ t("● on target") }}
+  {%- elif verdict.delta < 0 and n <= 5 %}{{ t("▼ {n} s/km · inside window", n=n) }}
+  {%- elif verdict.delta < 0 %}{{ t("▼ {n} s/km · under target", n=n) }}
+  {%- elif n <= 5 %}{{ t("▲ {n} s/km · inside window", n=n) }}
+  {%- else %}{{ t("▲ {n} s/km · over target", n=n) }}
+  {%- endif %}
+</span>
+{% endif %}

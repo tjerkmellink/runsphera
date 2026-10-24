@@ -1,0 +1,1599 @@
+<!doctype html>
+{% set theme_mode = current_theme_mode() %}
+<html lang="en" data-mode="{{ theme_mode }}">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Running Coach{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {# Favicon — self-hosted RunSphera brand mark (built by
+       scripts/build_brand_assets.py into /static/brand/). The /favicon.ico
+       route in app.py covers browsers that request the root path directly. #}
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/brand/icon-16.png">
+    <link rel="apple-touch-icon" href="/static/brand/icon-256.png">
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    {# Plotly loaded once at page-shell level, NOT inline with the
+       individual chart HTML. Previously each chart's `pio.to_html`
+       could re-emit a `<script src="cdn.plot.ly/...">` tag, and that
+       tag landing inside the HTMX-swapped `#dashboard-main` caused
+       Plotly to attempt a re-load on every dashboardRefresh — racing
+       with the per-chart init and leaving the rest of the swap
+       (recent-runs row HTMX handlers, etc.) unprocessed. Loading the
+       library here keeps every chart's `pio.to_html(include_plotlyjs=False)`
+       safe to swap. #}
+    <script src="https://cdn.plot.ly/plotly-3.5.0.min.js" charset="utf-8"></script>
+    {# Leaflet powers the run-detail Route map. Loaded shell-level for the
+       same reason as Plotly above: the map lives in HTMX-swapped modal
+       content, and a <script src> arriving inside a swap would re-load the
+       library on every open. #}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    {# Decide effective light/dark BEFORE the body paints: 'dark' / 'light' force,
+       'auto' follows the OS via matchMedia. Sets html.is-dark / html.is-light so
+       the rest of the CSS can target a single class instead of fighting media queries. #}
+    <script>
+    (() => {
+        const h = document.documentElement;
+        const apply = () => {
+            const m = h.dataset.mode || 'auto';
+            const dark = m === 'dark' || (m === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+            h.classList.toggle('is-dark', dark);
+            h.classList.toggle('is-light', !dark);
+        };
+        apply();
+        if (window.matchMedia) {
+            matchMedia('(prefers-color-scheme: dark)').addEventListener('change', apply);
+        }
+    })();
+    </script>
+    <link rel="stylesheet" href="/static/fonts/tempo-fonts.css">
+    <style>
+        :root {
+            color-scheme: light dark;
+            /* Light tokens (default) */
+            --bg: #fafafa;
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+            --accent: #2563eb;
+        }
+        /* Dark tokens — applied whenever `is-dark` class is set on <html>,
+           which the inline script in <head> manages from data-mode + OS pref.
+           color-scheme must follow the APP theme, not the OS: it drives the
+           rendering of native widgets (the date-input calendar icon,
+           scrollbars, select dropdowns). Left at :root's `light dark`, a
+           forced in-app theme that differs from the OS paints e.g. a dark
+           calendar icon on a dark card — invisible. */
+        html.is-light { color-scheme: light; }
+        html.is-dark {
+            color-scheme: dark;
+            --bg:#0f172a; --card:#1e293b; --border:#334155; --text:#e2e8f0; --muted:#94a3b8;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        header {
+            padding: 1.25rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--card);
+        }
+        header h1 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+        header .sub { color: var(--muted); font-size: 0.85rem; margin-top: 0.25rem; }
+        main { padding: 1.5rem 2rem; max-width: 1300px; margin: 0 auto; }
+        .grid { display: grid; gap: 1rem; }
+        .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+        @media (max-width: 900px) { .grid.cols-2, .grid.cols-4 { grid-template-columns: 1fr; } }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+        }
+        .card h2 {
+            margin: 0 0 0.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            font-weight: 600;
+        }
+        .stat-value { font-size: 1.6rem; font-weight: 600; line-height: 1.2; }
+        .stat-sub { color: var(--muted); font-size: 0.85rem; margin-top: 0.2rem; }
+        .section { margin-top: 1.25rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+        tr:last-child td { border-bottom: none; }
+        th {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+            font-weight: 600;
+        }
+        td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .empty { color: var(--muted); font-style: italic; padding: 1.5rem; text-align: center; }
+
+        /* header actions */
+        .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+        button.primary, button.ghost {
+            font: inherit; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;
+            border: 1px solid var(--border); background: var(--card); color: var(--text);
+        }
+        button.primary { background: var(--accent); color: white; border-color: var(--accent); font-weight: 500; }
+        button.primary:hover { filter: brightness(1.1); }
+        button.ghost:hover { background: var(--bg); }
+        button[disabled], button.htmx-request { opacity: 0.7; cursor: wait; }
+        button.htmx-request::after {
+            content: '';
+            display: inline-block;
+            width: 0.85em;
+            height: 0.85em;
+            margin-left: 0.55em;
+            vertical-align: -0.12em;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        /* Coach-refresh buttons spin their own ↻ icon (see further down),
+           so suppress the generic ::after spinner — otherwise the user
+           sees two spinners on the same button. */
+        button.coach-refresh.htmx-request::after { content: none; }
+        .error { background: #fee2e2; color: #991b1b; padding: 0.75rem 1rem; border-radius: 6px; margin-top: 0.5rem; font-size: 0.9rem; }
+        html.is-dark .error { background: #481414; color: #fca5a5; }
+
+        /* clickable rows */
+        tbody tr.clickable { cursor: pointer; transition: background-color 0.1s; }
+        tbody tr.clickable:hover { background: var(--bg); }
+        tbody tr.active { background: rgba(37, 99, 235, 0.08); }
+
+        /* run detail panel */
+        .muted { color: var(--muted); }
+        .run-detail { display: flex; flex-direction: column; gap: 1.25rem; }
+        .run-detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+        .run-title { margin: 0; font-size: 1.1rem; font-weight: 600; }
+        /* The coach reaction inside the run modal uses .tprd-coach-* (app.css). */
+        .stat-row > div { padding: 0.5rem 0; }
+        .stat-mini-label { font-size: 0.7rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.04em; }
+        .stat-mini { font-size: 1.2rem; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 0.15rem; }
+        .run-detail h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 0 0 0.5rem; font-weight: 600; }
+        .zone-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 0.5rem; background: var(--border); }
+        .zone-seg { min-width: 0; }
+        .zone-table, table.kv { width: 100%; border-collapse: collapse; }
+        .zone-table td, table.kv td { padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .zone-table tr:last-child td, table.kv tr:last-child td { border-bottom: none; }
+        .zone-dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; margin-right: 0.4rem; vertical-align: middle; }
+
+        /* Execution-score ring — corner badge on completed plan workouts.
+           SVG-based so it scales cleanly and one partial covers every theme.
+           See running_coach/execution_score.py for the 0-100 composite.       */
+        .exec-score-ring { display: block; overflow: visible; }
+        .exec-score-track { stroke: color-mix(in srgb, var(--muted) 30%, transparent); }
+        .exec-score-ring.is-green .exec-score-bar { stroke: var(--ok); }
+        .exec-score-ring.is-amber .exec-score-bar { stroke: var(--warn); }
+        .exec-score-ring.is-red   .exec-score-bar { stroke: var(--bad); }
+        .exec-score-num {
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 0.62rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            fill: var(--text);
+        }
+        .exec-score-ring.is-green .exec-score-num { fill: var(--ok); }
+        .exec-score-ring.is-amber .exec-score-num { fill: var(--warn); }
+        .exec-score-ring.is-red   .exec-score-num { fill: var(--bad); }
+        /* Position the ring in the top-right corner of a plan-day cell. */
+        .tp-plan-day { position: relative; }
+        .tp-plan-day .exec-score-ring {
+            position: absolute; top: 4px; right: 4px;
+            pointer-events: none;
+        }
+        /* Larger ring in the plan-workout modal header. */
+        .tp-pw-head { position: relative; }
+        .tp-pw-head > .exec-score-ring {
+            position: absolute; top: 0; right: 0;
+        }
+        .tp-pw-head > .exec-score-ring .exec-score-num {
+            font-size: 0.85rem;
+        }
+
+        /* Per-lap pace chart (run-detail modal). Bars grow from the chart's
+           baseline; faster paces are shorter bars, slower paces are taller —
+           so a tempo block looks like a U-shape dip, matching every running
+           app's pace-chart convention. */
+        .lap-chart-section { display: flex; flex-direction: column; gap: 0.45rem; }
+        .lap-chart-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
+        .lap-chart-active { font-size: 0.85rem; }
+        .lap-chart { display: flex; gap: 0.5rem; }
+        .lap-chart-axis { display: flex; flex-direction: column; justify-content: space-between; font-size: 0.7rem; font-variant-numeric: tabular-nums; min-width: 3.4rem; padding: 0.1rem 0; }
+        .lap-chart-plot {
+            position: relative; flex: 1;
+            height: 120px;
+            display: flex; align-items: flex-end; gap: 2px;
+            border-left: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 2px;
+        }
+        .lap-chart-bar-wrap { height: 100%; display: flex; align-items: flex-end; min-width: 4px; }
+        .lap-chart-bar { width: 100%; border-radius: 2px 2px 0 0; transition: opacity 0.15s; }
+        .lap-chart-bar-wrap:hover .lap-chart-bar { opacity: 0.75; }
+        .lap-chart-target {
+            position: absolute; left: 0; right: 0; height: 0;
+            border-top: 1.5px dashed var(--accent);
+            pointer-events: none;
+        }
+        .lap-chart-target-label {
+            position: absolute; right: 0.3rem; top: -1.05rem;
+            font-size: 0.65rem; color: var(--accent);
+            background: var(--card); padding: 0 0.25rem; border-radius: 3px;
+            font-variant-numeric: tabular-nums;
+        }
+        .lap-chart-legend { display: flex; gap: 0.85rem; font-size: 0.75rem; flex-wrap: wrap; }
+        .lap-chart-legend-item { display: inline-flex; align-items: center; gap: 0.3rem; }
+        .lap-chart-swatch { width: 0.7rem; height: 0.7rem; border-radius: 2px; display: inline-block; }
+
+        /* nav */
+        nav.top-nav { display: flex; gap: 1.25rem; margin-top: 0.5rem; align-items: center; }
+        nav.top-nav a { color: var(--muted); text-decoration: none; padding: 0.3rem 0; font-size: 0.9rem; font-weight: 500; border-bottom: 2px solid transparent; }
+        nav.top-nav a:hover { color: var(--text); }
+        nav.top-nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+        nav.top-nav .spacer { flex: 1; }
+        nav.top-nav .account-chip {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            font-size: 0.78rem; color: var(--muted);
+            padding: 0.2rem 0.55rem; border-radius: 999px;
+            background: color-mix(in srgb, var(--w-easy) 18%, var(--card));
+            border: 1px solid color-mix(in srgb, var(--w-easy) 30%, var(--border));
+        }
+        nav.top-nav .account-chip .dot {
+            width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--ok);
+        }
+        nav.top-nav form.inline-form { display: inline; margin: 0; }
+
+        /* Header actions cluster: page-specific buttons (sync, etc.) + the
+           profile chip sit together on the top-right of the header. */
+        .header-actions {
+            display: inline-flex; align-items: center; gap: 0.6rem;
+        }
+        /* Circular profile button → links to /settings. Renders the runner's
+           first initial when known, or a gear glyph as fallback. */
+        a.profile-chip {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 2rem; height: 2rem; border-radius: 50%;
+            background: var(--accent); color: white;
+            font-size: 0.85rem; font-weight: 600;
+            text-decoration: none; border: none;
+            transition: filter 0.12s, transform 0.12s;
+        }
+        a.profile-chip:hover { filter: brightness(1.1); }
+        a.profile-chip.is-anonymous {
+            background: var(--card); color: var(--muted);
+            border: 1px solid var(--border);
+            font-size: 1.05rem; font-weight: 400;
+        }
+        a.profile-chip.is-anonymous:hover { color: var(--text); background: var(--bg); }
+        a.profile-chip.is-active {
+            outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent);
+            outline-offset: 2px;
+        }
+
+        /* link button */
+        a.button { display: inline-block; text-decoration: none; font: inherit; padding: 0.5rem 1rem; border-radius: 6px;
+                   background: var(--accent); color: white; font-weight: 500; }
+        a.button:hover { filter: brightness(1.1); }
+        a.button.ghost { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+
+        /* Status colors — the single answer to "is this good, worrying, or
+           bad?". Every pill, badge, dot, banner and label that signals state
+           reads from these; no rule should hardcode a green/amber/red hex.
+
+           Two variants per status:
+             --x        ink — text, borders, dots, and color-mix() tints laid
+                        on a card. Flips per mode so it stays legible on both
+                        paper-cream and charcoal.
+             --x-solid  filled chip carrying white text. Stays put in both
+                        modes, because a mode-flipped bright green under white
+                        text would be unreadable.
+
+           --accent is NOT a status color. It is the brand voice (emphasis,
+           "today"/current, links, hover). Using it for state is what made an
+           ACTIVE pill and an ON-WATCH pill read as failures. */
+        :root {
+            --ok:   #15803d; --ok-solid:   #16a34a;
+            --warn: #d97706; --warn-solid: #d97706;
+            --bad:  #b91c1c; --bad-solid:  #b91c1c;
+            --info: #1d4ed8; --info-solid: #2563eb;
+        }
+        html.is-dark {
+            --ok:   #4ade80;
+            --warn: #fbbf24;
+            --bad:  #f87171;
+            --info: #93c5fd;
+        }
+
+        /* Workout type colors */
+        :root {
+            --w-easy: #4ade80;
+            --w-long: #3b82f6;
+            --w-tempo: #fb923c;
+            --w-intervals: #ef4444;
+            --w-recovery: #94a3b8;
+            --w-rest: #cbd5e1;
+            --w-race: #f59e0b;
+            --w-cross: #a855f7;
+        }
+        html.is-dark { --w-rest: #475569; }
+
+        /* Training-phase colors. One definition, three readers: the block-map
+           segments, its legend, and the phase pill on every week row — so a
+           week's pill can never drift from the colour the legend claims. */
+        :root {
+            --phase-base:     #4ade80;
+            --phase-build:    #3b82f6;
+            --phase-peak:     #ef4444;
+            --phase-taper:    #a855f7;
+            --phase-race:     #f59e0b;
+            --phase-maintain: #94a3b8;
+        }
+        .wtype-easy      { --wc: var(--w-easy); }
+        .wtype-long      { --wc: var(--w-long); }
+        .wtype-tempo     { --wc: var(--w-tempo); }
+        .wtype-intervals { --wc: var(--w-intervals); }
+        .wtype-recovery  { --wc: var(--w-recovery); }
+        .wtype-rest      { --wc: var(--w-rest); }
+        .wtype-race      { --wc: var(--w-race); }
+        .wtype-cross     { --wc: var(--w-cross); }
+
+        /* Today's workout card on dashboard */
+        .today-card {
+            background: linear-gradient(135deg, var(--card), var(--bg));
+            border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem;
+            display: flex; align-items: center; gap: 1.5rem;
+        }
+        .today-card .swatch { width: 6px; align-self: stretch; background: var(--wc); border-radius: 3px; }
+        .today-card .grow { flex: 1; }
+        .today-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+        .today-card .title { font-size: 1.3rem; font-weight: 600; margin: 0.2rem 0; }
+        .today-card .desc { color: var(--muted); font-size: 0.95rem; }
+        .today-card .stats { display: flex; gap: 1.5rem; margin-top: 0.5rem; }
+        .today-card .stats > div { font-variant-numeric: tabular-nums; }
+        .today-card .stats .k { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+        .today-card .stats .v { font-size: 1.05rem; font-weight: 600; }
+        .today-card .stats .sub { font-size: 0.7rem; color: var(--muted); margin-top: 0.15rem; font-variant-numeric: tabular-nums; }
+        /* Post-run: prescription text demoted once the day's run is logged. */
+        .today-card .desc.is-planned { font-style: italic; opacity: 0.7; }
+        /* Done state: label turns green so the card reads as finished. */
+        .today-card.is-done .label { color: var(--ok); }
+
+        /* Today's bonus tip card — same shape as today-card, lighter weight */
+        .tip-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+            padding: 1rem 1.25rem; display: flex; align-items: stretch; gap: 1.25rem;
+        }
+        .tip-card .swatch {
+            width: 5px; align-self: stretch; background: var(--tc); border-radius: 3px;
+        }
+        .tip-card .grow { flex: 1; }
+        .tip-card .label {
+            font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+            color: var(--muted); font-weight: 600;
+            display: flex; align-items: center; gap: 0.6rem;
+        }
+        .tip-card .tip-duration {
+            font-size: 0.7rem; padding: 0.1rem 0.5rem; border-radius: 999px;
+            background: color-mix(in srgb, var(--tc) 14%, var(--card));
+            color: var(--tc); border: 1px solid color-mix(in srgb, var(--tc) 30%, var(--border));
+            letter-spacing: 0.02em;
+        }
+        .tip-card .title { font-size: 1.05rem; font-weight: 600; margin: 0.2rem 0; }
+        .tip-card .desc { color: var(--text); font-size: 0.92rem; line-height: 1.5; }
+        .tip-card .tip-rationale {
+            color: var(--muted); font-size: 0.82rem; font-style: italic;
+            margin-top: 0.4rem;
+        }
+        .tip-card.tip-cat-mobility { --tc: #06b6d4; }
+        .tip-card.tip-cat-core     { --tc: #8b5cf6; }
+        .tip-card.tip-cat-strength { --tc: #8b5cf6; }
+        .tip-card.tip-cat-walk     { --tc: #10b981; }
+        .tip-card.tip-cat-strides  { --tc: #f59e0b; }
+        .tip-card.tip-cat-stretch  { --tc: #14b8a6; }
+        .tip-card.tip-cat-off      { --tc: #64748b; }
+
+        /* Weather chip — small strip above the today's note editor.
+           Rendered as a <button> so the whole chip opens the 48-h modal. */
+        .weather-chip {
+            display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap;
+            background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+            padding: 0.5rem 1rem; margin-bottom: 0.85rem; font-size: 0.88rem;
+            width: 100%; text-align: left; cursor: pointer; color: inherit;
+            font-family: inherit;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .weather-chip:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 4%, var(--card)); }
+        .weather-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .weather-chip .weather-modal-hint-inline {
+            font-size: 0.72rem; letter-spacing: 0.04em;
+        }
+        .weather-chip .weather-now {
+            display: inline-flex; align-items: baseline; gap: 0.55rem;
+            font-weight: 600;
+        }
+        .weather-chip .weather-temp { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+        .weather-chip .weather-text { color: var(--muted); font-weight: 500; }
+        .weather-chip .weather-detail {
+            display: inline-flex; gap: 0.95rem; flex-wrap: wrap;
+            font-variant-numeric: tabular-nums; color: var(--text);
+        }
+        .weather-chip .weather-where { margin-left: auto; font-size: 0.78rem; }
+        .weather-chip .weather-best {
+            flex-basis: 100%; margin-top: 0.4rem; padding-top: 0.45rem;
+            border-top: 1px dashed var(--border);
+            font-size: 0.85rem; color: var(--text);
+        }
+        .weather-chip .weather-best-label {
+            text-transform: uppercase; letter-spacing: 0.06em;
+            font-size: 0.7rem; font-weight: 600; color: var(--accent);
+            margin-right: 0.5rem;
+        }
+
+        /* 48-h weather modal */
+        dialog.weather-modal {
+            width: min(96vw, 1100px); max-width: 96vw;
+            border: 1px solid var(--border); border-radius: 12px;
+            background: var(--card); color: var(--text); padding: 0;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        dialog.weather-modal::backdrop { background: rgba(0,0,0,0.45); }
+        .weather-modal-head {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 1rem; padding: 1rem 1.4rem; border-bottom: 1px solid var(--border);
+        }
+        .weather-modal-head h2 { margin: 0; font-size: 1.05rem; font-weight: 600; }
+        .weather-modal-close {
+            background: transparent; border: 1px solid var(--border); cursor: pointer;
+            width: 2rem; height: 2rem; border-radius: 50%; color: var(--muted);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; padding: 0;
+        }
+        .weather-modal-close:hover { color: var(--text); border-color: var(--accent); }
+        .weather-modal-summary { padding: 0.85rem 1.4rem; border-bottom: 1px solid var(--border); }
+        .weather-modal-summary .weather-best-label {
+            text-transform: uppercase; letter-spacing: 0.06em;
+            font-size: 0.7rem; font-weight: 600; color: var(--accent); margin-right: 0.5rem;
+        }
+        .weather-modal-hint { margin-top: 0.4rem; font-size: 0.8rem; }
+
+        .weather-hours-scroller {
+            overflow-x: auto; overflow-y: hidden;
+            padding: 1rem 1rem 1.2rem;
+            scrollbar-width: thin;
+            background:
+                linear-gradient(to right, var(--card), transparent 4%),
+                linear-gradient(to left,  var(--card), transparent 4%);
+        }
+        .weather-hour-row { display: flex; gap: 0.4rem; align-items: stretch; min-height: 220px; }
+
+        .weather-day-divider {
+            display: flex; align-items: flex-start; padding: 0 0.7rem;
+            border-left: 2px dashed var(--accent);
+            margin: 0 0.2rem;
+        }
+        .weather-day-divider-label {
+            font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em;
+            color: var(--accent); font-weight: 700;
+            writing-mode: horizontal-tb;
+            padding-top: 0.1rem; white-space: nowrap;
+        }
+
+        .weather-hour-col {
+            flex: 0 0 auto; width: 60px;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 0.25rem; padding: 0.4rem 0.25rem 0.5rem;
+            border-radius: 8px; border: 1px solid transparent;
+            position: relative; font-variant-numeric: tabular-nums;
+        }
+        .weather-hour-col.is-best {
+            border-color: color-mix(in srgb, var(--ok) 45%, var(--border));
+            background: color-mix(in srgb, var(--ok) 8%, var(--card));
+        }
+        .hour-best-tag {
+            position: absolute; top: -0.7rem; left: 50%; transform: translateX(-50%);
+            font-size: 0.6rem; font-weight: 700; letter-spacing: 0.06em;
+            color: white; background: var(--ok-solid);
+            padding: 0.05rem 0.4rem; border-radius: 999px;
+        }
+        .hour-time     { font-size: 0.75rem; color: var(--muted); }
+        .hour-icon     { font-size: 1.3rem; line-height: 1; }
+        .hour-temp     { font-size: 0.95rem; font-weight: 600; }
+        .hour-precip   { font-size: 0.7rem; color: var(--muted); }
+        .hour-precip.is-wet { color: var(--info); font-weight: 600; }
+        .hour-wind     { font-size: 0.7rem; color: var(--muted); display: inline-flex; align-items: baseline; gap: 0.15rem; }
+        .hour-wind .unit { font-size: 0.55rem; opacity: 0.7; }
+        .hour-score-bar {
+            width: 4px; height: 24px; border-radius: 2px;
+            background: color-mix(in srgb, var(--border) 50%, transparent);
+            display: flex; align-items: flex-end; overflow: hidden;
+            margin-top: 0.1rem;
+        }
+        .hour-score-fill {
+            width: 100%;
+            background: linear-gradient(to top, var(--warn), var(--ok) 70%);
+        }
+        .hour-sun-tag {
+            position: absolute; bottom: -1.05rem; left: 50%; transform: translateX(-50%);
+            font-size: 0.6rem; color: var(--accent); font-weight: 600; white-space: nowrap;
+        }
+        /* Dark mode needs a stronger tint — 8% of a bright green on charcoal
+           barely registers. Ink token already flipped; only the mix changes. */
+        html.is-dark .weather-hour-col.is-best { background: color-mix(in srgb, var(--ok) 15%, var(--card)); }
+
+        /* Calendar tab */
+        .calendar-fav-card { padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+        .calendar-fav-list { list-style: none; padding: 0; margin: 0.6rem 0 0; }
+        .calendar-fav-row {
+            display: flex; align-items: center; gap: 0.7rem;
+            padding: 0.4rem 0; border-top: 1px solid var(--border); font-size: 0.9rem;
+        }
+        .calendar-fav-row:first-child { border-top: none; }
+        .calendar-fav-date { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 11rem; }
+        .calendar-fav-name { font-weight: 600; }
+        .event-arace-pill {
+            display: inline-block; margin-left: 0.4rem;
+            font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em;
+            padding: 0.05rem 0.4rem; border-radius: 999px;
+            background: color-mix(in srgb, var(--bad) 14%, var(--card)); color: var(--bad);
+            border: 1px solid color-mix(in srgb, var(--bad) 30%, var(--border));
+        }
+        .calendar-toolbar {
+            display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap;
+            justify-content: space-between; margin-bottom: 1.25rem;
+        }
+        .calendar-view-toggle {
+            display: inline-flex; border: 1px solid var(--border); border-radius: 999px;
+            overflow: hidden; background: var(--card);
+        }
+        .calendar-view-pill {
+            font-size: 0.85rem; padding: 0.35rem 1rem; text-decoration: none;
+            color: var(--muted); font-weight: 500; border-right: 1px solid var(--border);
+        }
+        .calendar-view-pill:last-child { border-right: none; }
+        .calendar-view-pill:hover { color: var(--text); }
+        .calendar-view-pill.active {
+            color: white; background: var(--accent); font-weight: 600;
+        }
+        .calendar-filters {
+            display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+        }
+        .calendar-filter-pill {
+            font-size: 0.85rem; padding: 0.3rem 0.8rem; border-radius: 999px;
+            border: 1px solid var(--border); color: var(--muted);
+            text-decoration: none; background: var(--card);
+        }
+        .calendar-filter-pill:hover { color: var(--text); border-color: var(--accent); }
+        .calendar-filter-pill.active {
+            color: var(--accent); border-color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 12%, var(--card));
+        }
+        .calendar-month { margin-bottom: 2rem; }
+        .calendar-month-head {
+            font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em;
+            color: var(--muted); margin: 0 0 0.75rem; font-weight: 600;
+        }
+        .calendar-month-events { display: flex; flex-direction: column; gap: 0.55rem; }
+
+        .event-row {
+            display: flex; gap: 1rem; align-items: stretch;
+            background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+            padding: 0.7rem 1rem;
+        }
+        .event-row.is-clickable { cursor: pointer; transition: border-color 0.12s, background 0.12s; }
+        .event-row.is-clickable:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 3%, var(--card)); }
+        .event-row.is-favorited { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+        .event-date {
+            flex: 0 0 3.2rem; text-align: center; line-height: 1.1;
+            border-right: 1px solid var(--border); padding-right: 0.85rem;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .event-date-day { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .event-date-mon { font-size: 0.75rem; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+        .event-date-dow { font-size: 0.7rem; }
+        .event-body { flex: 1; min-width: 0; }
+        .event-head { display: flex; justify-content: space-between; gap: 0.5rem; align-items: baseline; flex-wrap: wrap; }
+        .event-name { margin: 0; font-size: 0.98rem; font-weight: 600; }
+        .event-loc { font-size: 0.82rem; }
+        .event-prov {
+            display: inline-block; margin-left: 0.2rem; padding: 0 0.35rem;
+            font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em;
+            color: var(--muted); border: 1px solid var(--border); border-radius: 3px;
+        }
+        .event-distances { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
+        .event-dist-pill {
+            font-size: 0.72rem; padding: 0.1rem 0.5rem; border-radius: 999px;
+            background: var(--bg); color: var(--muted); border: 1px solid var(--border);
+            font-variant-numeric: tabular-nums;
+        }
+        .event-actions {
+            display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;
+            flex: 0 0 auto; padding-left: 0.5rem; border-left: 1px solid var(--border);
+        }
+        .event-actions .event-save, .event-actions .event-plan-link {
+            font-size: 0.78rem; padding: 0.3rem 0.7rem; border-radius: 6px;
+            white-space: nowrap;
+        }
+        .event-saved-pill {
+            font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px;
+            background: color-mix(in srgb, var(--ok) 14%, var(--card)); color: var(--ok);
+            border: 1px solid color-mix(in srgb, var(--ok) 30%, var(--border));
+            white-space: nowrap;
+        }
+        .event-detail-link {
+            color: var(--muted); text-decoration: none; font-size: 1rem;
+            padding: 0.15rem 0.4rem; border-radius: 4px;
+        }
+        .event-detail-link:hover { color: var(--accent); background: var(--bg); }
+        .calendar-importer { margin-top: 1.25rem; }
+        .calendar-importer summary { cursor: pointer; padding: 0.5rem 0; user-select: none; }
+        .calendar-importer summary:hover { color: var(--accent); }
+        .calendar-add-form, .calendar-import-form { margin-top: 0.5rem; padding: 1rem 1.25rem; }
+        .form-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.6rem 1rem;
+        }
+        .form-grid label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.82rem; color: var(--muted); }
+        .form-grid input { font: inherit; padding: 0.4rem 0.55rem; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+        .form-grid input:focus { outline: none; border-color: var(--accent); }
+        .form-grid-wide { grid-column: 1 / -1; }
+
+        /* Agenda (monthly grid) view */
+        .agenda-month { margin-bottom: 2rem; }
+        .agenda-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px;
+            background: var(--border); border: 1px solid var(--border);
+            border-radius: 8px; overflow: hidden;
+        }
+        .agenda-dow {
+            background: var(--card); padding: 0.4rem 0.5rem;
+            font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em;
+            color: var(--muted); text-transform: uppercase; text-align: center;
+        }
+        .agenda-cell {
+            background: var(--card); min-height: 110px; padding: 0.35rem 0.4rem;
+            display: flex; flex-direction: column; gap: 0.2rem;
+            font-size: 0.78rem; position: relative;
+        }
+        .agenda-cell.is-other-month { background: var(--bg); }
+        .agenda-cell.is-other-month .agenda-day-num { color: color-mix(in srgb, var(--muted) 60%, transparent); }
+        .agenda-cell.is-today { box-shadow: inset 0 0 0 2px var(--accent); }
+        .agenda-day-num {
+            font-size: 0.78rem; font-weight: 600; color: var(--muted);
+            font-variant-numeric: tabular-nums;
+        }
+        .agenda-cell.is-today .agenda-day-num { color: var(--accent); }
+        .agenda-chip {
+            display: block; font-size: 0.7rem; line-height: 1.15;
+            padding: 0.15rem 0.4rem; border-radius: 4px;
+            text-decoration: none; color: var(--text);
+            border-left: 3px solid var(--ac, var(--accent));
+            background: color-mix(in srgb, var(--ac, var(--accent)) 10%, var(--card));
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            /* button reset (agenda chips are <button> so they open the modal) */
+            border-top: none; border-right: none; border-bottom: none;
+            text-align: left; cursor: pointer; font-family: inherit; width: 100%;
+        }
+        .agenda-chip:hover {
+            background: color-mix(in srgb, var(--ac, var(--accent)) 22%, var(--card));
+            outline: 1px solid var(--ac, var(--accent));
+        }
+        .agenda-chip.cat-short    { --ac: #94a3b8; }
+        .agenda-chip.cat-5k       { --ac: #06b6d4; }
+        .agenda-chip.cat-10k      { --ac: #2563eb; }
+        .agenda-chip.cat-15k      { --ac: #f59e0b; }
+        .agenda-chip.cat-half     { --ac: #ea580c; }
+        .agenda-chip.cat-marathon { --ac: #dc2626; }
+        .agenda-chip.cat-ultra    { --ac: #7c2d12; }
+        .agenda-chip.cat-other    { --ac: #64748b; }
+        .agenda-more {
+            font-size: 0.7rem; color: var(--muted); text-decoration: none;
+            padding: 0.1rem 0.3rem; font-style: italic;
+        }
+        .agenda-more:hover { color: var(--accent); }
+        @media (max-width: 900px) {
+            .agenda-cell { min-height: 80px; padding: 0.25rem; font-size: 0.7rem; }
+            .agenda-chip { font-size: 0.62rem; padding: 0.1rem 0.25rem; }
+        }
+
+        /* Event detail modal */
+        dialog.event-modal {
+            width: min(94vw, 720px); max-width: 94vw;
+            max-height: 90vh; overflow-y: auto;
+            border: 1px solid var(--border); border-radius: 12px;
+            background: var(--card); color: var(--text); padding: 0;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            /* overscroll-behavior keeps scroll chained to the dialog
+               itself (instead of bubbling up to the page body when you
+               hit either end of the modal content). */
+            overscroll-behavior: contain;
+        }
+        dialog.event-modal::backdrop { background: rgba(0,0,0,0.45); }
+        .event-modal-inner {
+            display: flex; flex-direction: column;
+            /* `--band-c` is the per-distance-band accent (set by .band-*
+               rules below). 6px top stripe makes the band readable
+               immediately, matching the calendar chips. */
+            border-top: 6px solid var(--band-c, var(--accent));
+        }
+        .event-modal-inner.band-short    { --band-c: #16a34a; }
+        .event-modal-inner.band-mid      { --band-c: #1d4ed8; }
+        .event-modal-inner.band-long     { --band-c: #c2410c; }
+        .event-modal-inner.band-marathon { --band-c: #dc2626; }
+        .event-modal-head {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+        }
+        .event-modal-title { margin: 0; font-size: 1.1rem; font-weight: 600; }
+        .event-modal-meta { font-size: 0.85rem; margin-top: 0.2rem; }
+        .event-modal-hero {
+            position: relative; background: var(--bg);
+            border-bottom: 1px solid var(--border);
+        }
+        .event-modal-hero img {
+            display: block; width: 100%; max-height: 280px; object-fit: cover;
+        }
+        .event-modal-body { padding: 1rem 1.25rem; }
+        .event-modal-desc {
+            margin: 0 0 0.85rem; font-size: 0.95rem; line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .event-modal-links {
+            display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+            margin: 0.5rem 0 0;
+        }
+        .event-modal-actions {
+            display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+            margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--border);
+        }
+        .event-modal-enrich {
+            margin: 0 1.25rem 1.25rem;
+            border-top: 1px dashed var(--border); padding-top: 0.75rem;
+        }
+        .event-modal-enrich summary {
+            cursor: pointer; padding: 0.3rem 0; user-select: none;
+        }
+        .event-modal-enrich summary:hover { color: var(--accent); }
+        .event-enrich-form, .event-manual-form {
+            display: flex; flex-direction: column; gap: 0.55rem;
+            margin: 0.5rem 0 0.75rem;
+        }
+        .event-enrich-form label, .event-manual-form label {
+            display: flex; flex-direction: column; gap: 0.2rem;
+        }
+        .event-enrich-form input, .event-manual-form input,
+        .event-manual-form textarea {
+            font: inherit; padding: 0.45rem 0.6rem; border-radius: 6px;
+            border: 1px solid var(--border); background: var(--bg); color: var(--text);
+        }
+        .event-enrich-form input:focus, .event-manual-form input:focus,
+        .event-manual-form textarea:focus { outline: none; border-color: var(--accent); }
+        .event-enrich-form button, .event-manual-form button {
+            align-self: flex-start;
+        }
+        .event-enrich-form.htmx-request { opacity: 0.6; }
+        .event-modal-manual { margin-top: 0.75rem; padding-top: 0.6rem; border-top: 1px dashed var(--border); }
+        .event-modal-manual summary { font-size: 0.9rem; }
+
+        /* Dashboard 'Your races' strip */
+        .upcoming-races { padding: 0.85rem 1.25rem; }
+        .upcoming-races-head { display: flex; justify-content: space-between; align-items: baseline; }
+        .upcoming-races-head h2 { margin: 0; font-size: 0.95rem; }
+        .upcoming-races-list { list-style: none; padding: 0; margin: 0.45rem 0 0; }
+        .upcoming-races-list li {
+            display: flex; gap: 0.6rem; align-items: baseline; flex-wrap: wrap;
+            padding: 0.25rem 0; font-size: 0.88rem;
+            border-top: 1px dashed var(--border);
+        }
+        .upcoming-races-list li:first-child { border-top: none; }
+        .upcoming-races-date { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 10rem; }
+        .upcoming-races-name { font-weight: 600; }
+
+        /* Plan page */
+        .plan-hero {
+            background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+            padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+        }
+        .plan-hero h2 { margin: 0; font-size: 1.4rem; }
+        .plan-hero .meta { color: var(--muted); font-size: 0.9rem; margin-top: 0.3rem; }
+        .countdown { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); }
+        .countdown .small { font-size: 0.7rem; color: var(--muted); display: block; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+        .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+        .badge.phase-base    { background: rgba(74, 222, 128, 0.18); color: #15803d; }
+        .badge.phase-build   { background: rgba(59, 130, 246, 0.18); color: #1d4ed8; }
+        .badge.phase-peak    { background: rgba(239, 68, 68, 0.18); color: #b91c1c; }
+        .badge.phase-taper   { background: rgba(168, 85, 247, 0.18); color: #6d28d9; }
+        .badge.phase-maintain{ background: rgba(148, 163, 184, 0.22); color: #334155; }
+        html.is-dark .badge.phase-base    { color: #4ade80; }
+        html.is-dark .badge.phase-build   { color: #93c5fd; }
+        html.is-dark .badge.phase-peak    { color: #fca5a5; }
+        html.is-dark .badge.phase-taper   { color: #c4b5fd; }
+        html.is-dark .badge.phase-maintain{ color: #cbd5e1; }
+
+        /* Weekly card */
+        .week-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem 1.25rem; margin-bottom: 1rem; }
+        .week-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+        .week-head h3 { margin: 0; font-size: 1rem; font-weight: 600; }
+        .week-head .summary { color: var(--muted); font-size: 0.85rem; }
+        .week-adherence {
+            display: inline-block; margin-left: 0.5rem;
+            font-size: 0.72rem; font-weight: 600;
+            padding: 0.15rem 0.55rem; border-radius: 999px;
+            letter-spacing: 0.02em; border: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        .week-adherence.adh-complete {
+            background: color-mix(in srgb, var(--ok) 14%, var(--card)); color: var(--ok);
+            border-color: color-mix(in srgb, var(--ok) 30%, var(--border));
+        }
+        .week-adherence.adh-on-track {
+            background: color-mix(in srgb, var(--ok) 8%, var(--card)); color: var(--ok);
+            border-color: color-mix(in srgb, var(--ok) 22%, var(--border));
+        }
+        .week-adherence.adh-behind {
+            background: color-mix(in srgb, var(--warn) 14%, var(--card)); color: var(--warn);
+            border-color: color-mix(in srgb, var(--warn) 30%, var(--border));
+        }
+        .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; }
+        @media (max-width: 900px) { .week-grid { grid-template-columns: repeat(2, 1fr); } }
+        .day { border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.7rem; min-height: 110px;
+               border-left: 4px solid var(--wc, var(--w-rest)); background: var(--bg); position: relative; }
+        .day.today { box-shadow: 0 0 0 2px var(--accent); }
+        .day .dow { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
+        .day .wtitle { font-size: 0.9rem; font-weight: 600; margin-top: 0.2rem; }
+        .day .wstat { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; font-variant-numeric: tabular-nums; }
+        .day .wdesc { font-size: 0.72rem; color: var(--muted); margin-top: 0.35rem; line-height: 1.35; }
+        .day.rest .wtitle { color: var(--muted); font-weight: 500; }
+        .day-push {
+            font: inherit; font-size: 0.7rem; font-weight: 500;
+            margin-top: 0.5rem; padding: 0.3rem 0.55rem; border-radius: 5px;
+            border: 1px solid var(--border); background: var(--card); color: var(--accent);
+            cursor: pointer; width: 100%;
+        }
+        .day-push:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
+        .day-push.htmx-request { opacity: 0.6; }
+        .day-push.htmx-request::after { content: " …"; }
+        .day-coming { font-size: 0.65rem; color: var(--muted); margin-top: 0.5rem; font-style: italic; }
+        .watch-pill, .status-pill { display: inline-block; font-size: 0.6rem; font-weight: 600;
+                      padding: 0.05rem 0.4rem; border-radius: 999px; margin-left: 0.3rem;
+                      letter-spacing: 0.03em; text-transform: uppercase; }
+        /* On-watch and done are both positive outcomes → ok. Missed is the
+           only negative here. */
+        .watch-pill.on    { background: color-mix(in srgb, var(--ok) 18%, var(--card)); color: var(--ok); }
+        .status-pill.done { background: color-mix(in srgb, var(--ok) 22%, var(--card)); color: var(--ok); }
+        .status-pill.missed { background: color-mix(in srgb, var(--bad) 18%, var(--card)); color: var(--bad); }
+        /* "Today" is the current-item marker, not a verdict → brand accent,
+           matching `.tp-pw-pill.status-today` in the workout modal. The day
+           cell and its modal must not disagree about what today looks like. */
+        .status-pill.today { background: color-mix(in srgb, var(--accent) 14%, var(--card)); color: var(--accent); }
+        .day.status-done { opacity: 0.95; }
+        .day.status-missed { border-left-style: dashed; opacity: 0.7; }
+        .actual-block {
+            margin-top: 0.5rem; padding-top: 0.4rem;
+            border-top: 1px dashed var(--border);
+        }
+        .actual-label { font-size: 0.6rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.04em; font-weight: 600; }
+        .actual-stats { font-size: 0.78rem; font-variant-numeric: tabular-nums; margin-top: 0.1rem; }
+
+        /* Today's note (dashboard quick-add) */
+        .today-note { padding: 1.1rem 1.25rem 1rem; margin-bottom: 1rem; }
+        .today-note-head {
+            display: flex; align-items: baseline; justify-content: space-between;
+            gap: 1rem; margin-bottom: 0.7rem;
+        }
+        .today-note-title {
+            margin: 0; font-size: 0.85rem; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--muted); font-weight: 600;
+        }
+        .today-note-date { font-size: 0.78rem; color: var(--muted); }
+        .today-note textarea {
+            width: 100%; font: inherit; font-size: 0.92rem; line-height: 1.45;
+            padding: 0.6rem 0.75rem; border-radius: 8px;
+            border: 1px solid var(--border); background: var(--card); color: var(--text);
+            resize: vertical; min-height: 68px;
+        }
+        .today-note textarea:focus { outline: none; border-color: var(--accent); }
+
+        /* Diary tab */
+        .diary-add-card { padding: 1.25rem 1.4rem; margin-bottom: 2rem; }
+        .diary-add-head {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 1rem; flex-wrap: wrap; margin-bottom: 0.6rem;
+        }
+        .diary-add-title { margin: 0; font-size: 1.05rem; }
+        .diary-add-date { display: inline-flex; align-items: center; gap: 0.5rem; }
+        .diary-add-date input[type="date"] {
+            font: inherit; padding: 0.35rem 0.55rem; border-radius: 6px;
+            border: 1px solid var(--border); background: var(--bg); color: var(--text);
+        }
+        .diary-add-card textarea {
+            width: 100%; font-family: inherit; line-height: 1.5;
+            padding: 0.6rem 0.75rem; border-radius: 8px;
+            border: 1px solid var(--border); background: var(--bg); color: var(--text);
+            margin-top: 0.6rem; resize: vertical;
+        }
+        .diary-add-card textarea:focus { outline: none; border-color: var(--accent); }
+
+        /* Timeline */
+        .diary-timeline { position: relative; padding-left: 1.5rem; }
+        .diary-timeline::before {
+            content: ''; position: absolute;
+            left: 0.45rem; top: 0.3rem; bottom: 0.3rem;
+            width: 2px; background: var(--border);
+            border-radius: 1px;
+        }
+        .diary-timeline-week { margin-bottom: 1.75rem; position: relative; }
+        .diary-week-marker {
+            font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em;
+            color: var(--muted); margin: 0 0 0.85rem; font-weight: 600;
+            padding-left: 0.1rem;
+        }
+        .diary-timeline-card { position: relative; margin-bottom: 0.7rem; }
+        .diary-timeline-card::before {
+            content: ''; position: absolute;
+            left: -1.35rem; top: 1.05rem;
+            width: 11px; height: 11px; border-radius: 50%;
+            background: var(--accent); border: 2px solid var(--card);
+            box-shadow: 0 0 0 2px var(--border);
+        }
+        .diary-timeline-card.editing { border-color: var(--accent); }
+        .diary-timeline-card.editing textarea {
+            width: 100%; font-family: inherit; line-height: 1.5;
+            padding: 0.55rem 0.7rem; border-radius: 8px;
+            border: 1px solid var(--border); background: var(--bg); color: var(--text);
+            margin-top: 0.6rem; resize: vertical;
+        }
+        .diary-timeline-card.editing textarea:focus { outline: none; border-color: var(--accent); }
+        .diary-card-right {
+            display: inline-flex; align-items: center; gap: 0.6rem;
+            flex-wrap: wrap; justify-content: flex-end;
+        }
+        .diary-edit-btn {
+            background: transparent; border: 1px solid var(--border);
+            color: var(--muted); cursor: pointer;
+            width: 1.7rem; height: 1.7rem; border-radius: 50%;
+            font-size: 0.85rem; line-height: 1; padding: 0;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: background 0.12s, color 0.12s, border-color 0.12s;
+        }
+        .diary-edit-btn:hover { color: var(--text); background: var(--bg); border-color: var(--accent); }
+        .diary-edit-btn:disabled { opacity: 0.4; cursor: wait; }
+        .diary-edit-btn.htmx-request { opacity: 0.5; cursor: wait; }
+
+        /* Legacy week classes (still referenced elsewhere) */
+        .diary-week { margin-bottom: 1.75rem; }
+        .diary-week-head {
+            font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em;
+            color: var(--muted); margin: 0 0 0.7rem; font-weight: 600;
+        }
+        .diary-week-entries { display: flex; flex-direction: column; gap: 0.7rem; }
+        .diary-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+            padding: 1rem 1.25rem;
+        }
+        .diary-card-head {
+            display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+            margin-bottom: 0.6rem; flex-wrap: wrap;
+        }
+        .diary-card-date {
+            font-weight: 600; font-size: 0.95rem;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+        }
+        .diary-mood { font-size: 1.15rem; }
+        .diary-card-link { color: var(--muted); font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .diary-link-badge {
+            display: inline-block; padding: 0.05rem 0.45rem; border-radius: 999px;
+            font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+            background: color-mix(in srgb, var(--accent) 12%, var(--card));
+            color: var(--accent);
+            border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+        }
+        .diary-card-body {
+            white-space: pre-wrap;
+            font-size: 0.92rem; line-height: 1.5;
+            color: var(--text);
+        }
+
+        /* Runner's diary editor (inside the run detail modal) */
+        .run-diary {
+            margin-top: 1rem; padding-top: 1rem;
+            border-top: 1px dashed var(--border);
+        }
+        .run-diary h4 {
+            font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;
+            color: var(--muted); margin: 0 0 0.6rem; font-weight: 600;
+        }
+        .garmin-feel-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.85rem; }
+        .feel-badge {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            font-size: 0.75rem; padding: 0.2rem 0.55rem; border-radius: 999px;
+            background: color-mix(in srgb, var(--accent) 8%, var(--card));
+            border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+        }
+        .feel-label { color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.65rem; }
+        .feel-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+        .mood-dial { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+        .mood-pill {
+            display: inline-flex; flex-direction: column; align-items: center; gap: 0.15rem;
+            border: 2px solid var(--border); border-radius: 8px;
+            padding: 0.4rem 0.55rem; cursor: pointer; min-width: 56px;
+            background: var(--card);
+            transition: border-color 0.1s, background 0.1s;
+        }
+        .mood-pill input { display: none; }
+        .mood-pill:hover { border-color: var(--accent); }
+        .mood-pill.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--card)); }
+        .mood-pill.mood-clear { background: var(--bg); }
+        .mood-emoji {
+            font-size: 1.2rem; line-height: 1;
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+                         "Noto Color Emoji", system-ui, sans-serif;
+        }
+        .diary-mood {
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+                         "Noto Color Emoji", system-ui, sans-serif;
+        }
+        .mood-text { font-size: 0.65rem; color: var(--muted); text-transform: lowercase; letter-spacing: 0.02em; }
+        .run-diary textarea {
+            width: 100%; font: inherit; font-size: 0.9rem; line-height: 1.45;
+            padding: 0.6rem 0.75rem; border-radius: 8px;
+            border: 1px solid var(--border); background: var(--card); color: var(--text);
+            resize: vertical; min-height: 70px;
+        }
+        .run-diary textarea:focus { outline: none; border-color: var(--accent); }
+        .diary-actions {
+            display: flex; align-items: center; justify-content: flex-end;
+            gap: 0.75rem; margin-top: 0.6rem;
+        }
+        .diary-meta { font-size: 0.72rem; color: var(--muted); margin-right: auto; }
+        .saved-indicator {
+            font-size: 0.8rem; color: var(--ok); font-weight: 600;
+            margin-right: auto;
+            animation: fadein 0.25s ease-in;
+        }
+        @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Modal dialog */
+        dialog.modal {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0;
+            background: var(--card);
+            color: var(--text);
+            max-width: min(900px, 92vw);
+            width: 800px;
+            max-height: 88vh;
+            overflow: auto;
+            box-shadow: 0 24px 64px -16px rgba(0, 0, 0, 0.45);
+        }
+        dialog.modal::backdrop {
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(2px);
+        }
+        html.is-dark dialog.modal::backdrop { background: rgba(0, 0, 0, 0.6); }
+        dialog.modal > .modal-close {
+            position: absolute; top: 0.6rem; right: 0.7rem; z-index: 2;
+            background: var(--card); border: 1px solid var(--border);
+            color: var(--muted); cursor: pointer;
+            width: 2rem; height: 2rem; border-radius: 50%;
+            font-size: 1.25rem; line-height: 1; padding: 0;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        dialog.modal > .modal-close:hover { color: var(--text); border-color: var(--muted); }
+        /* the partial inside the dialog has a .card wrapper that adds its own padding;
+           strip the dialog's intrinsic margin so it sits flush */
+        dialog.modal > #run-detail-content > .card { border: none; box-shadow: none; }
+
+        /* ── Getting-started wizard ──────────────────────────────────── */
+        dialog.modal.onboarding { width: 560px; max-width: min(560px, 94vw); }
+        .onb { position: relative; padding: 1.75rem 1.9rem 1.5rem; }
+        .onb .onb-close { position: absolute; top: 0.6rem; right: 0.7rem; }
+        .onb-progress { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 1.1rem; }
+        .onb-dot {
+            width: 0.5rem; height: 0.5rem; border-radius: 50%;
+            background: var(--border); transition: background 0.2s, transform 0.2s;
+        }
+        .onb-dot.is-done { background: color-mix(in srgb, var(--accent) 55%, var(--border)); }
+        .onb-dot.is-current { background: var(--accent); transform: scale(1.35); }
+        .onb-progress-label { margin-left: 0.4rem; font-size: 0.72rem; color: var(--muted); letter-spacing: 0.03em; }
+        .onb-title { font-size: 1.45rem; font-weight: 700; margin: 0 0 0.5rem; letter-spacing: -0.01em; }
+        .onb-lead { color: var(--muted); font-size: 0.95rem; line-height: 1.5; margin: 0 0 1.1rem; }
+        .onb-steplist { color: var(--text); font-size: 0.92rem; line-height: 1.7; margin: 0 0 1.3rem 1.1rem; padding: 0; }
+        /* Motivational finale — baseline stat card */
+        .onb-seedcard {
+            display: flex; gap: 0.75rem; margin: 0.25rem 0 0.75rem;
+        }
+        .onb-seedcard-row {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            padding: 0.75rem 0.5rem; border-radius: 10px;
+            border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+            background: color-mix(in srgb, var(--accent) 7%, var(--card));
+        }
+        .onb-seedcard-num { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
+        .onb-seedcard-lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.15rem; }
+        .onb-seedhint { font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .onb-extra {
+            border: 1px solid var(--border); border-radius: 10px;
+            padding: 0.85rem 1rem; margin-bottom: 0.85rem;
+        }
+        .onb-extra-head { font-weight: 600; font-size: 0.98rem; margin-bottom: 0.25rem; }
+        .onb-extra .muted { font-size: 0.85rem; line-height: 1.45; margin: 0 0 0.6rem; }
+        .onb-badge {
+            font-size: 0.72rem; font-weight: 600; margin-left: 0.4rem;
+            padding: 0.1rem 0.5rem; border-radius: 999px;
+            background: color-mix(in srgb, var(--accent) 14%, var(--card));
+            color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+        }
+        .onb-inline { display: flex; gap: 0.5rem; }
+        .onb-inline input { flex: 1; }
+        .onb-actions { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.3rem; }
+        .onb-spacer { flex: 1; }
+        /* htmx-indicator swap: hide the resting label + show the busy label
+           while the button's request is in flight (no hx-indicator needed —
+           the button itself gets .htmx-request). */
+        .onb .htmx-indicator { display: none; }
+        .onb button.htmx-request .onb-btn-label { display: none; }
+        .onb button.htmx-request .htmx-indicator { display: inline; }
+
+        /* Personalised greeting + first-run welcome */
+        .greeting {
+            font-size: 1.4rem; font-weight: 600;
+            margin-bottom: 0.85rem; padding: 0 0.1rem;
+            letter-spacing: -0.01em;
+        }
+        .welcome-card {
+            background: linear-gradient(135deg,
+                color-mix(in srgb, var(--accent) 8%, var(--card)),
+                var(--card));
+            border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin-bottom: 1.25rem;
+        }
+        .welcome-headline { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.4rem; }
+        .welcome-body { color: var(--muted); font-size: 0.95rem; line-height: 1.45; margin-bottom: 1rem; }
+        .welcome-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+        /* coach banner */
+        .coach-banner {
+            display: flex; gap: 1rem; align-items: flex-start;
+            padding: 0.85rem 1.25rem; border-radius: 10px;
+            border: 1px solid var(--border); background: var(--card);
+            margin-bottom: 1rem;
+        }
+        .coach-banner.coach-go      { border-left: 5px solid var(--ok); background: color-mix(in srgb, var(--ok) 6%, var(--card)); }
+        .coach-banner.coach-caution { border-left: 5px solid var(--warn); background: color-mix(in srgb, var(--warn) 6%, var(--card)); }
+        .coach-banner.coach-easy    { border-left: 5px solid var(--bad); background: color-mix(in srgb, var(--bad) 6%, var(--card)); }
+        .coach-banner.coach-rest    { border-left: 5px solid var(--muted); background: color-mix(in srgb, var(--muted) 6%, var(--card)); }
+        .coach-banner.coach-checkin { border-left: 5px solid var(--accent); background: color-mix(in srgb, var(--accent) 5%, var(--card)); }
+        .coach-banner .coach-icon {
+            flex: 0 0 auto; font-size: 1.6rem; font-weight: 700; padding: 0.1rem 0.7rem;
+            border-radius: 999px; letter-spacing: 0.02em;
+        }
+        .coach-banner.coach-go .coach-icon      { background: color-mix(in srgb, var(--ok) 15%, var(--card));   color: var(--ok); }
+        .coach-banner.coach-caution .coach-icon { background: color-mix(in srgb, var(--warn) 15%, var(--card)); color: var(--warn); }
+        .coach-banner.coach-easy .coach-icon    { background: color-mix(in srgb, var(--bad) 15%, var(--card));  color: var(--bad); }
+        .coach-banner.coach-rest .coach-icon    { background: color-mix(in srgb, var(--muted) 18%, var(--card)); color: var(--muted); }
+        .coach-body { flex: 1; }
+        .coach-head { font-size: 1.05rem; font-weight: 600; }
+
+        /* Weekly recap card — sits between the daily banner and Today's note. */
+        .weekly-recap {
+            border: 1px solid var(--border); border-radius: 10px;
+            background: linear-gradient(135deg, var(--card), var(--bg));
+            padding: 0.85rem 1.1rem;
+            margin-bottom: 1rem;
+        }
+        .weekly-recap-head {
+            display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+        }
+        .weekly-recap-label {
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+            text-transform: uppercase; color: var(--accent);
+            padding: 0.15rem 0.6rem; border-radius: 999px;
+            background: color-mix(in srgb, var(--accent) 14%, var(--card));
+            border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+        }
+        .weekly-recap-range { font-size: 0.78rem; }
+        .weekly-recap-refresh { margin-left: auto; }
+        .weekly-recap-body {
+            font-size: 0.95rem; line-height: 1.55; color: var(--text);
+            white-space: pre-wrap;
+        }
+        .coach-refresh {
+            background: transparent; border: none; cursor: pointer;
+            color: var(--muted); font-size: 1rem; padding: 0 0.35rem;
+            margin-left: 0.35rem; border-radius: 4px; line-height: 1;
+        }
+        .coach-refresh:hover { color: var(--text); background: var(--bg); }
+        .coach-refresh:disabled { opacity: 0.4; cursor: wait; }
+        /* Spin ONLY the inner icon span, not the whole button — buttons
+           with text labels ("↻ Regenerate") looked chaotic when the
+           entire word rotated. Templates wrap the arrow in
+           `<span class="coach-refresh-icon">↻</span>` so this rule has
+           something to target. `display: inline-block` makes the transform
+           apply (inline elements don't accept it). */
+        .coach-refresh.htmx-request { animation: none; }
+        .coach-refresh-icon { display: inline-block; }
+        .coach-refresh.htmx-request .coach-refresh-icon {
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .coach-reasons {
+            margin-top: 0.3rem; color: var(--muted); font-size: 0.85rem;
+            display: flex; flex-wrap: wrap; gap: 0.4rem 1rem;
+        }
+        .coach-reasons span { font-variant-numeric: tabular-nums; }
+        .coach-suggestion {
+            margin-top: 0.55rem; padding: 0.45rem 0.7rem;
+            background: var(--bg); border-radius: 6px;
+            font-size: 0.88rem; font-style: italic;
+        }
+
+        /* Plan archive */
+        /* flex-wrap so a .tp-confirm strip mounted here (the Delete button's
+           confirmation) drops onto its own full-width line instead of
+           squeezing the row's two columns. */
+        .archive-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; padding: 0.7rem 0.5rem; border-bottom: 1px solid var(--border); }
+        .archive-row:last-child { border-bottom: none; }
+        .archive-row a { color: var(--text); text-decoration: none; }
+        .archive-row a:hover { color: var(--accent); }
+        .icon-button {
+            display: inline-flex; align-items: center; justify-content: center;
+            background: transparent; border: 1px solid var(--border); border-radius: 6px;
+            padding: 0.4rem 0.55rem; color: var(--muted); cursor: pointer;
+            transition: color 0.15s, border-color 0.15s, background 0.15s;
+        }
+        /* Icon buttons are destructive (delete / remove) → bad on hover. */
+        .icon-button:hover { color: var(--bad); border-color: var(--bad); background: color-mix(in srgb, var(--bad) 8%, var(--card)); }
+
+        /* Plan create form */
+        .form-block { margin-bottom: 1.5rem; }
+        .form-block h3 { margin: 0 0 0.5rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
+        .pick-grid { display: grid; gap: 0.75rem; }
+        .pick-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .pick-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .pick-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+        .pick-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+        .pick-grid.cols-6 { grid-template-columns: repeat(6, 1fr); }
+        @media (max-width: 1000px) { .pick-grid.cols-5, .pick-grid.cols-6 { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 800px) { .pick-grid.cols-3, .pick-grid.cols-4, .pick-grid.cols-2, .pick-grid.cols-5, .pick-grid.cols-6 { grid-template-columns: 1fr 1fr; } }
+        .pick {
+            border: 2px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; cursor: pointer;
+            background: var(--card); display: block;
+        }
+        .pick:hover { border-color: var(--accent); }
+        .pick input[type=radio] { display: none; }
+        .pick input[type=radio]:checked ~ .pick-body { /* fallback */ }
+        .pick.checked, .pick:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
+        .pick.disabled { opacity: 0.5; cursor: not-allowed; }
+        .pick.disabled:hover { border-color: var(--border); }
+        .pick.locked { opacity: 0.35; cursor: not-allowed; filter: grayscale(0.4); }
+        .pick.locked:hover { border-color: var(--border); }
+        .pick-title { font-weight: 600; }
+        .pick-sub { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; }
+        .pick-desc { font-size: 0.75rem; color: var(--muted); margin-top: 0.4rem; line-height: 1.4; }
+        .pick-coming { display: inline-block; background: var(--bg); border-radius: 999px; padding: 0.1rem 0.5rem; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-left: 0.4rem; }
+        .day-picker { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .day-picker label { border: 2px solid var(--border); padding: 0.4rem 0.7rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; background: var(--card); }
+        .day-picker label:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--card)); }
+        .day-picker input { display: none; }
+        /* Workout-day picker — checkbox for "train on this day" + nested radio
+           for "this is the long run". Becomes visible inside the cell once the
+           day is checked. */
+        .day-picker.workout-day-picker { gap: 0.5rem; }
+        .day-picker.workout-day-picker .workout-day-cell {
+            display: flex; flex-direction: column; align-items: center;
+            min-width: 4.5rem; padding: 0.55rem 0.7rem;
+            user-select: none;
+        }
+        .day-picker.workout-day-picker .wd-label {
+            font-weight: 500; font-size: 0.85rem;
+        }
+        .day-picker.workout-day-picker .wd-long {
+            display: flex; align-items: center; gap: 0.25rem;
+            margin-top: 0.4rem; font-size: 0.7rem; color: var(--muted);
+            cursor: pointer;
+        }
+        .day-picker.workout-day-picker .wd-long-radio {
+            display: inline-block;
+            appearance: auto;
+            margin: 0; cursor: pointer;
+        }
+        .day-picker.workout-day-picker .workout-day-cell:not(:has(.wd-checkbox:checked)) .wd-long {
+            visibility: hidden;
+        }
+        .day-picker.workout-day-picker .workout-day-cell:has(.wd-long-radio:checked) {
+            background: color-mix(in srgb, var(--accent) 18%, var(--card));
+            border-color: var(--accent);
+        }
+        .day-picker.workout-day-picker .workout-day-cell:has(.wd-long-radio:checked) .wd-long {
+            color: var(--accent); font-weight: 600;
+        }
+        .field-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .field-row > div { display: flex; flex-direction: column; }
+        input[type=date], input[type=number], input[type=text] {
+            font: inherit; padding: 0.4rem 0.55rem; border-radius: 6px;
+            border: 1px solid var(--border); background: var(--card); color: var(--text); width: 100%;
+        }
+        .seed-banner {
+            background: color-mix(in srgb, var(--accent) 8%, var(--card));
+            border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+            padding: 0.6rem 1rem; border-radius: 8px; font-size: 0.9rem; margin-bottom: 1.25rem;
+        }
+        .seed-banner strong { color: var(--accent); }
+    </style>
+    {# Tempo CSS loads AFTER the inline base styles so equal-specificity
+       rules in app.css win on source order. #}
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+    <header>
+        <div class="header-row">
+            <div>
+                <h1>{% block headline %}Personal Running Coach{% endblock %}</h1>
+                <nav class="top-nav">
+                    <a href="/" class="{% if nav_active == 'dashboard' %}active{% endif %}">{{ t("Dashboard") }}</a>
+                    <a href="/plans" class="{% if nav_active == 'plans' %}active{% endif %}">{{ t("Plans") }}</a>
+                    <a href="/calendar" class="{% if nav_active == 'calendar' %}active{% endif %}">{{ t("Calendar") }}</a>
+                    <a href="/body" class="{% if nav_active == 'body' %}active{% endif %}">{{ t("Body") }}</a>
+                    <a href="/fuel" class="{% if nav_active == 'fuel' %}active{% endif %}">{{ t("Fuel") }}</a>
+                    <a href="/diary" class="{% if nav_active == 'diary' %}active{% endif %}">{{ t("Diary") }}</a>
+                    <span class="spacer"></span>
+                    {% if is_authenticated() %}
+                    <span class="account-chip" title="Garmin Connect session active"><span class="dot"></span> {{ t("Connected") }}</span>
+                    {% endif %}
+                </nav>
+            </div>
+            <div class="header-actions">
+                {% block header_actions %}{% endblock %}
+                {# Profile chip sits to the right of any page-specific actions
+                   (e.g. the dashboard's Sync button). Links to /settings;
+                   shows the runner's first initial once Garmin auth is set,
+                   else a gear glyph as a fallback. #}
+                {% set _first = current_first_name() %}
+                <a href="/settings"
+                   class="profile-chip{% if not _first %} is-anonymous{% endif %}{% if nav_active == 'settings' %} is-active{% endif %}"
+                   aria-label="{{ t('Settings') }}"
+                   title="{{ t('Settings') }}{% if _first %} · {{ _first }}{% endif %}">
+                    {% if _first %}{{ _first[:1]|upper }}{% else %}⚙{% endif %}
+                </a>
+            </div>
+        </div>
+        {# Subhead lives in the header (outside `#dashboard-main`), so a
+           normal post-sync swap wouldn't reach it — without this
+           listener the "last ingest" timestamp would stay stale until
+           the next full page navigation. Same hx-select self-refresh
+           pattern as the dashboard wrapper. #}
+        <div id="dashboard-subhead" class="sub" style="margin-top: 0.4rem;"
+             hx-get="/"
+             hx-trigger="dashboardRefresh from:body"
+             hx-select="#dashboard-subhead"
+             hx-swap="outerHTML"
+             hx-disinherit="*">
+            {% block subhead %}{% endblock %}
+        </div>
+        {% block header_status %}{% endblock %}
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    {# ── Inline confirm strips ───────────────────────────────────────────
+       Second-thought confirmation for destructive / lossy actions. The app
+       uses no native confirm() or alert() (see docs/design-system.md), so
+       a form asks for confirmation declaratively:
+
+           <form method="post" action="…"
+                 data-confirm="Delete this plan permanently?"
+                 data-confirm-yes="Yes, delete">
+
+       Optional attributes:
+           data-confirm-yes    label for the confirm button (default: "Yes, continue")
+           data-confirm-tone   "primary" for cautionary actions; default is
+                               destructive red
+           data-confirm-into   CSS selector of an ancestor (resolved with
+                               closest()) to mount the strip on, for when the
+                               form sits in a container too narrow to read in
+
+       The listener is delegated from document, so partials that HTMX swaps
+       in later (plan-settings modal, recalibrate preview) are covered
+       without shipping their own copy of this. #}
+    <script>
+    (() => {
+        const DEFAULTS = {
+            cancel: {{ t("Cancel") | tojson }},
+            yes: {{ t("Yes, continue") | tojson }},
+        };
+        let open = null;   // { strip, form, trigger }
+
+        const close = (refocus) => {
+            if (!open) return;
+            const {strip, form, trigger} = open;
+            open = null;
+            strip.remove();
+            form.classList.remove('is-confirming');
+            // Focus goes back where it came from, otherwise cancelling drops
+            // the caret to the top of the document.
+            if (refocus && trigger && trigger.isConnected) trigger.focus();
+        };
+
+        const build = (form, trigger) => {
+            const strip = document.createElement('div');
+            strip.className = 'tp-confirm';
+            if (form.dataset.confirmTone === 'primary') strip.classList.add('tone-primary');
+            // alertdialog + assertive: a keyboard/screen-reader user needs to
+            // hear the question, not just find a new button.
+            strip.setAttribute('role', 'alertdialog');
+            strip.setAttribute('aria-live', 'assertive');
+
+            const q = document.createElement('p');
+            q.className = 'tp-confirm-question';
+            // `{value}` + data-confirm-field quotes what the runner actually
+            // typed back at them ("Set plan VDOT to 47.5?"), which is the
+            // whole point of confirming a number they just edited.
+            let question = form.dataset.confirm;
+            const field = form.dataset.confirmField;
+            if (field && question.includes('{value}')) {
+                const input = form.elements[field];
+                question = question.replace('{value}', input ? input.value : '');
+            }
+            q.textContent = question;
+            strip.appendChild(q);
+
+            const actions = document.createElement('div');
+            actions.className = 'tp-confirm-actions';
+
+            const no = document.createElement('button');
+            no.type = 'button';
+            no.className = 'tp-btn';
+            no.textContent = DEFAULTS.cancel;
+            no.addEventListener('click', () => close(true));
+
+            const yes = document.createElement('button');
+            yes.type = 'button';
+            yes.className = 'tp-btn ' + (form.dataset.confirmTone === 'primary' ? 'primary' : 'danger');
+            yes.textContent = form.dataset.confirmYes || DEFAULTS.yes;
+            yes.addEventListener('click', () => {
+                const target = open && open.form;
+                close(false);
+                // submit() rather than requestSubmit(): it does not re-fire the
+                // submit event, so the handler below can't loop. The browser
+                // already ran constraint validation before that event fired.
+                if (target) target.submit();
+            });
+
+            actions.appendChild(no);
+            actions.appendChild(yes);
+            strip.appendChild(actions);
+
+            // Calendar rows are themselves clickable (hx-get opens the event
+            // modal) and the strip mounts inside one, so keep its clicks in.
+            strip.addEventListener('click', (e) => e.stopPropagation());
+            return {strip, no};
+        };
+
+        document.addEventListener('submit', (e) => {
+            const form = e.target;
+            if (!(form instanceof HTMLFormElement) || !form.dataset.confirm) return;
+            e.preventDefault();
+            if (open && open.form === form) return;   // strip already up
+            close(false);                             // only ever one at a time
+
+            const trigger = e.submitter;
+            const {strip, no} = build(form, trigger);
+            const intoSel = form.dataset.confirmInto;
+            const into = intoSel ? form.closest(intoSel) : null;
+            if (into) into.appendChild(strip);
+            else form.insertAdjacentElement('afterend', strip);
+
+            form.classList.add('is-confirming');
+            open = {strip, form, trigger};
+            // Cancel takes focus, so a reflexive Enter or Space backs out
+            // instead of confirming a destructive action.
+            no.focus();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && open) { e.preventDefault(); close(true); }
+        });
+    })();
+    </script>
+
+    {# Getting-started wizard. The dialog shell lives in base.html; the body is
+       loaded on demand via GET /onboarding. It auto-opens on the dashboard
+       while onboarding is unfinished (show_onboarding) — first-run only, no
+       manual reopen entry point. See docs/onboarding.md. #}
+    <dialog id="onboarding-modal" class="modal onboarding"
+            onclick="if (event.target === this) this.close()">
+        <div id="onboarding-body"></div>
+    </dialog>
+    {% if show_onboarding %}
+    <script>
+    (() => {
+        const open = () => {
+            const dlg = document.getElementById('onboarding-modal');
+            if (!dlg || dlg.open) return;
+            htmx.ajax('GET', '/onboarding', {target: '#onboarding-body', swap: 'innerHTML'})
+                .then(() => { if (!dlg.open) dlg.showModal(); });
+        };
+        if (document.readyState !== 'loading') open();
+        else document.addEventListener('DOMContentLoaded', open);
+    })();
+    </script>
+    {% endif %}
+
+    {# Global ESC-closes-modal handler. Native <dialog>.showModal() does
+       this on its own, but HTMX swaps into a child of the dialog (e.g.
+       `#run-detail-content`) can briefly move focus out, after which
+       Chrome and Safari sometimes stop catching the keydown. Catching
+       it here at document level closes whatever's open. #}
+    <script>
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        const open = document.querySelector('dialog[open]');
+        if (open) {
+            e.preventDefault();
+            open.close();
+        }
+    });
+    </script>
+
+    {# When `#dashboard-main` is re-fetched via the `dashboardRefresh`
+       HTMX trigger (post-sync, post-swap, etc.), the chart div gets
+       replaced and Plotly remounts. Plotly's `responsive: true` only
+       listens to window-resize, so the chart bakes in coordinates from
+       the mid-swap moment when content above hasn't settled yet — the
+       legend renders below the card border and the hover-capture rect
+       overlaps the section below (Recent runs becomes unclickable).
+
+       We resize on htmx:afterSettle, but Plotly's initial mount can
+       finish AFTER the settle event (it does internal layout passes
+       that yield to the browser), so a synchronous resize re-bakes
+       the same stale coords. Two rAF ticks pushes us past the mount
+       and onto a settled layout. Belt-and-braces: also dispatch a
+       window-resize event since Plotly's responsive mode listens for
+       that too.
+
+       Second failure mode (found 2026-07-02, reproduced with Playwright):
+       htmx's settle phase restores the *server-sent* attributes on swapped
+       nodes whose id matches the old content — stripping the
+       `js-plotly-plot` class that Plotly.newPlot added while the swap was
+       still settling. Plotly's stylesheet keys its layout rules on that
+       class (`.js-plotly-plot .plotly .main-svg { position: absolute; … }`),
+       so without it the chart's stacked svg layers fall into document flow:
+       the hover layer lands a full chart-height below the chart (hover
+       popover appears way down) and the displaced svg blocks clicks on the
+       section underneath (Recent runs). It also made this resize loop match
+       nothing (`.js-plotly-plot` selected zero nodes). Select by the
+       server-emitted `plotly-graph-div` class instead and re-add
+       `js-plotly-plot` — pure CSS, the layers snap back instantly. #}
+    <script>
+    function tpPlotlyResize() {
+        if (!window.Plotly) return;
+        document.querySelectorAll('.plotly-graph-div').forEach((el) => {
+            el.classList.add('js-plotly-plot');
+            try { window.Plotly.Plots.resize(el); } catch (_) {}
+        });
+        try { window.dispatchEvent(new Event('resize')); } catch (_) {}
+    }
+    document.body.addEventListener('htmx:afterSettle', () => {
+        requestAnimationFrame(() => requestAnimationFrame(tpPlotlyResize));
+    });
+    </script>
+</body>
+</html>

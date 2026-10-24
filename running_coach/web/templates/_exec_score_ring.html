@@ -1,0 +1,42 @@
+{# Execution-score ring — small SVG circular progress badge for the
+   top-right corner of completed plan-workout cells.
+
+   Usage:
+       {% with es=w.execution_score, size=28 %}
+           {% include "_exec_score_ring.html" %}
+       {% endwith %}
+
+   `es` must be the dict returned by execution_score.compute() or None
+   (in which case nothing renders). `size` is the outer pixel size of
+   the ring; default 28px. The stroke width is sized proportionally.
+
+   Colors come from the parent theme's `.exec-score-ring.is-{color}`
+   rules — green / amber / red — defined in base.html / tempo.css. #}
+{% if es %}
+{% set _size = size | default(28) %}
+{% set _stroke = (_size * 0.12) | round(0, 'floor') | int %}
+{% set _r = (_size - _stroke) / 2 %}
+{% set _c = 2 * 3.141593 * _r %}
+{% set _offset = _c * (1 - es.score / 100.0) %}
+<svg class="exec-score-ring is-{{ es.color }}"
+     width="{{ _size }}" height="{{ _size }}"
+     viewBox="0 0 {{ _size }} {{ _size }}"
+     role="img"
+     aria-label="Execution score {{ es.score }} of 100"
+     title="Execution {{ es.score }}/100 — pace {{ '%.0f'|format(es.pace_score) if es.pace_score is not none else '—' }}, distance {{ '%.0f'|format(es.distance_score) if es.distance_score is not none else '—' }}, HR {{ '%.0f'|format(es.hr_score) if es.hr_score is not none else '—' }}">
+    <circle class="exec-score-track"
+            cx="{{ _size / 2 }}" cy="{{ _size / 2 }}" r="{{ _r }}"
+            fill="none" stroke-width="{{ _stroke }}"></circle>
+    <circle class="exec-score-bar"
+            cx="{{ _size / 2 }}" cy="{{ _size / 2 }}" r="{{ _r }}"
+            fill="none" stroke-width="{{ _stroke }}"
+            stroke-dasharray="{{ '%.2f'|format(_c) }}"
+            stroke-dashoffset="{{ '%.2f'|format(_offset) }}"
+            stroke-linecap="round"
+            transform="rotate(-90 {{ _size / 2 }} {{ _size / 2 }})"></circle>
+    <text class="exec-score-num"
+          x="{{ _size / 2 }}" y="{{ _size / 2 }}"
+          text-anchor="middle"
+          dominant-baseline="central">{{ es.score }}</text>
+</svg>
+{% endif %}

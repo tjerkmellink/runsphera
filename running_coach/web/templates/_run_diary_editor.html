@@ -1,0 +1,54 @@
+<section class="run-diary" id="run-diary-{{ run.activity_id }}">
+    {% if run.garmin_feel is not none or run.garmin_rpe is not none %}
+    <div class="garmin-feel-row">
+        {% if run.garmin_feel is not none %}
+        <span class="feel-badge" title="How you rated this workout in Garmin Connect">
+            <span class="feel-label">Feel</span>
+            <span class="feel-value">{{ garmin_feel_label(run.garmin_feel) }}</span>
+        </span>
+        {% endif %}
+        {% if run.garmin_rpe is not none %}
+        <span class="feel-badge" title="Perceived exertion in Garmin Connect">
+            <span class="feel-label">Effort</span>
+            <span class="feel-value">{{ garmin_rpe_label(run.garmin_rpe) }}</span>
+        </span>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <form hx-post="/runs/{{ run.activity_id }}/diary"
+          hx-target="#run-diary-{{ run.activity_id }}"
+          hx-swap="outerHTML">
+        <h4>How did it go?</h4>
+
+        <div class="mood-dial">
+            {% for v in [1, 2, 3, 4, 5] %}
+            <label class="mood-pill {% if diary_entry and diary_entry.mood == v %}selected{% endif %}"
+                   title="{{ mood_label(v) }}">
+                <input type="radio" name="mood" value="{{ v }}"
+                       {% if diary_entry and diary_entry.mood == v %}checked{% endif %}>
+                <span class="mood-emoji">{{ mood_emoji(v) }}</span>
+                <span class="mood-text">{{ mood_label(v) }}</span>
+            </label>
+            {% endfor %}
+            <label class="mood-pill mood-clear {% if not (diary_entry and diary_entry.mood) %}selected{% endif %}"
+                   title="no rating">
+                <input type="radio" name="mood" value=""
+                       {% if not (diary_entry and diary_entry.mood) %}checked{% endif %}>
+                <span class="mood-emoji">—</span>
+            </label>
+        </div>
+
+        <textarea name="body" rows="3"
+                  placeholder="A few words about how this run felt — weather, mental state, anything worth remembering.">{{ diary_entry.body if diary_entry else '' }}</textarea>
+
+        <div class="diary-actions">
+            {% if saved %}
+            <span class="saved-indicator">Saved ✓</span>
+            {% elif diary_entry %}
+            <span class="diary-meta">last updated {{ diary_entry.updated_at }}</span>
+            {% endif %}
+            <button type="submit" class="primary">Save</button>
+        </div>
+    </form>
+</section>

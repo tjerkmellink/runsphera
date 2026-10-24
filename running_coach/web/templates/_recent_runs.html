@@ -1,0 +1,48 @@
+{# Recent-runs table + pager. Rendered on the dashboard and swapped in by
+   GET /runs/recent for pagination. Expects: runs, page, has_prev, has_next.
+   page 1 is the newest 10; "Newer" walks toward page 1, "Older" away. #}
+<div class="tp-recent-card">
+    <table>
+        <thead>
+            <tr>
+                <th>{{ t("Date") }}</th>
+                <th>{{ t("Session") }}</th>
+                <th class="num">{{ t("Distance") }}</th>
+                <th class="num">{{ t("Time") }}</th>
+                <th class="num">{{ t("Pace") }}</th>
+                <th class="num">{{ t("Avg HR") }}</th>
+                <th class="num">{{ t("Load") }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in runs %}
+            <tr class="clickable{% if r.workout_type %} wtype-{{ r.workout_type }}{% endif %}"
+                hx-get="/runs/{{ r.activity_id }}"
+                hx-target="#run-detail-content"
+                hx-swap="innerHTML"
+                hx-on::after-request="document.getElementById('run-detail-modal').showModal()">
+                <td class="date">{{ fmt_date_short(r.date) }}</td>
+                <td class="session">{{ r.name }}</td>
+                <td class="num">{{ "%.2f"|format(r.km) }} km</td>
+                <td class="num">{{ fmt_duration(r.duration_s) }}</td>
+                <td class="num">{{ r.pace }}</td>
+                <td class="num">{{ "%.0f"|format(r.avg_hr) if r.avg_hr else "—" }}</td>
+                <td class="num">{{ "%.0f"|format(r.training_load) if r.training_load else "—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if has_prev or has_next %}
+<div class="tp-recent-pager">
+    <button type="button" class="tp-pager-btn"{% if not has_prev %} disabled{% endif %}
+            hx-get="/runs/recent?page={{ page - 1 }}"
+            hx-target="#recent-runs-panel"
+            hx-swap="innerHTML">← {{ t("Newer") }}</button>
+    <span class="tp-pager-label">{{ t("Page") }} {{ page }}</span>
+    <button type="button" class="tp-pager-btn"{% if not has_next %} disabled{% endif %}
+            hx-get="/runs/recent?page={{ page + 1 }}"
+            hx-target="#recent-runs-panel"
+            hx-swap="innerHTML">{{ t("Older") }} →</button>
+</div>
+{% endif %}

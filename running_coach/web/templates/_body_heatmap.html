@@ -1,0 +1,67 @@
+{# Heatmap section — the whole heat-grid card, rendered inline by
+   body.html?view=heatmap AND returned by GET /body/heatmap?window=N
+   for the HTMX window-picker swap.
+
+   Required context vars:
+     - window: 90 / 180 / 365 (active days window)
+     - heatmap: heatmap_aggregates(...) — kept for compat; not consumed
+     - heatmap_by_design_key: dict[design_key → intensity_0_to_1]
+     - body_svg, t(), slug_label, side_label — Jinja globals
+#}
+<div class="tp-body-heat-grid" id="tp-body-heat-grid">
+    <div class="card tp-body-diagram-card tp-body-heat-card">
+        <div class="tp-body-heat-title">
+            <span class="mono">{{ t("LAST {n} DAYS", n=window) }}</span>
+        </div>
+        {% with mode='heatmap', prefix='h' %}
+            {% include "_body_diagram.html" %}
+        {% endwith %}
+        <div class="tp-body-fig-hint">{{ t("AGGREGATE SEVERITY · HOVER FOR COUNTS") }}</div>
+    </div>
+    <aside class="tp-body-heat-aside">
+        <div class="card tp-body-heat-windows">
+            <h3>{{ t("Window") }}</h3>
+            <div class="tp-body-win-pills">
+                {% for w in [90, 180, 365] %}
+                <button type="button"
+                        class="tp-body-win-pill {% if window == w %}on{% endif %}"
+                        hx-get="/body/heatmap?window={{ w }}"
+                        hx-target="#tp-body-heat-grid"
+                        hx-swap="outerHTML">{{ w }}d</button>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="card tp-body-heat-legend">
+            <h3>{{ t("Intensity") }}</h3>
+            <div class="tp-body-legend-bar"></div>
+            <div class="tp-body-legend-scale">
+                <span>{{ t("LOW") }}</span>
+                <span>{{ t("MODERATE") }}</span>
+                <span>{{ t("HIGH") }}</span>
+            </div>
+        </div>
+        <div class="card tp-body-heat-zones">
+            <h3>{{ t("Top zones") }}</h3>
+            <div class="tp-body-zone-list">
+                {% set _heat_sorted = heatmap_by_design_key.items()|list|sort(attribute='1', reverse=true) %}
+                {% if _heat_sorted %}
+                    {% for dk, v in _heat_sorted[:6] %}
+                        {% set bucket = (v * 5)|int %}
+                        {% if bucket > 4 %}{% set bucket = 4 %}{% endif %}
+                        {% set _colors = ['#fde68a','#fcd34d','#fb923c','#ef4444','#b91c1c'] %}
+                        {% set _parts = body_svg.from_design_key(dk) %}
+                        <div class="tp-body-zone-row">
+                            <span class="tp-body-zone-dot" style="background: {{ _colors[bucket] }};"></span>
+                            <span class="tp-body-zone-name">
+                                {% if _parts[1] != 'midline' %}{{ t(side_label(_parts[1])) }} · {% endif %}{{ t(slug_label(_parts[0])) }}
+                            </span>
+                            <span class="tp-body-zone-meta">{{ (v * 100)|round|int }}%</span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: var(--mute); font-size: 13px;">{{ t("No data in this window.") }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </aside>
+</div>
