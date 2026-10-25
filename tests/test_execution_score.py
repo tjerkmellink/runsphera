@@ -1,4 +1,4 @@
-"""Tests for running_coach.execution_score — composite execution score
+"""Tests for runsphera.execution_score — composite execution score
 shown as a corner ring on completed plan-workout cards.
 
 The scoring math is the bit that needs guarding: tolerance bands per
@@ -16,7 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.execution_score import (  # noqa: E402
+from runsphera.execution_score import (  # noqa: E402
     _color_for, _distance_score, _hr_score, _pace_score, compute,
 )
 

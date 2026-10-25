@@ -1,0 +1,585 @@
+{% extends "base.html" %}
+
+{% block headline %}RunSphera{% endblock %}
+{% block subhead %}{% endblock %}
+
+{% block content %}
+
+{# ── status banners (saved / error) ────────────────────────────────── #}
+{% if saved == 'claude' %}
+<div class="seed-banner" style="margin-bottom: 1rem;">{{ t("Claude API key saved.") }}</div>
+{% elif saved == 'cleared' %}
+<div class="seed-banner" style="margin-bottom: 1rem;">{{ t("Claude API key cleared.") }}</div>
+{% elif saved == 'about' %}
+<div class="seed-banner" style="margin-bottom: 1rem;">{{ t("Your note was saved. Today's coach line will refresh on the next dashboard view.") }}</div>
+{% elif saved == 'location' %}
+<div class="seed-banner" style="margin-bottom: 1rem;">{{ t("Location saved.") }}</div>
+{% elif saved == 'location_cleared' %}
+<div class="seed-banner" style="margin-bottom: 1rem;">{{ t("Location cleared.") }}</div>
+{% elif saved == 'body_llm' %}
+<div class="seed-banner" style="margin-bottom: 1rem;">{{ t("Coach context updated.") }}</div>
+{% elif saved == 'mode' %}
+<div class="seed-banner" style="margin-bottom: 1rem;">{{ t("Mode set to") }} <strong>{{ t(current_theme_mode()|capitalize) }}</strong>.</div>
+{% elif saved == 'language' %}
+<div class="seed-banner" style="margin-bottom: 1rem;">{{ t("● Language saved.") }} <strong>{{ available_languages.get(active_language, active_language) }}</strong>.</div>
+{% elif saved == 'body_profile' %}
+<div class="seed-banner" style="margin-bottom: 1rem;">{{ t("Body profile saved. Your fuel targets are now personalised.") }}</div>
+{% elif saved == 'body_profile_garmin' %}
+<div class="seed-banner" style="margin-bottom: 1rem;">{{ t("Pre-filled from Garmin. Check the values and adjust if needed.") }}</div>
+{% endif %}
+{% if error == 'location_empty' %}
+<div class="error" style="margin-bottom: 1rem;">{{ t("Please enter a city or place name.") }}</div>
+{% elif error == 'location_unresolved' %}
+<div class="error" style="margin-bottom: 1rem;">{{ t("Couldn't find that place. Try a more specific query — e.g. \"Wassenaar, Netherlands\".") }}</div>
+{% elif error == 'body_profile' %}
+<div class="error" style="margin-bottom: 1rem;">{{ t("Couldn't save — check the values (weight 30–250 kg, height 100–250 cm).") }}</div>
+{% elif error == 'garmin_profile' %}
+<div class="error" style="margin-bottom: 1rem;">{{ t("Garmin didn't return usable body data. Enter it manually below.") }}</div>
+{% endif %}
+
+{# ── HERO ─────────────────────────────────────────────────────────── #}
+<section class="tp-hero">
+    <p class="tp-eyebrow">{{ t("// Config · Local-first · Your machine only") }}</p>
+    <h1 class="tp-display">Wrenches &amp; dials.</h1>
+    <p class="tp-lede">
+        {{ t("The bits that make it yours. All of it lives in a SQLite file on this laptop — nothing leaves unless you copy it.") }}
+    </p>
+</section>
+
+{# ── STATUS STRIP (4 cells: Garmin · Claude · Location · Data) ────── #}
+<section class="tp-status-strip" aria-label="{{ t('System status') }}">
+    <div class="tp-status-cell">
+        <p class="tp-status-label">Garmin</p>
+        <p class="tp-status-value">
+            <span class="tp-status-dot {{ 'dot-ok' if garmin_connected else 'dot-off' }}"></span>
+            {{ t('CONNECTED') if garmin_connected else t('OFFLINE') }}
+        </p>
+        <p class="tp-status-sub">
+            {% if db.last_sync_at %}{{ t("sync") }} · {{ db.last_sync_at[5:16].replace('-', '/') }}{% else %}{{ t("not synced yet") }}{% endif %}
+        </p>
+    </div>
+    <div class="tp-status-cell">
+        <p class="tp-status-label">Claude</p>
+        <p class="tp-status-value">
+            <span class="tp-status-dot {{ 'dot-ok' if (claude_key_present or claude_key_from_env) else 'dot-off' }}"></span>
+            {{ t('ACTIVE') if (claude_key_present or claude_key_from_env) else t('IDLE') }}
+        </p>
+        <p class="tp-status-sub">opus 4.7</p>
+    </div>
+    <div class="tp-status-cell">
+        <p class="tp-status-label">{{ t("Location") }}</p>
+        <p class="tp-status-value">
+            <span class="tp-status-dot {{ 'dot-ok' if home_location else 'dot-off' }}"></span>
+            {% if home_location %}{{ (home_location.display_name or '').split(',')[0]|upper }}{% else %}{{ t("NOT SET") }}{% endif %}
+        </p>
+        <p class="tp-status-sub">
+            {% if home_location %}{{ "%.3f"|format(home_location.lat) }} °N · {{ "%.3f"|format(home_location.lon) }} °E{% else %}—{% endif %}
+        </p>
+    </div>
+    <div class="tp-status-cell">
+        <p class="tp-status-label">{{ t("Data") }}</p>
+        <p class="tp-status-value">
+            <span class="tp-status-dot dot-ok"></span>
+            {{ db.activity_count }} {{ t("runs") }}
+        </p>
+        <p class="tp-status-sub">{{ db.size_human }} · {{ db.diary_count }} {{ t("entries") }}</p>
+    </div>
+</section>
+
+{# ── ① INTEGRATIONS ──────────────────────────────────────────────── #}
+<p class="tp-section-eyebrow">① {{ t("Integrations") }}</p>
+<div class="tp-card-grid">
+
+    {# Garmin Connect card #}
+    <article class="tp-card">
+        {% if garmin_connected %}
+        <span class="tp-card-corner-pill pill-ok">● {{ t("Linked") }}</span>
+        {% else %}
+        <span class="tp-card-corner-pill pill-off">○ {{ t("Offline") }}</span>
+        {% endif %}
+        <div class="tp-card-icon">G</div>
+        <h3 class="tp-card-title">Garmin Connect</h3>
+        <p class="tp-card-desc">
+            {{ t("Pulls activities, body battery, HRV, sleep. Pushes planned workouts back to your watch.") }}
+        </p>
+        <hr class="tp-card-rule">
+        <div class="tp-field-grid">
+            {% if garmin_email %}
+            <div>
+                <p class="tp-field-label">{{ t("Account") }}</p>
+                <p class="tp-field-value">{{ garmin_email }}</p>
+            </div>
+            {% endif %}
+            {% if garmin_full_name %}
+            <div>
+                <p class="tp-field-label">{{ t("Name") }}</p>
+                <p class="tp-field-value">{{ garmin_full_name }}</p>
+            </div>
+            {% endif %}
+            <div>
+                <p class="tp-field-label">{{ t("Last sync") }}</p>
+                <p class="tp-field-value {% if not db.last_sync_at %}is-muted{% endif %}">
+                    {{ db.last_sync_at[5:16].replace('-', '/').replace('T', ' · ') if db.last_sync_at else t('never') }}
+                </p>
+            </div>
+            <div>
+                <p class="tp-field-label">{{ t("Activities") }}</p>
+                <p class="tp-field-value">{{ db.activity_count }} {{ t("imported") }}</p>
+            </div>
+        </div>
+        <div class="tp-actions">
+            {% if garmin_connected %}
+            <button type="button" class="tp-btn primary"
+                    hx-post="/ingest" hx-target="#sync-status" hx-swap="innerHTML"
+                    hx-disabled-elt="this">{{ t("Sync now") }} ↻</button>
+            <form method="post" action="/auth/logout" class="tp-btn-inline-form"
+                  data-confirm="{{ t("Disconnect Garmin? You will need to sign in again before the next sync. Cached data stays.") }}"
+                  data-confirm-yes="{{ t("Yes, disconnect") }}">
+                <button type="submit" class="tp-btn">{{ t("Disconnect") }}</button>
+            </form>
+            {% else %}
+            <a href="/auth" class="tp-btn primary">{{ t("Connect Garmin") }}</a>
+            {% endif %}
+        </div>
+        <div id="sync-status" style="margin-top: 0.5rem;"></div>
+    </article>
+
+    {# Coach voice card — three-provider tab strip. The active tab on
+       first paint matches the runner's currently-selected provider,
+       so they see "their" card immediately. Tabs are CSS-only (radio
+       + sibling combinator) — no JS needed. #}
+    {% set _any_key = (claude_key_present or claude_key_from_env or
+                        openai_key_present or openai_key_from_env or
+                        gemini_key_present or gemini_key_from_env) %}
+    <article class="tp-card">
+        {% if _any_key %}
+        <span class="tp-card-corner-pill pill-on">● {{ t("Active") }}</span>
+        {% else %}
+        <span class="tp-card-corner-pill pill-off">○ {{ t("Idle") }}</span>
+        {% endif %}
+        <div class="tp-card-icon is-accent">★</div>
+        <h3 class="tp-card-title">{{ t("Coach voice") }}</h3>
+        <p class="tp-card-desc">
+            {{ t("The line under the dashboard, the weekly recap, the run reaction — all spoken by your chosen LLM. Switch any time; past generations stay.") }}
+        </p>
+        <hr class="tp-card-rule">
+
+        <div class="tp-llm-tabs">
+            {# Radio inputs drive the visible panel via CSS :checked + ~ #}
+            <input type="radio" name="llm-tab" id="llmtab-anthropic" class="tp-llm-tab-radio"
+                   {% if llm_provider == 'anthropic' %}checked{% endif %}>
+            <input type="radio" name="llm-tab" id="llmtab-openai" class="tp-llm-tab-radio"
+                   {% if llm_provider == 'openai' %}checked{% endif %}>
+            <input type="radio" name="llm-tab" id="llmtab-gemini" class="tp-llm-tab-radio"
+                   {% if llm_provider == 'gemini' %}checked{% endif %}>
+
+            <div class="tp-llm-tab-strip">
+                <label for="llmtab-anthropic" class="tp-llm-tab-label">
+                    Anthropic
+                    {% if llm_provider == 'anthropic' %}<span class="tp-llm-active-dot" title="{{ t('Active') }}">●</span>{% endif %}
+                    <span class="tp-llm-badge tp-llm-badge--paid">{{ t("paid") }}</span>
+                </label>
+                <label for="llmtab-openai" class="tp-llm-tab-label">
+                    OpenAI
+                    {% if llm_provider == 'openai' %}<span class="tp-llm-active-dot" title="{{ t('Active') }}">●</span>{% endif %}
+                    <span class="tp-llm-badge tp-llm-badge--paid">{{ t("paid") }}</span>
+                </label>
+                <label for="llmtab-gemini" class="tp-llm-tab-label">
+                    Gemini
+                    {% if llm_provider == 'gemini' %}<span class="tp-llm-active-dot" title="{{ t('Active') }}">●</span>{% endif %}
+                    <span class="tp-llm-badge tp-llm-badge--free">{{ t("free") }}</span>
+                </label>
+            </div>
+
+            {# ── Anthropic panel ─────────────────────────────────── #}
+            <div class="tp-llm-tab-panel" data-tab="anthropic">
+                <p class="tp-field-value is-muted" style="margin: 0.4rem 0 0.4rem; font-size: 0.85rem;">
+                    {{ t("Claude Opus 4.7 — the sharpest voice. Pay-as-you-go after a one-time $5 starter credit.") }}
+                </p>
+                <p class="tp-llm-console-link">
+                    <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">
+                        ↗ {{ t("Manage key & usage on console.anthropic.com") }}
+                    </a>
+                </p>
+                {% if claude_key_present %}
+                <p class="tp-field-label" style="margin-bottom: 0.4rem;">{{ t("API key") }}</p>
+                <div class="tp-api-row">
+                    <code class="tp-api-code">{{ claude_key_masked }}</code>
+                    <form method="post" action="/settings/claude/delete" class="tp-btn-inline-form"
+                          data-confirm="{{ t('Clear the saved Anthropic API key?') }}"
+                          data-confirm-yes="{{ t('Yes, clear') }}">
+                        <button type="submit" class="tp-btn">{{ t("Clear") }}</button>
+                    </form>
+                </div>
+                {% elif claude_key_from_env %}
+                <p class="tp-field-label" style="margin-bottom: 0.4rem;">{{ t("Source") }}</p>
+                <p class="tp-field-value is-muted" style="margin-bottom: 0.85rem;">{{ t("via .env / environment") }}</p>
+                {% endif %}
+                <form method="post" action="/settings/claude" style="margin-top: 0.4rem;">
+                    <p class="tp-field-label" style="margin-bottom: 0.4rem;">
+                        {% if claude_key_present %}{{ t("Replace key") }}{% else %}{{ t("Paste your key") }}{% endif %}
+                    </p>
+                    <input type="password" name="api_key" class="tp-input"
+                           placeholder="sk-ant-..." autocomplete="off" required
+                           style="margin-bottom: 0.85rem;">
+                    <button type="submit" class="tp-btn primary">{{ t("Save key") }}</button>
+                </form>
+                {% if llm_provider != 'anthropic' %}
+                <form method="post" action="/settings/llm/provider" style="margin-top: 0.85rem;">
+                    <input type="hidden" name="provider" value="anthropic">
+                    <button type="submit" class="tp-btn">{{ t("Use Anthropic for coach voice") }}</button>
+                </form>
+                {% endif %}
+            </div>
+
+            {# ── OpenAI panel ───────────────────────────────────── #}
+            <div class="tp-llm-tab-panel" data-tab="openai">
+                <p class="tp-field-value is-muted" style="margin: 0.4rem 0 0.4rem; font-size: 0.85rem;">
+                    {{ t("gpt-4o-mini — cheap and capable. Pay-as-you-go after the $5 starter credit (≈ €0.10/year at one call/day).") }}
+                </p>
+                <p class="tp-llm-console-link">
+                    <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">
+                        ↗ {{ t("Manage key & usage on platform.openai.com") }}
+                    </a>
+                </p>
+                {% if openai_key_present %}
+                <p class="tp-field-label" style="margin-bottom: 0.4rem;">{{ t("API key") }}</p>
+                <div class="tp-api-row">
+                    <code class="tp-api-code">{{ openai_key_masked }}</code>
+                    <form method="post" action="/settings/openai/delete" class="tp-btn-inline-form"
+                          data-confirm="{{ t('Clear the saved OpenAI API key?') }}"
+                          data-confirm-yes="{{ t('Yes, clear') }}">
+                        <button type="submit" class="tp-btn">{{ t("Clear") }}</button>
+                    </form>
+                </div>
+                {% elif openai_key_from_env %}
+                <p class="tp-field-label" style="margin-bottom: 0.4rem;">{{ t("Source") }}</p>
+                <p class="tp-field-value is-muted" style="margin-bottom: 0.85rem;">{{ t("via .env / environment") }}</p>
+                {% endif %}
+                <form method="post" action="/settings/openai" style="margin-top: 0.4rem;">
+                    <p class="tp-field-label" style="margin-bottom: 0.4rem;">
+                        {% if openai_key_present %}{{ t("Replace key") }}{% else %}{{ t("Paste your key") }}{% endif %}
+                    </p>
+                    <input type="password" name="api_key" class="tp-input"
+                           placeholder="sk-..." autocomplete="off" required
+                           style="margin-bottom: 0.85rem;">
+                    <button type="submit" class="tp-btn primary">{{ t("Save key") }}</button>
+                </form>
+                {% if llm_provider != 'openai' %}
+                <form method="post" action="/settings/llm/provider" style="margin-top: 0.85rem;">
+                    <input type="hidden" name="provider" value="openai">
+                    <button type="submit" class="tp-btn">{{ t("Use OpenAI for coach voice") }}</button>
+                </form>
+                {% endif %}
+            </div>
+
+            {# ── Gemini panel ───────────────────────────────────── #}
+            <div class="tp-llm-tab-panel" data-tab="gemini">
+                <p class="tp-field-value is-muted" style="margin: 0.4rem 0 0.4rem; font-size: 0.85rem;">
+                    {{ t("Gemini 2.5 Flash — truly free on AI Studio (1500 req/day). Get a key at aistudio.google.com.") }}
+                </p>
+                <p class="tp-llm-console-link">
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">
+                        ↗ {{ t("Manage key & usage on aistudio.google.com") }}
+                    </a>
+                </p>
+                {% if gemini_key_present %}
+                <p class="tp-field-label" style="margin-bottom: 0.4rem;">{{ t("API key") }}</p>
+                <div class="tp-api-row">
+                    <code class="tp-api-code">{{ gemini_key_masked }}</code>
+                    <form method="post" action="/settings/gemini/delete" class="tp-btn-inline-form"
+                          data-confirm="{{ t('Clear the saved Gemini API key?') }}"
+                          data-confirm-yes="{{ t('Yes, clear') }}">
+                        <button type="submit" class="tp-btn">{{ t("Clear") }}</button>
+                    </form>
+                </div>
+                {% elif gemini_key_from_env %}
+                <p class="tp-field-label" style="margin-bottom: 0.4rem;">{{ t("Source") }}</p>
+                <p class="tp-field-value is-muted" style="margin-bottom: 0.85rem;">{{ t("via .env / environment") }}</p>
+                {% endif %}
+                <form method="post" action="/settings/gemini" style="margin-top: 0.4rem;">
+                    <p class="tp-field-label" style="margin-bottom: 0.4rem;">
+                        {% if gemini_key_present %}{{ t("Replace key") }}{% else %}{{ t("Paste your key") }}{% endif %}
+                    </p>
+                    <input type="password" name="api_key" class="tp-input"
+                           placeholder="AIza..." autocomplete="off" required
+                           style="margin-bottom: 0.85rem;">
+                    <button type="submit" class="tp-btn primary">{{ t("Save key") }}</button>
+                </form>
+                {% if llm_provider != 'gemini' %}
+                <form method="post" action="/settings/llm/provider" style="margin-top: 0.85rem;">
+                    <input type="hidden" name="provider" value="gemini">
+                    <button type="submit" class="tp-btn">{{ t("Use Gemini for coach voice") }}</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </article>
+</div>
+
+{# ── ② ABOUT YOU ─────────────────────────────────────────────────── #}
+<p class="tp-section-eyebrow">② {{ t("About you") }}</p>
+<div class="tp-card-grid">
+
+    {# The runner card — only the fields we actually track #}
+    <article class="tp-card">
+        <h3 class="tp-card-title" style="margin-bottom: 1rem;">{{ t("The runner") }}</h3>
+        <div class="tp-field-grid">
+            {% if garmin_full_name %}
+            <div>
+                <p class="tp-field-label">{{ t("Name") }}</p>
+                <p class="tp-field-value">{{ garmin_full_name }}</p>
+            </div>
+            {% endif %}
+            {% if current_vdot %}
+            <div>
+                <p class="tp-field-label">VDOT</p>
+                <p class="tp-field-value is-accent">{{ "%.1f"|format(current_vdot) }}</p>
+            </div>
+            {% endif %}
+            {% if db.first_run_date %}
+            <div>
+                <p class="tp-field-label">{{ t("First run") }}</p>
+                <p class="tp-field-value">{{ db.first_run_date }}</p>
+            </div>
+            {% endif %}
+            <div>
+                <p class="tp-field-label">{{ t("Activities") }}</p>
+                <p class="tp-field-value">{{ db.activity_count }}</p>
+            </div>
+        </div>
+
+        <hr class="tp-card-rule">
+        <p class="tp-field-label" style="margin-bottom: 0.4rem;">{{ t("About you · ground truth for the coach") }}</p>
+        <form method="post" action="/settings/about">
+            <textarea name="about_you" class="tp-textarea" rows="4"
+                      maxlength="{{ about_you_max }}"
+                      placeholder="{{ t('e.g. Managing a mild left-knee niggle. Morning runner, no time for doubles.') }}"
+                      style="margin-bottom: 0.7rem;">{{ about_you }}</textarea>
+            <button type="submit" class="tp-btn primary">{{ t("Save note") }}</button>
+        </form>
+
+        {# Body data → LLM opt-out. The runner can keep the Body tab
+           working while excluding their issues from the cached coach
+           prompt. Default ON (smarter coach by default). #}
+        <hr class="tp-card-rule">
+        <form method="post" action="/settings/body-llm" class="tp-body-llm-toggle">
+            <div class="tp-body-llm-row">
+                <div class="tp-body-llm-text">
+                    <p class="tp-field-label">{{ t("Body check-in shared with coach") }}</p>
+                    <p class="tp-card-desc">
+                        {{ t("When on, your active body issues feed the coach's prompt so it can adjust prescriptions to how you actually feel. Off keeps the Body tab working but hides it from the coach.") }}
+                    </p>
+                </div>
+                <label class="tp-toggle">
+                    <input type="checkbox" name="enabled" value="1"
+                           {% if include_body_in_llm %}checked{% endif %}
+                           onchange="this.form.submit()">
+                    <span class="tp-toggle-slider"></span>
+                </label>
+            </div>
+        </form>
+    </article>
+
+    {# Fitness baseline — the manual seed for plan generation. A recent race
+       result becomes a VDOT via Daniels' formula; weekly volume is stored
+       as given. Garmin-measured data outranks these when it exists, so the
+       card states which source is currently winning. #}
+    <article class="tp-card" id="fitness">
+        <h3 class="tp-card-title">{{ t("Fitness baseline") }}</h3>
+        <p class="tp-card-desc">
+            {% if plan_seed.vdot_source == 'garmin' %}
+            {{ t("Plans are currently built from your Garmin-measured VO₂max ({v}). The values below only take over when there's no Garmin data.", v="%.1f"|format(plan_seed.current_vdot)) }}
+            {% elif plan_seed.vdot_source == 'manual' %}
+            {{ t("Plans are currently built from your entered result: VDOT {v}", v="%.1f"|format(plan_seed.current_vdot)) }}{% if plan_seed.vdot_note %} ({{ plan_seed.vdot_note }}){% endif %}.
+            {% else %}
+            {{ t("No fitness data yet — plans fall back to a cautious default (VDOT 45, 25 km/week). Enter a recent race result below for paces that actually fit you.") }}
+            {% endif %}
+        </p>
+        {% if saved == 'fitness' %}<div class="seed-banner" style="margin-bottom: 0.7rem;">{{ t("Fitness baseline saved.") }}</div>{% endif %}
+        {% if error == 'fitness' %}<div class="error" style="margin-bottom: 0.7rem;">{{ t("Couldn't save that — double-check the values.") }}</div>{% endif %}
+        <form method="post" action="/settings/fitness">
+            <p class="tp-field-label" style="margin-bottom: 0.4rem;">{{ t("A recent race or hard time-trial result") }}</p>
+            <div class="tp-actions" style="margin-bottom: 0.85rem;">
+                <select name="race_distance" class="tp-input" style="min-width: 130px;">
+                    <option value="">{{ t('Distance…') }}</option>
+                    {% for did, (dlabel, _m) in fitness_distances.items() %}
+                    <option value="{{ did }}">{{ t(dlabel) }}</option>
+                    {% endfor %}
+                </select>
+                <input type="number" name="race_hours" min="0" max="9" placeholder="{{ t('h') }}" class="tp-input" style="width: 60px;">
+                <input type="number" name="race_minutes" min="0" max="59" placeholder="{{ t('min') }}" class="tp-input" style="width: 70px;">
+                <input type="number" name="race_seconds" min="0" max="59" placeholder="{{ t('sec') }}" class="tp-input" style="width: 70px;">
+            </div>
+            <p class="tp-field-label" style="margin-bottom: 0.4rem;">{{ t("Weekly running volume (km)") }}</p>
+            <input type="number" name="weekly_km" min="0" max="300" step="1" class="tp-input"
+                   value="{{ fitness_baseline.weekly_km|round|int if fitness_baseline.weekly_km else '' }}"
+                   placeholder="{{ t('e.g. 20') }}" style="width: 120px; margin-bottom: 0.85rem;">
+            <p class="tp-field-label" style="margin-bottom: 0.4rem;">{{ t("Can you currently run 10 minutes non-stop?") }}</p>
+            <div class="tp-actions" style="margin-bottom: 0.85rem;">
+                <label style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                    <input type="radio" name="can_run_10min" value="yes"
+                           {% if can_run_10min is true %}checked{% endif %}> {{ t("Yes") }}
+                </label>
+                <label style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                    <input type="radio" name="can_run_10min" value="no"
+                           {% if can_run_10min is false %}checked{% endif %}> {{ t("Not yet") }}
+                </label>
+            </div>
+            <div class="tp-actions">
+                <button type="submit" class="tp-btn primary">{{ t("Save baseline") }}</button>
+            </div>
+        </form>
+    </article>
+
+    {# Where you run #}
+    <article class="tp-card">
+        <h3 class="tp-card-title">{{ t("Where you run") }}</h3>
+        <p class="tp-card-desc">
+            {{ t("Drives the weather chip, the \"best window today\" line, and which race calendars get pulled.") }}
+        </p>
+        <div class="tp-location-feature">
+            <svg class="tp-location-contours" viewBox="0 0 200 120" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M0 60 Q40 40 80 50 T160 60 T200 50" stroke="currentColor" stroke-width="1" fill="none" opacity="0.5"/>
+                <path d="M0 70 Q40 50 80 60 T160 70 T200 60" stroke="currentColor" stroke-width="1" fill="none" opacity="0.5"/>
+                <path d="M0 80 Q40 60 80 70 T160 80 T200 70" stroke="currentColor" stroke-width="1" fill="none" opacity="0.5"/>
+                <path d="M0 90 Q40 70 80 80 T160 90 T200 80" stroke="currentColor" stroke-width="1" fill="none" opacity="0.5"/>
+            </svg>
+            {% if home_location %}
+            <p class="tp-field-label">{{ t("Primary") }}</p>
+            <h4 class="tp-location-name">{{ home_location.display_name.split(',')[0] }}{% if home_location.country_code %}, {{ home_location.country_code }}{% endif %}</h4>
+            <p class="tp-location-coords">{{ "%.4f"|format(home_location.lat) }} °N · {{ "%.4f"|format(home_location.lon) }} °E</p>
+            {% else %}
+            <p class="tp-field-label">{{ t("Primary") }}</p>
+            <h4 class="tp-location-name" style="font-size: 1.4rem; color: var(--muted);">{{ t("Not set") }}</h4>
+            <p class="tp-location-coords">{{ t("Save a city to enable weather + race calendar filtering") }}</p>
+            {% endif %}
+        </div>
+        <form method="post" action="/settings/location" class="tp-actions" style="margin-top: 0.6rem;">
+            <input type="text" name="query" class="tp-input"
+                   placeholder="{{ t('e.g. Wassenaar, Netherlands') }}" required
+                   style="flex: 1; min-width: 12rem;">
+            <button type="submit" class="tp-btn primary">{% if home_location %}{{ t("Change") }}{% else %}{{ t("Set") }}{% endif %}</button>
+            {% if home_location %}
+            <form method="post" action="/settings/location/delete" class="tp-btn-inline-form">
+                <button type="submit" class="tp-btn">{{ t("Clear") }}</button>
+            </form>
+            {% endif %}
+        </form>
+    </article>
+
+    {# Body profile — powers the Fuel tab (energy + macros + hydration).
+       Manual entry is first-class; the Garmin button just pre-fills. #}
+    <article class="tp-card" id="fuel">
+        <h3 class="tp-card-title">{{ t("Body profile") }}</h3>
+        <p class="tp-card-desc">
+            {{ t("Powers the Fuel tab — turns your training load into calorie, carb and hydration targets. Weight is the one field that's required; the rest sharpen the numbers.") }}
+        </p>
+        <form method="post" action="/settings/body-profile">
+            <div class="tp-field-grid" style="gap: 0.8rem 1.2rem;">
+                <div>
+                    <label class="tp-field-label" for="bp-weight">{{ t("Weight") }} (kg) *</label>
+                    <input type="number" step="0.1" min="30" max="250" id="bp-weight"
+                           name="weight_kg" class="tp-input" required
+                           value="{{ body_profile.weight_kg if body_profile else '' }}">
+                </div>
+                <div>
+                    <label class="tp-field-label" for="bp-height">{{ t("Height") }} (cm)</label>
+                    <input type="number" step="0.1" min="100" max="250" id="bp-height"
+                           name="height_cm" class="tp-input"
+                           value="{{ body_profile.height_cm if body_profile else '' }}">
+                </div>
+                <div>
+                    <label class="tp-field-label" for="bp-year">{{ t("Birth year") }}</label>
+                    <input type="number" min="1900" max="2025" id="bp-year"
+                           name="birth_year" class="tp-input"
+                           value="{{ body_profile.birth_year if body_profile else '' }}">
+                </div>
+                <div>
+                    <label class="tp-field-label" for="bp-sex">{{ t("Sex") }}</label>
+                    <select id="bp-sex" name="sex" class="tp-input">
+                        <option value="">{{ t("—") }}</option>
+                        {% for s in body_profile_sexes %}
+                        <option value="{{ s }}" {% if body_profile and body_profile.sex == s %}selected{% endif %}>{{ t(s|capitalize) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="tp-field-label" for="bp-diet">{{ t("Diet") }}</label>
+                    <select id="bp-diet" name="diet_pref" class="tp-input">
+                        <option value="">{{ t("—") }}</option>
+                        {% for d in body_profile_diets %}
+                        <option value="{{ d }}" {% if body_profile and body_profile.diet_pref == d %}selected{% endif %}>{{ t(d|capitalize) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="tp-actions" style="margin-top: 0.9rem;">
+                <button type="submit" class="tp-btn primary">{{ t("Save profile") }}</button>
+            </div>
+        </form>
+        {% if garmin_connected %}
+        <hr class="tp-card-rule">
+        <form method="post" action="/settings/body-profile/import-garmin">
+            <div class="tp-body-llm-row">
+                <div class="tp-body-llm-text">
+                    <p class="tp-field-label">{{ t("Pre-fill from Garmin") }}</p>
+                    <p class="tp-card-desc">{{ t("Pull weight, height, sex and birth year from your Garmin profile. You can still edit afterwards.") }}</p>
+                </div>
+                <button type="submit" class="tp-btn">{{ t("Import") }}</button>
+            </div>
+        </form>
+        {% endif %}
+    </article>
+</div>
+
+{# ── ③ APPEARANCE — Mode + Language side-by-side ──────────────── #}
+<p class="tp-section-eyebrow">③ {{ t("Appearance") }}</p>
+<div class="tp-settings-2col" style="margin-bottom: 2.25rem;">
+    <article class="tp-card">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.4rem;">
+            <h3 class="tp-card-title" style="margin: 0;">{{ t("Mode") }}</h3>
+            {# Mode toggle — Auto / Light / Dark #}
+            {% set cm = current_theme_mode() %}
+            <div class="tp-mode-toggle" role="radiogroup" aria-label="{{ t('Mode') }}">
+                {% for value, label in [('auto', t('Auto')), ('light', t('Light')), ('dark', t('Dark'))] %}
+                <form method="post" action="/settings/theme-mode" class="{% if cm == value %}is-active{% endif %}">
+                    <input type="hidden" name="mode" value="{{ value }}">
+                    <button type="submit">{{ label }}</button>
+                </form>
+                {% endfor %}
+            </div>
+        </div>
+        <p class="tp-card-desc">{{ t("Auto follows your OS; Light and Dark force the variant.") }}</p>
+    </article>
+
+    <article class="tp-card">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.4rem;">
+            <h3 class="tp-card-title" style="margin: 0;">{{ t("Language") }}</h3>
+            <div class="tp-mode-toggle" role="radiogroup" aria-label="{{ t('Language') }}">
+                {% for code, name in available_languages.items() %}
+                <form method="post" action="/settings/language" class="{% if active_language == code %}is-active{% endif %}">
+                    <input type="hidden" name="language" value="{{ code }}">
+                    <button type="submit">{{ name }}</button>
+                </form>
+                {% endfor %}
+            </div>
+        </div>
+        <p class="tp-card-desc">{{ t("Choose the language for the UI and the coach voice.") }}</p>
+    </article>
+</div>
+
+{# ── ④ DATA · DANGER ZONE ───────────────────────────────────────── #}
+<p class="tp-section-eyebrow">④ {{ t("Data · danger zone") }}</p>
+<div class="tp-data-zone">
+    <div class="tp-data-zone-text">
+        <strong>{{ t("Your data lives here") }}</strong>
+        <code>{{ db.path_short }} · {{ db.size_human }} · {{ db.activity_count }} {{ t("activities") }} · {{ db.diary_count }} {{ t("diary entries") }}</code>
+    </div>
+    <div class="tp-actions">
+        <span class="tp-btn" title="{{ t('JSON export — not yet wired') }}" aria-disabled="true" style="opacity: 0.5; cursor: not-allowed;">{{ t("Export JSON") }}</span>
+        <span class="tp-btn danger" title="{{ t('Reset — not yet wired') }}" aria-disabled="true" style="opacity: 0.5; cursor: not-allowed;">{{ t("Reset all") }}</span>
+    </div>
+</div>
+
+{% endblock %}

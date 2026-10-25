@@ -28,6 +28,30 @@ and diary all work without it — you just enter your own baseline.
 
 ---
 
+## What it looks like
+
+**Dashboard** — today's call in a coach's voice, the session itself, and the
+countdown to your A-race with a projected finish time.
+
+![The RunSphera dashboard: a GO verdict with readiness and load, today's long run, and a race countdown](docs/img/dashboard.png)
+
+**Plans** — the whole block at a glance: phase map, adherence, and every week
+laid out day by day. The ring on a completed session is its execution score.
+
+![The plans page: a 14-week half-marathon block with phase map, adherence and weekly day cells](docs/img/plans.png)
+
+**Creating a plan** — pick a goal and a methodology. Six are implemented, each
+with its own rules about distances, days per week, and whether it uses pace
+zones at all.
+
+![Creating a plan: goal picker, illustrated methodology tiles, schedule and training days](docs/img/create-plan.png)
+
+> These are from a seeded demo database, not a real runner —
+> `python -m scripts.seed_demo` builds it. Regenerate it and retake the shots
+> rather than letting them drift.
+
+---
+
 ## Quick start
 
 Pre-requisites: Python 3.12+, and (optionally) a Garmin Connect account with a paired watch.
@@ -53,10 +77,10 @@ manually with `python -m venv .venv` then
 
 ```powershell
 # The native app window — same as the RunSphera shortcut
-.venv\Scripts\python.exe -m running_coach.desktop
+.venv\Scripts\python.exe -m runsphera.desktop
 
 # …or the plain web app, in your browser at http://localhost:8000
-.venv\Scripts\python.exe -m running_coach.web
+.venv\Scripts\python.exe -m runsphera.web
 ```
 
 First launch walks you through a short setup: connect Garmin (or skip it), sync,
@@ -133,11 +157,11 @@ review standards. All three apply to humans and coding agents alike.
 .venv\Scripts\python.exe -m pytest tests -q
 
 # Web app with auto-reload, for development
-.venv\Scripts\uvicorn.exe running_coach.web.app:app --reload --port 8000
+.venv\Scripts\uvicorn.exe runsphera.web.app:app --reload --port 8000
 
 # Pull from Garmin into SQLite from the command line
-.venv\Scripts\python.exe -m running_coach.ingest
-.venv\Scripts\python.exe -m running_coach.ingest --activities 60 --days 30
+.venv\Scripts\python.exe -m runsphera.ingest
+.venv\Scripts\python.exe -m runsphera.ingest --activities 60 --days 30
 
 # Dump raw Garmin JSON to data/raw/ for schema work
 .venv\Scripts\python.exe -m scripts.explore

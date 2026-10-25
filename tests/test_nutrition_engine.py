@@ -14,10 +14,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Make `running_coach` importable when running this script directly.
+# Make `runsphera` importable when running this script directly.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.nutrition import engine  # noqa: E402
+from runsphera.nutrition import engine  # noqa: E402
 
 
 # A known runner used across cases. Age is computed against a fixed

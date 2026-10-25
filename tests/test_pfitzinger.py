@@ -16,14 +16,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans.methodology import PlanParams  # noqa: E402
-from running_coach.plans.pfitzinger import (  # noqa: E402
+from runsphera.plans.methodology import PlanParams  # noqa: E402
+from runsphera.plans.pfitzinger import (  # noqa: E402
     Pfitzinger18_55,
     TOTAL_WEEKS,
     _LONG_CAP_KM,
     _PEAK_KM,
 )
-from running_coach.plans.daniels import _paces_for_vdot  # noqa: E402
+from runsphera.plans.daniels import _paces_for_vdot  # noqa: E402
 
 # Kept in sync with service.ALLOWED_WORKOUT_TYPES, duplicated here so the test
 # doesn't pull in service.py (which imports the optional garminconnect dep).

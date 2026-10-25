@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.nutrition import meal_plan, food_library  # noqa: E402
+from runsphera.nutrition import meal_plan, food_library  # noqa: E402
 
 
 TARGETS = {"carbs_g": 400, "protein_g": 115, "fat_g": 85}

@@ -2,14 +2,14 @@
 
 The app has no accounts, so loopback binding was the only thing between a
 malicious page and a hard-delete of a non-regenerable plan — and loopback
-does not stop a cross-origin form POST. See running_coach/web/security.py.
+does not stop a cross-origin form POST. See runsphera/web/security.py.
 """
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from running_coach.web.security import (  # noqa: E402
+from runsphera.web.security import (  # noqa: E402
     SameOriginMiddleware,
     bare_host,
 )
@@ -118,7 +118,7 @@ def test_extra_host_can_be_allowed_explicitly():
 
 
 def test_env_var_extends_allow_list():
-    from running_coach.web import security
+    from runsphera.web import security
 
     os.environ["RUNNING_COACH_ALLOWED_HOSTS"] = "pi.local, nas.lan"
     try:

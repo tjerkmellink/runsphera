@@ -40,25 +40,25 @@ Works in both themes. Tempo uses `t()`-translated labels (English / Nederlands);
 
 ### Modules
 
-- [running_coach/plans/service.py](../running_coach/plans/service.py) — `todays_workout(conn)`. The query gained a `LEFT JOIN activities ON a.activity_id = pw.actual_activity_id`, surfacing `actual_distance_m`, `actual_duration_s`, `actual_avg_hr` on the returned row when (and only when) the day's run is matched. Unmatched → those columns are `NULL` and the template renders the prescription as before.
+- [runsphera/plans/service.py](../runsphera/plans/service.py) — `todays_workout(conn)`. The query gained a `LEFT JOIN activities ON a.activity_id = pw.actual_activity_id`, surfacing `actual_distance_m`, `actual_duration_s`, `actual_avg_hr` on the returned row when (and only when) the day's run is matched. Unmatched → those columns are `NULL` and the template renders the prescription as before.
 
 ### Templates
 
-- [index.html](../running_coach/web/templates/index.html) — `tp-flagship-main` block branches on `todays_workout.actual_activity_id`. Actual pace is derived in-template: `actual_duration_s / (actual_distance_m / 1000)`.
-- [index.html](../running_coach/web/templates/index.html) — same branch for the Base `today-card`.
+- [index.html](../runsphera/web/templates/index.html) — `tp-flagship-main` block branches on `todays_workout.actual_activity_id`. Actual pace is derived in-template: `actual_duration_s / (actual_distance_m / 1000)`.
+- [index.html](../runsphera/web/templates/index.html) — same branch for the Base `today-card`.
 
 ### Styles
 
-- [static/app.css](../running_coach/web/static/app.css) — `.tp-flagship-stat-sub` (the `vs target` subline) and `.tp-flagship-desc.is-planned` (dimmed/italic prescription).
-- [base.html](../running_coach/web/templates/base.html) — `.today-card .stats .sub` and `.today-card .desc.is-planned`.
+- [static/app.css](../runsphera/web/static/app.css) — `.tp-flagship-stat-sub` (the `vs target` subline) and `.tp-flagship-desc.is-planned` (dimmed/italic prescription).
+- [base.html](../runsphera/web/templates/base.html) — `.today-card .stats .sub` and `.today-card .desc.is-planned`.
 
 ### i18n
 
-New keys in [i18n.py](../running_coach/i18n.py) under the flagship section: `Done ✓`, `Time`, `Avg HR`, `Planned:`, `vs {target} km target`, `vs {target} target` (Dutch translations included). `{target}` is a `.format()` placeholder filled by the template — survives the lookup.
+New keys in [i18n.py](../runsphera/i18n.py) under the flagship section: `Done ✓`, `Time`, `Avg HR`, `Planned:`, `vs {target} km target`, `vs {target} target` (Dutch translations included). `{target}` is a `.format()` placeholder filled by the template — survives the lookup.
 
 ### Data flow
 
-Nothing new in the pipeline. `actual_activity_id` is set by [plans/matcher.py](../running_coach/plans/matcher.py) on every Garmin sync (also re-runnable via the plan "Re-match" button). The flagship just reads it and joins the matched activity's headline stats. No caching — recomputed per dashboard render.
+Nothing new in the pipeline. `actual_activity_id` is set by [plans/matcher.py](../runsphera/plans/matcher.py) on every Garmin sync (also re-runnable via the plan "Re-match" button). The flagship just reads it and joins the matched activity's headline stats. No caching — recomputed per dashboard render.
 
 ## Configuration
 
@@ -80,7 +80,7 @@ None. The flip is deterministic from whether today's plan workout has a matched 
 Quick non-UI check of the query:
 
 ```python
-from running_coach.plans import service
+from runsphera.plans import service
 r = service.todays_workout(conn)
 # matched → r["actual_distance_m"] etc. are populated; unmatched → None
 ```

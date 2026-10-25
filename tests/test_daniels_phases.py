@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans.daniels import _phase_layout, _PHASE_SPEC  # noqa: E402
+from runsphera.plans.daniels import _phase_layout, _PHASE_SPEC  # noqa: E402
 
 
 def _as_dict(layout: list[tuple[str, int]]) -> dict[str, int]:

@@ -1,6 +1,6 @@
 # Body — wellbeing check-in (design brief)
 
-> **Status:** pre-implementation design brief. Currently roadmap *Next up · #1* (roadmap.md). Foundational input mechanism that several downstream features depend on (post-marathon Day 1-2 triage, daily coach prescription softening, strength-session exercise avoidance, plan re-flex on escalation). Frozen reference for the actual implementation. Not in [docs/README.md](README.md)'s *Documented features* table yet — that's for shipped features.
+> **Status:** pre-implementation design brief. Currently roadmap *Next up · #1* ([roadmap.md](roadmap.md)). Foundational input mechanism that several downstream features depend on (post-marathon Day 1-2 triage, daily coach prescription softening, strength-session exercise avoidance, plan re-flex on escalation). Frozen reference for the actual implementation. Not in [docs/README.md](README.md)'s *Documented features* table yet — that's for shipped features.
 
 ## What the feature is
 
@@ -287,7 +287,7 @@ All HTMX-driven; no full-page reloads.
 
 ## Cross-references
 
-- Roadmap entry: roadmap.md → *Next up — committed · #1*
+- Roadmap entry: [roadmap.md](roadmap.md) → *Next up — committed · #1*
 - Downstream feature waiting on this: [post-marathon-recovery.md](post-marathon-recovery.md) (Day 1-2 body triage + Wk2 jog gate)
 - Related daily-readiness logic: [daily-tips.md](daily-tips.md), [llm-coach.md](llm-coach.md)
 - Adjacent input surfaces: [runners-diary.md](runners-diary.md) (subjective notes + mood), Garmin RPE / feel surfaced in [post-run-flagship.md](post-run-flagship.md)

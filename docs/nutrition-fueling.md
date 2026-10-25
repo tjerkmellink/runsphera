@@ -27,12 +27,12 @@ If no body profile is set, both surfaces show an empty state linking to Settings
 ## How it works (implementation)
 
 - **Modules**:
-  - `running_coach/nutrition/engine.py` — pure, deterministic rules (no I/O): `bmr()`, `run_kcal()`, `daily_targets()`, `fuel_the_run()`, `hydration()`. All thresholds are named constants at the top.
-  - `running_coach/nutrition/service.py` — gathers DB inputs (profile, the day's workout + matched-activity calories, Garmin daily metrics, weather) and calls the engine; `fuel_for_date()` (now also assembles meals) and `weekly_fuel_strip()`.
-  - `running_coach/nutrition/food_library.py` — hand-authored curated Dutch dish templates (per-100 g macros, diet tag, one carb anchor each). Pure data; validated at import.
-  - `running_coach/nutrition/meal_plan.py` — pure rules: split the daily carb pool across slots, pick a diet-appropriate dish per slot (date-rotated), scale to the slot's carb target (clamped). Named constants for shares/seeds/clamp.
-  - `running_coach/settings.py` — `get_body_profile()` / `set_body_profile()` (range-validated; weight required).
-  - `running_coach/garmin.py` — `fetch_profile()` reads Garmin's `get_userprofile_settings()` + `get_body_composition()` tolerantly.
+  - `runsphera/nutrition/engine.py` — pure, deterministic rules (no I/O): `bmr()`, `run_kcal()`, `daily_targets()`, `fuel_the_run()`, `hydration()`. All thresholds are named constants at the top.
+  - `runsphera/nutrition/service.py` — gathers DB inputs (profile, the day's workout + matched-activity calories, Garmin daily metrics, weather) and calls the engine; `fuel_for_date()` (now also assembles meals) and `weekly_fuel_strip()`.
+  - `runsphera/nutrition/food_library.py` — hand-authored curated Dutch dish templates (per-100 g macros, diet tag, one carb anchor each). Pure data; validated at import.
+  - `runsphera/nutrition/meal_plan.py` — pure rules: split the daily carb pool across slots, pick a diet-appropriate dish per slot (date-rotated), scale to the slot's carb target (clamped). Named constants for shares/seeds/clamp.
+  - `runsphera/settings.py` — `get_body_profile()` / `set_body_profile()` (range-validated; weight required).
+  - `runsphera/garmin.py` — `fetch_profile()` reads Garmin's `get_userprofile_settings()` + `get_body_composition()` tolerantly.
 - **Templates**: `web/templates/fuel.html` (tab), the Body-profile card in `settings.html`, the Fuel tile in `index.html`, the nav link in `base.html`.
 - **Routes**: `GET /fuel`, `POST /settings/body-profile`, `POST /settings/body-profile/import-garmin`.
 - **DB**: new `app_settings` columns — `weight_kg`, `height_cm`, `birth_year`, `sex`, `diet_pref`, `body_profile_updated_at`.

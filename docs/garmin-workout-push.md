@@ -37,10 +37,10 @@ Rest and cross-training days have no button at all — there is nothing to send.
 ## How it works (implementation)
 
 - **Modules**
-  - [running_coach/plans/garmin_sync.py](../running_coach/plans/garmin_sync.py) — the translation layer: the pushability contract (`is_pushable`, `is_pushable_row`, `push_status`), the Garmin shape primitives, and `planned_to_garmin_workout()`.
-  - [running_coach/plans/service.py](../running_coach/plans/service.py) — `push_workout_to_garmin()`, `push_week_to_garmin()`, `cleanup_pushed_workouts()`, plus the re-push paths inside `edit_workout()` and `recalibrate_paces()`.
-  - [running_coach/plans/daniels.py](../running_coach/plans/daniels.py) and the other engines — build the `workout_structure` JSON at generation time.
-- **Templates** — [_day_card.html](../running_coach/web/templates/_day_card.html), [_plan_workout_modal.html](../running_coach/web/templates/_plan_workout_modal.html), [_week_card.html](../running_coach/web/templates/_week_card.html).
+  - [runsphera/plans/garmin_sync.py](../runsphera/plans/garmin_sync.py) — the translation layer: the pushability contract (`is_pushable`, `is_pushable_row`, `push_status`), the Garmin shape primitives, and `planned_to_garmin_workout()`.
+  - [runsphera/plans/service.py](../runsphera/plans/service.py) — `push_workout_to_garmin()`, `push_week_to_garmin()`, `cleanup_pushed_workouts()`, plus the re-push paths inside `edit_workout()` and `recalibrate_paces()`.
+  - [runsphera/plans/daniels.py](../runsphera/plans/daniels.py) and the other engines — build the `workout_structure` JSON at generation time.
+- **Templates** — [_day_card.html](../runsphera/web/templates/_day_card.html), [_plan_workout_modal.html](../runsphera/web/templates/_plan_workout_modal.html), [_week_card.html](../runsphera/web/templates/_week_card.html).
 - **Routes** — `POST /plan-workouts/{pw_id}/push`, `POST /plans/{plan_id}/weeks/{week_number}/push`. (Strength sessions have their own pair, `/plan-strength/{id}/push` and `/unpush` — see [strength-sessions.md](strength-sessions.md).)
 - **DB** — `plan_workouts.workout_structure` (JSON text), `garmin_workout_id`, `pushed_at`.
 - **External services** — Garmin Connect via `garminconnect`: `upload_running_workout()` then `schedule_workout()`.
@@ -282,7 +282,7 @@ Existing plans stuck with structure-less rows:
 
    ```
    .venv/Scripts/python.exe -c "import sys; sys.path.insert(0,'.'); \
-     from running_coach.plans.garmin_sync import push_status; \
+     from runsphera.plans.garmin_sync import push_status; \
      print(repr(push_status('intervals', None)))"
    ```
 

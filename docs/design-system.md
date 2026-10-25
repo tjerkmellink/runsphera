@@ -22,11 +22,11 @@ A consistent visual identity that:
 | Captions / labels / numeric data | JetBrains Mono | 400-500 |
 | Pull-quote (LLM voice) | Archivo Black | italic, oversized |
 
-Self-hosted in [running_coach/web/static/fonts/](../running_coach/web/static/fonts/) — woff2 files + an `@font-face` CSS shim. No external font CDN, keeps the app local-first. Re-fetched with [scripts/fetch_theme_fonts.py](../scripts/fetch_theme_fonts.py).
+Self-hosted in [runsphera/web/static/fonts/](../runsphera/web/static/fonts/) — woff2 files + an `@font-face` CSS shim. No external font CDN, keeps the app local-first. Re-fetched with [scripts/fetch_theme_fonts.py](../scripts/fetch_theme_fonts.py).
 
 ## Color tokens
 
-Defined as CSS custom properties in [base.html](../running_coach/web/templates/base.html) on `:root` (light) and overridden under `html.is-dark` for dark.
+Defined as CSS custom properties in [base.html](../runsphera/web/templates/base.html) on `:root` (light) and overridden under `html.is-dark` for dark.
 
 ### Surface palette
 
@@ -49,7 +49,7 @@ failures. State goes through the status palette below.
 ### Status palette (good / worrying / bad)
 
 The single answer to "is this good, worrying, or bad?". Defined on `:root` and
-flipped under `html.is-dark` in [base.html](../running_coach/web/templates/base.html).
+flipped under `html.is-dark` in [base.html](../runsphera/web/templates/base.html).
 Two variants per status:
 
 | Token | Light | Dark | Used for |
@@ -155,8 +155,8 @@ User-facing surface: `/settings` → *Appearance* card → 3-button mode toggle 
 
 Two layers cooperate to make the cascade behave:
 
-1. **Inline base `<style>`** in [base.html](../running_coach/web/templates/base.html) — light tokens on `:root`, dark tokens on `html.is-dark`, all baseline component rules.
-2. **`<link>` to [static/app.css](../running_coach/web/static/app.css)** loaded *after* the inline `<style>` — page-level component classes (the `.tp-*` family) and feature-specific overrides. Wins on equal specificity through source order.
+1. **Inline base `<style>`** in [base.html](../runsphera/web/templates/base.html) — light tokens on `:root`, dark tokens on `html.is-dark`, all baseline component rules.
+2. **`<link>` to [static/app.css](../runsphera/web/static/app.css)** loaded *after* the inline `<style>` — page-level component classes (the `.tp-*` family) and feature-specific overrides. Wins on equal specificity through source order.
 
 ### Class-name conventions
 
@@ -169,11 +169,11 @@ Two layers cooperate to make the cascade behave:
 
 Three LLM-generated voice surfaces share a consistent attribution footer: `— Coach · HH:MM · ↻ Regenerate`.
 
-- **Daily coach** ([_coach_message.html](../running_coach/web/templates/_coach_message.html)) — hero pull-quote, time pulled from `daily_coach_generated_at(conn)`
-- **Weekly recap** ([_weekly_recap.html](../running_coach/web/templates/_weekly_recap.html)) — pull-quote card, time from `weekly_recap_generated_at(conn)`
-- **Run reaction** ([_run_reaction.html](../running_coach/web/templates/_run_reaction.html)) — the run-detail modal's coach pull-quote (`.tprd-coach-quote` + `.tprd-coach-by`), time from `run_reaction_generated_at(conn, activity_id)`. One partial for all states, included inline by `_run_detail.html` and returned by the lazy/refresh endpoints, so the inline and swapped-in renders are the same markup.
+- **Daily coach** ([_coach_message.html](../runsphera/web/templates/_coach_message.html)) — hero pull-quote, time pulled from `daily_coach_generated_at(conn)`
+- **Weekly recap** ([_weekly_recap.html](../runsphera/web/templates/_weekly_recap.html)) — pull-quote card, time from `weekly_recap_generated_at(conn)`
+- **Run reaction** ([_run_reaction.html](../runsphera/web/templates/_run_reaction.html)) — the run-detail modal's coach pull-quote (`.tprd-coach-quote` + `.tprd-coach-by`), time from `run_reaction_generated_at(conn, activity_id)`. One partial for all states, included inline by `_run_detail.html` and returned by the lazy/refresh endpoints, so the inline and swapped-in renders are the same markup.
 
-All three helpers in [commentary.py](../running_coach/llm/commentary.py) share the `_cache_row_local_hhmm` parser that converts SQLite's UTC `created_at` to local HH:MM.
+All three helpers in [commentary.py](../runsphera/llm/commentary.py) share the `_cache_row_local_hhmm` parser that converts SQLite's UTC `created_at` to local HH:MM.
 
 The HTMX swap targets (`#coach-head`, `#weekly-recap`, `#run-reaction-<id>`) wrap both body and byline so regeneration preserves the editorial structure.
 
@@ -239,7 +239,7 @@ A form opts in declaratively — no per-instance script:
 | `data-confirm-field` | name of a field whose live value replaces `{value}` in the question, so it can quote back what the runner just typed ("Set plan VDOT to 46.2?") |
 | `data-confirm-into` | selector of an ancestor (via `closest()`) to mount the strip on, for forms sitting in a container too narrow to read in |
 
-The handler lives once in [base.html](../running_coach/web/templates/base.html), delegated from `document` — so partials HTMX swaps in later (plan-settings modal, recalibrate preview) are covered without shipping their own copy.
+The handler lives once in [base.html](../runsphera/web/templates/base.html), delegated from `document` — so partials HTMX swaps in later (plan-settings modal, recalibrate preview) are covered without shipping their own copy.
 
 Behaviour that matters:
 
@@ -255,7 +255,7 @@ Behaviour that matters:
 | Setting | Storage | UI surface |
 |---|---|---|
 | Light/dark mode | `app_settings.theme_mode` | `/settings` → Appearance → Mode toggle |
-| Fonts | [running_coach/web/static/fonts/*.woff2](../running_coach/web/static/fonts/) | re-fetch with `python scripts/fetch_theme_fonts.py` |
+| Fonts | [runsphera/web/static/fonts/*.woff2](../runsphera/web/static/fonts/) | re-fetch with `python scripts/fetch_theme_fonts.py` |
 
 No env-var escape hatches — mode is a UI choice, not an operator decision.
 
@@ -275,10 +275,10 @@ No env-var escape hatches — mode is a UI choice, not an operator decision.
 2. **CSS cascade.** Inline `<style>` rules should lose to `static/app.css` rules on equal specificity (source order). Inspect any `.tp-card` rule in DevTools — the app.css declaration should win.
 3. **Semantic colors render the same in both modes.** A `wtype-tempo` stripe should be orange in both light and dark — workout-type colors are load-bearing for plan readability and don't theme-shift. Same for the phase palette: a *build* week's pill and its block-map segment are the same blue in either mode. Severity is the documented exception and is expected to differ.
 4. **Status colors agree across surfaces.** On `/settings`, the Garmin card's *Linked* pill and the Coach-voice card's *Active* pill must be the same green — neither may be red. On a plan detail page, a pushed workout's *✓ on watch* pill is green, a missed session's pill is red, and today's is accent. Flip to dark mode and check that each still reads as one color per meaning (one green, one amber, one red) — that's the regression this palette exists to prevent.
-5. **No stray semantic hexes.** `grep -nE '#(4ade80|16a34a|15803d|86efac|b91c1c|ef4444|dc2626|f87171|d97706|fcd34d)' running_coach/web/static/app.css running_coach/web/templates/base.html` should only return the token definitions (status, workout-type, phase, severity) plus the raw-hex mood / distance-band rules. A hit inside a pill, badge, button or banner rule is a bug. The phase hexes now live only in the `--phase-*` block in `base.html`; a raw phase hex anywhere else (a legend, a segment rule) means the pill and the block map can drift apart.
+5. **No stray semantic hexes.** `grep -nE '#(4ade80|16a34a|15803d|86efac|b91c1c|ef4444|dc2626|f87171|d97706|fcd34d)' runsphera/web/static/app.css runsphera/web/templates/base.html` should only return the token definitions (status, workout-type, phase, severity) plus the raw-hex mood / distance-band rules. A hit inside a pill, badge, button or banner rule is a bug. The phase hexes now live only in the `--phase-*` block in `base.html`; a raw phase hex anywhere else (a legend, a segment rule) means the pill and the block map can drift apart.
 6. **Editorial byline trio.** On `/`, the hero pull-quote and weekly-recap card should both show `— Coach · HH:MM · ↻ Regenerate` under the body. Open any run from Recent runs — the modal's reaction strip shows the same byline pattern.
 7. **Mode invalid value.** `curl -X POST -d 'mode=nonsense' /settings/theme-mode` should `ValueError` server-side without writing the row.
-8. **No native popups.** `grep -rn 'confirm(\|alert(' running_coach/web/templates/` should return nothing outside the documentation comment in `base.html`. Then exercise a strip: `/settings` → *Disconnect* shows an inline red strip and stays connected; Escape and *Cancel* both dismiss it and return focus to the button. `/calendar` → an event's `×` shows a strip spanning the row that names the event, and clicking inside the strip must not open the event modal (the row is itself clickable).
+8. **No native popups.** `grep -rn 'confirm(\|alert(' runsphera/web/templates/` should return nothing outside the documentation comment in `base.html`. Then exercise a strip: `/settings` → *Disconnect* shows an inline red strip and stays connected; Escape and *Cancel* both dismiss it and return focus to the button. `/calendar` → an event's `×` shows a strip spanning the row that names the event, and clicking inside the strip must not open the event modal (the row is itself clickable).
 9. **Confirm strips survive an HTMX swap.** Open the plan-settings modal (`/plans` → *Edit plan*, loaded on demand) and submit *Save VDOT* — a strip must appear quoting the value in the field. The handler is delegated from `document`; if it were bound per page load, swapped-in partials would submit unconfirmed.
 
 ## Future improvements

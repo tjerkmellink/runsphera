@@ -1,4 +1,4 @@
-"""Tests for running_coach/plans/narrative.py — the coach-voice walkthrough
+"""Tests for runsphera/plans/narrative.py — the coach-voice walkthrough
 rendered in the plan-workout modal.
 
 The renderer is derived-at-display, so the invariants that matter are:
@@ -22,11 +22,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans.daniels import (  # noqa: E402
+from runsphera.plans.daniels import (  # noqa: E402
     _interval_structure,
     _tempo_structure,
 )
-from running_coach.plans.narrative import narrate  # noqa: E402
+from runsphera.plans.narrative import narrate  # noqa: E402
 
 
 # VDOT 43 paces — the same fixture the description-refresh tests use.

@@ -32,7 +32,7 @@ The dedicated `/diary` route shows every entry as a vertical timeline:
 
 ### Modules
 
-- [running_coach/diary.py](../running_coach/diary.py) — all CRUD + label helpers. Key functions:
+- [runsphera/diary.py](../runsphera/diary.py) — all CRUD + label helpers. Key functions:
   - `upsert_for_activity(conn, activity_id, body, mood, entry_date=None)` — used by the run-detail modal.
   - `upsert_for_date(conn, entry_date, body, mood)` — used by the dashboard's Today's note and the `/diary` backfill form.
   - `update_entry(conn, entry_id, body, mood)` — used by the timeline inline edit.
@@ -43,11 +43,11 @@ The dedicated `/diary` route shows every entry as a vertical timeline:
 
 ### Templates
 
-- [diary.html](../running_coach/web/templates/diary.html) — the `/diary` page (backfill form + timeline).
-- [_diary_entry_card.html](../running_coach/web/templates/_diary_entry_card.html) — one entry in display mode.
-- [_diary_entry_edit.html](../running_coach/web/templates/_diary_entry_edit.html) — one entry in edit mode.
-- [_today_note_editor.html](../running_coach/web/templates/_today_note_editor.html) — the dashboard freestanding-entry editor.
-- [_run_diary_editor.html](../running_coach/web/templates/_run_diary_editor.html) — the "How did it go?" form in the run-detail modal.
+- [diary.html](../runsphera/web/templates/diary.html) — the `/diary` page (backfill form + timeline).
+- [_diary_entry_card.html](../runsphera/web/templates/_diary_entry_card.html) — one entry in display mode.
+- [_diary_entry_edit.html](../runsphera/web/templates/_diary_entry_edit.html) — one entry in edit mode.
+- [_today_note_editor.html](../runsphera/web/templates/_today_note_editor.html) — the dashboard freestanding-entry editor.
+- [_run_diary_editor.html](../runsphera/web/templates/_run_diary_editor.html) — the "How did it go?" form in the run-detail modal.
 
 ### Routes
 

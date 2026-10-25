@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans.daniels import (  # noqa: E402
+from runsphera.plans.daniels import (  # noqa: E402
     DanielsVDOT,
     _LONG_RUN_CAP_S,
     _PEAK_LONG_M_FRACTION,
@@ -26,8 +26,8 @@ from running_coach.plans.daniels import (  # noqa: E402
     _structure_duration_s,
     _time_capped_long_km,
 )
-from running_coach.plans.methodology import PlanParams  # noqa: E402
-from running_coach.plans.service import _rewrite_structure_pace  # noqa: E402
+from runsphera.plans.methodology import PlanParams  # noqa: E402
+from runsphera.plans.service import _rewrite_structure_pace  # noqa: E402
 
 
 # Mirrors the live plan this work was verified against (plan 41):

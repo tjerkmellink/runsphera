@@ -10,7 +10,7 @@ The plans page already shows whether a workout was *done* (status pill, actual s
 
 ### Where it appears
 
-- **Plans page day cells** — a small (~26 px) score ring in the top-right corner of every done workout in the [_week_card.html](../running_coach/web/templates/_week_card.html). Hover for a tooltip with the per-component breakdown.
+- **Plans page day cells** — a small (~26 px) score ring in the top-right corner of every done workout in the [_week_card.html](../runsphera/web/templates/_week_card.html). Hover for a tooltip with the per-component breakdown.
 - **Plan-workout modal** — larger (~52 px) ring in the header alongside the title pills, so the runner sees the score the moment they tap into a session.
 
 ### What the colors mean
@@ -25,7 +25,7 @@ The plans page already shows whether a workout was *done* (status pill, actual s
 
 Three sub-scores 0–100 combined with weights that vary by workout type:
 
-- **Pace adherence**: actual pace vs target pace. For structured workouts (tempo / intervals) this uses the *active-block-only* pace (extracted from per-km lap data via [`laps.active_block_summary`](../running_coach/laps.py)), so warmup + cooldown don't drag the comparison. For unstructured runs (easy / long / recovery) it uses the total-run average.
+- **Pace adherence**: actual pace vs target pace. For structured workouts (tempo / intervals) this uses the *active-block-only* pace (extracted from per-km lap data via [`laps.active_block_summary`](../runsphera/laps.py)), so warmup + cooldown don't drag the comparison. For unstructured runs (easy / long / recovery) it uses the total-run average.
 - **Distance adherence**: `actual_km / target_km`, with a grace band 95–110 % (no penalty), a sharp falloff below 95 % (cutting a run short matters), and a linear falloff from 110 % to 150 % (overshooting burns reserves for the rest of the week, so it isn't free either).
 - **HR-zone discipline**: percentage of duration spent in the *right* zones for the workout type — easy/recovery rewards Z1–Z2 (with Z3 counted as still-aerobic for easy/long, since amateur HR-zone calibration tends to be conservative), tempo rewards Z3–Z4, intervals rewards Z4–Z5.
 
@@ -41,16 +41,16 @@ If a sub-score can't be computed (no HR data, no target distance, etc.), it's sk
 
 ### Modules
 
-- [running_coach/execution_score.py](../running_coach/execution_score.py)
+- [runsphera/execution_score.py](../runsphera/execution_score.py)
   - `compute(conn, planned, activity)` → `{score, pace_score, distance_score, hr_score, color}` or `None`.
   - Internal sub-score functions `_pace_score`, `_distance_score`, `_hr_score`, plus `_color_for`.
   - All tunables (`_PACE_TOLERANCE_S_PER_KM`, `_WEIGHTS`, `_HR_GOOD_ZONES`) live at the top of the file — adjust them and re-run [tests/test_execution_score.py](../tests/test_execution_score.py).
 
 ### Templates
 
-- [_exec_score_ring.html](../running_coach/web/templates/_exec_score_ring.html) — SVG circular-progress badge. Theme-agnostic; included from both Tempo and base layouts (today only Tempo wires it; base falls through to the existing flat layout).
-- [_week_card.html](../running_coach/web/templates/_week_card.html) — adds the small ring to each `tp-plan-day` cell.
-- [_plan_workout_modal.html](../running_coach/web/templates/_plan_workout_modal.html) — adds the larger ring to the modal header.
+- [_exec_score_ring.html](../runsphera/web/templates/_exec_score_ring.html) — SVG circular-progress badge. Theme-agnostic; included from both Tempo and base layouts (today only Tempo wires it; base falls through to the existing flat layout).
+- [_week_card.html](../runsphera/web/templates/_week_card.html) — adds the small ring to each `tp-plan-day` cell.
+- [_plan_workout_modal.html](../runsphera/web/templates/_plan_workout_modal.html) — adds the larger ring to the modal header.
 
 ### Data path
 
@@ -75,7 +75,7 @@ Scores are computed at request time — no caching, no DB column. The math is ch
 otherwise → red
 ```
 
-In light mode the text inside the ring uses a darker shade of the band color for readability; in dark mode it brightens. See the `.exec-score-num.is-*` rules in [base.html](../running_coach/web/templates/base.html).
+In light mode the text inside the ring uses a darker shade of the band color for readability; in dark mode it brightens. See the `.exec-score-num.is-*` rules in [base.html](../runsphera/web/templates/base.html).
 
 ## Configuration
 

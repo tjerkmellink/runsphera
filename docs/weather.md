@@ -45,7 +45,7 @@ The LLM coach gets a `WEATHER TODAY` block in the per-request context. It picks 
 
 ### Modules
 
-- [running_coach/weather.py](../running_coach/weather.py) — exported functions:
+- [runsphera/weather.py](../runsphera/weather.py) — exported functions:
   - `geocode(query)` → resolve a free-text place to `{lat, lon, display_name, country_code}` or `None`. Falls back to the first comma-separated part when the full string doesn't resolve (Open-Meteo's geocoder doesn't accept "City, Country").
   - `fetch_forecast(lat, lon, today)` → raw Open-Meteo forecast call, returns a normalized dict including the raw `hourly` arrays.
   - `fetch_current(lat, lon)` → lightweight Open-Meteo `current=` call (temp, feels-like, wind, weather code). Used to refresh the live chip readings on every page load.
@@ -72,9 +72,9 @@ The "best window" picks the highest-scoring contiguous **two-hour** block among 
 
 ### Templates
 
-- [_weather_chip.html](../running_coach/web/templates/_weather_chip.html) — the dashboard strip, rendered as a `<button>` that opens the modal.
-- [_weather_modal.html](../running_coach/web/templates/_weather_modal.html) — the 48-h hourly columns dialog. Pre-rendered server-side; `<button onclick="document.getElementById('weather-modal').showModal()">` opens it client-side.
-- [settings.html](../running_coach/web/templates/settings.html) — the Location card.
+- [_weather_chip.html](../runsphera/web/templates/_weather_chip.html) — the dashboard strip, rendered as a `<button>` that opens the modal.
+- [_weather_modal.html](../runsphera/web/templates/_weather_modal.html) — the 48-h hourly columns dialog. Pre-rendered server-side; `<button onclick="document.getElementById('weather-modal').showModal()">` opens it client-side.
+- [settings.html](../runsphera/web/templates/settings.html) — the Location card.
 
 ### Routes
 

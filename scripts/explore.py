@@ -17,7 +17,7 @@ from pathlib import Path
 # Make sibling package importable when run as `python scripts/explore.py`.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from running_coach.garmin import get_client
+from runsphera.garmin import get_client
 
 
 OUT_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"

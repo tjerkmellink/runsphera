@@ -39,7 +39,7 @@ run lands on an un-picked day.
 
 ### Slot allocator
 
-[running_coach/plans/daniels.py](../running_coach/plans/daniels.py) — `_slot_map()` was a lookup against `_SLOT_PATTERNS`; now it's a dynamic allocator when `workout_days` is supplied. The algorithm:
+[runsphera/plans/daniels.py](../runsphera/plans/daniels.py) — `_slot_map()` was a lookup against `_SLOT_PATTERNS`; now it's a dynamic allocator when `workout_days` is supplied. The algorithm:
 
 1. Put the long run on `long_run_day`.
 2. Score each other workout day for the *main quality* slot: forward-gap from
@@ -70,19 +70,19 @@ methodologies ignore the field — only Daniels reads it.
 
 ### Modules touched
 
-- [running_coach/plans/methodology.py](../running_coach/plans/methodology.py) — `PlanParams.workout_days: list[int] | None`.
-- [running_coach/plans/daniels.py](../running_coach/plans/daniels.py) — `_slot_map()` + `_cyclic_gap()`. Legacy `_SLOT_PATTERNS` kept as the fallback when `workout_days is None`.
-- [running_coach/plans/service.py](../running_coach/plans/service.py) — `create_plan()` accepts and validates `workout_days`, persists it as CSV.
-- [running_coach/db.py](../running_coach/db.py) — `ALTER TABLE plans ADD COLUMN workout_days TEXT`.
-- [running_coach/web/app.py](../running_coach/web/app.py) — `POST /plans/new` accepts the repeated form field, validates count + long-in-set, surfaces inline errors.
-- [running_coach/web/templates/plans_new.html](../running_coach/web/templates/plans_new.html) — picker UI + the JS that enforces count and keeps long-run-day in sync.
-- [running_coach/web/templates/base.html](../running_coach/web/templates/base.html) — `.day-picker.workout-day-picker` styling shared across themes.
+- [runsphera/plans/methodology.py](../runsphera/plans/methodology.py) — `PlanParams.workout_days: list[int] | None`.
+- [runsphera/plans/daniels.py](../runsphera/plans/daniels.py) — `_slot_map()` + `_cyclic_gap()`. Legacy `_SLOT_PATTERNS` kept as the fallback when `workout_days is None`.
+- [runsphera/plans/service.py](../runsphera/plans/service.py) — `create_plan()` accepts and validates `workout_days`, persists it as CSV.
+- [runsphera/db.py](../runsphera/db.py) — `ALTER TABLE plans ADD COLUMN workout_days TEXT`.
+- [runsphera/web/app.py](../runsphera/web/app.py) — `POST /plans/new` accepts the repeated form field, validates count + long-in-set, surfaces inline errors.
+- [runsphera/web/templates/plans_new.html](../runsphera/web/templates/plans_new.html) — picker UI + the JS that enforces count and keeps long-run-day in sync.
+- [runsphera/web/templates/base.html](../runsphera/web/templates/base.html) — `.day-picker.workout-day-picker` styling shared across themes.
 
 ## Configuration
 
 No env vars. The defaults the JS seeds when `days_per_week` changes mirror the
 legacy `_SLOT_PATTERNS` offsets (Daniels' canonical layout). To change defaults
-in one place, edit `SLOT_OFFSETS` in [plans_new.html](../running_coach/web/templates/plans_new.html) and the Python `_SLOT_PATTERNS` in [daniels.py](../running_coach/plans/daniels.py).
+in one place, edit `SLOT_OFFSETS` in [plans_new.html](../runsphera/web/templates/plans_new.html) and the Python `_SLOT_PATTERNS` in [daniels.py](../runsphera/plans/daniels.py).
 
 ## Known limitations
 

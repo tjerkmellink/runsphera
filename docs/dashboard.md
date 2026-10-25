@@ -36,7 +36,7 @@ The page ends with two HTMX-loaded modals — the **run-detail** modal (from any
 
 ### Route
 
-[app.py](../running_coach/web/app.py) — `index(request)`. Redirects to `/auth` if there's no cached Garmin session, otherwise opens one connection and assembles the whole context in a single pass, then renders [index.html](../running_coach/web/templates/index.html).
+[app.py](../runsphera/web/app.py) — `index(request)`. Redirects to `/auth` if there's no cached Garmin session, otherwise opens one connection and assembles the whole context in a single pass, then renders [index.html](../runsphera/web/templates/index.html).
 
 ### Data contract
 
@@ -70,21 +70,21 @@ Every key the template may read, and where it comes from:
 
 ### Partials / includes
 
-[_coach_message.html](../running_coach/web/templates/_coach_message.html) (daily voice pull-quote), [_weekly_recap.html](../running_coach/web/templates/_weekly_recap.html) (Sunday recap pull-quote), [_today_note_editor.html](../running_coach/web/templates/_today_note_editor.html) (diary inline), [_flagship_aside.html](../running_coach/web/templates/_flagship_aside.html) (bonus-tip + next-race aside shared by the running and strength flagships), [_daily_tip.html](../running_coach/web/templates/_daily_tip.html), [_weather_chip.html](../running_coach/web/templates/_weather_chip.html) / [_weather_modal.html](../running_coach/web/templates/_weather_modal.html).
+[_coach_message.html](../runsphera/web/templates/_coach_message.html) (daily voice pull-quote), [_weekly_recap.html](../runsphera/web/templates/_weekly_recap.html) (Sunday recap pull-quote), [_today_note_editor.html](../runsphera/web/templates/_today_note_editor.html) (diary inline), [_flagship_aside.html](../runsphera/web/templates/_flagship_aside.html) (bonus-tip + next-race aside shared by the running and strength flagships), [_daily_tip.html](../runsphera/web/templates/_daily_tip.html), [_weather_chip.html](../runsphera/web/templates/_weather_chip.html) / [_weather_modal.html](../runsphera/web/templates/_weather_modal.html).
 
 ### Loading skeletons (hero)
 
 While the hero is waiting on fresh data, the two pieces that re-render — the display headline and the coach pull-quote — swap to shimmer placeholders so the layout holds its shape instead of showing stale text. Pure CSS, driven by HTMX's `htmx-request` class:
 
 - **Garmin sync / dashboard refresh** — both **Sync from Garmin** buttons carry `hx-indicator="#dashboard-main, .garmin-sync"`, so the wrapper wears `htmx-request` for the whole (slow) `POST /ingest` (skeletons) *and* the button keeps its own `::after` spinner. (htmx 2's `this` token isn't resolved inside a comma-separated `hx-indicator` list — only `hx-target` special-cases it — so the button is referenced by its `.garmin-sync` class instead.) The follow-up `dashboardRefresh` re-fetch adds the class again on its own request, so the skeleton stays continuous through both until the swap lands.
-- **Coach regenerate** — the ↻ button in [_coach_message.html](../running_coach/web/templates/_coach_message.html) uses `hx-indicator="closest #coach-head"`, so the pull-quote alone skeletons (and the ↻ icon keeps spinning) while `POST /coach-message/refresh` runs.
+- **Coach regenerate** — the ↻ button in [_coach_message.html](../runsphera/web/templates/_coach_message.html) uses `hx-indicator="closest #coach-head"`, so the pull-quote alone skeletons (and the ↻ icon keeps spinning) while `POST /coach-message/refresh` runs.
 
-The CSS lives in [app.css](../running_coach/web/static/app.css) (`.tp-sk` shimmer + `.tp-dash-display-sk` / `.tp-coach-quote-sk`). Rules hide `.tp-dash-display` / `.tp-status-pill` / `.tp-coach-quote` and reveal the placeholders when an ancestor has `htmx-request`. Honors `prefers-reduced-motion` (shimmer animation off, static bars stay).
+The CSS lives in [app.css](../runsphera/web/static/app.css) (`.tp-sk` shimmer + `.tp-dash-display-sk` / `.tp-coach-quote-sk`). Rules hide `.tp-dash-display` / `.tp-status-pill` / `.tp-coach-quote` and reveal the placeholders when an ancestor has `htmx-request`. Honors `prefers-reduced-motion` (shimmer animation off, static bars stay).
 
 ### Widgets that live only here
 
 - **Stats wall** — Training status · VO₂ max · Readiness · Acute/Chronic (ACWR). Read straight from `state.training_status` + `state.latest_readiness`; no transform beyond formatting.
-- **Weekly mileage chart** — `_weekly_mileage_chart` in [app.py](../running_coach/web/app.py) renders `analytics.weekly_mileage(weeks=12)` to inline Plotly; `|safe` into the template.
+- **Weekly mileage chart** — `_weekly_mileage_chart` in [app.py](../runsphera/web/app.py) renders `analytics.weekly_mileage(weeks=12)` to inline Plotly; `|safe` into the template.
 - **HR-zone inline bars** — built inline from raw `zones` totals as five vertical bars (Z1 left → Z5 right, fills grow bottom→top), colored with Garmin Connect's zone palette.
 - **Acute training load chart** — `_acute_load_chart` renders the 28-day rolling acute load (black line + markers) over a moving green "optimal range" band. Mirrors Garmin Connect's own training-load chart.
 - **Recent-runs table** — `analytics.recent_runs`; each row is HTMX-clickable into the run-detail modal (`GET /runs/{id}`). The table + a **Newer / Older pager** live in the `_recent_runs.html` partial inside a stable `#recent-runs-panel` wrapper. The pager buttons `hx-get /runs/recent?page=N` and swap the partial back in — 10 runs per page, up to 5 pages (50 runs, `RECENT_RUNS_PER_PAGE` / `RECENT_RUNS_MAX_PAGES`). Page 1 is the newest; `has_next` is gated on both the page cap and `analytics.count_runs()`. `/runs/recent` is declared **before** `/runs/{activity_id}` so "recent" isn't parsed as an id.

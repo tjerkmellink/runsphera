@@ -22,7 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans.daniels import (  # noqa: E402
+from runsphera.plans.daniels import (  # noqa: E402
     DanielsVDOT,
     _interval_structure,
     _paces_for_vdot,
@@ -31,9 +31,9 @@ from running_coach.plans.daniels import (  # noqa: E402
     _structure_duration_s,
     _tempo_structure,
 )
-from running_coach.plans.garmin_sync import is_pushable  # noqa: E402
-from running_coach.plans.methodology import PlanParams  # noqa: E402
-from running_coach.plans.service import (  # noqa: E402
+from runsphera.plans.garmin_sync import is_pushable  # noqa: E402
+from runsphera.plans.methodology import PlanParams  # noqa: E402
+from runsphera.plans.service import (  # noqa: E402
     _rewrite_structure_pace,
     _zone_for_workout,
 )

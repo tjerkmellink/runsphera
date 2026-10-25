@@ -28,9 +28,9 @@ Descriptions read as **effort** ("easy, conversational", "comfortably hard") —
 ## How it works (implementation)
 
 - **Modules**
-  - `running_coach/plans/higdon.py` — the engine. `class HigdonPlan(Methodology)` with `total_weeks()` and `generate()`. Tier profiles in `_TIERS`; long-run ladders in `_MARATHON_LONG_KM` / `_HALF_LONG_KM`.
-  - `running_coach/plans/daniels.py` — reused for pace calibration and structure builders (`_paces_for_vdot`, `_tempo_structure`, `_interval_structure`, `_structure_duration_s`, `_fmt_pace`).
-  - `running_coach/plans/__init__.py` — registry entry (`available=True`, `supported_goals`, `variants`, `fixed_schedule=True`).
+  - `runsphera/plans/higdon.py` — the engine. `class HigdonPlan(Methodology)` with `total_weeks()` and `generate()`. Tier profiles in `_TIERS`; long-run ladders in `_MARATHON_LONG_KM` / `_HALF_LONG_KM`.
+  - `runsphera/plans/daniels.py` — reused for pace calibration and structure builders (`_paces_for_vdot`, `_tempo_structure`, `_interval_structure`, `_structure_duration_s`, `_fmt_pace`).
+  - `runsphera/plans/__init__.py` — registry entry (`available=True`, `supported_goals`, `variants`, `fixed_schedule=True`).
 - **Templates**: `web/templates/plans_new.html` — the **Experience level** variant picker (one radio group per methodology with `variants`; JS reveals the selected methodology's group) and the goal allow-list (`data-supported-goals`). `web/templates/base.html` — a `.pick-grid.cols-3` rule for the tier grid.
 - **Routes**: `POST /plans/new` reads a new `variant` form field and threads it to `create_plan`.
 - **DB**: new nullable column `plans.variant` (migration in `db.py`). NULL ⇒ the engine's default tier (Novice 1).

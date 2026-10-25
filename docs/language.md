@@ -10,7 +10,7 @@ The runner reads the dashboard, picks training plans, and consumes the coach's c
 
 ### Settings → Language
 
-A small section on the [/settings](../running_coach/web/templates/settings.html) page lists the available languages as a radio-style pill row. Picking one POSTs to `/settings/language` and the page reloads with the new locale active. The banner at the top of Settings confirms the choice ("● Language saved. Nederlands.").
+A small section on the [/settings](../runsphera/web/templates/settings.html) page lists the available languages as a radio-style pill row. Picking one POSTs to `/settings/language` and the page reloads with the new locale active. The banner at the top of Settings confirms the choice ("● Language saved. Nederlands.").
 
 ### What changes
 
@@ -27,16 +27,16 @@ A small section on the [/settings](../running_coach/web/templates/settings.html)
 
 ### Modules
 
-- [running_coach/i18n.py](../running_coach/i18n.py) — the i18n core. Exports `t(source, locale, **kwargs)`, `plural(n, singular, many, locale)`, `language_name(code)`, plus `LANGUAGES` (the supported set) and `_NL` (the Dutch translation table).
-- [running_coach/settings.py](../running_coach/settings.py) — `get_language(conn)`, `set_language(conn, lang)`, `ALLOWED_LANGUAGES`.
-- [running_coach/llm/prompts.py](../running_coach/llm/prompts.py) — `system_prompt_for(base_prompt, locale)` prepends the per-locale language instruction.
-- [running_coach/llm/commentary.py](../running_coach/llm/commentary.py) — `invalidate_all_coach(conn)` drops every cached LLM message; called from the language-switch route so the next page render produces output in the new locale instead of serving stale text.
+- [runsphera/i18n.py](../runsphera/i18n.py) — the i18n core. Exports `t(source, locale, **kwargs)`, `plural(n, singular, many, locale)`, `language_name(code)`, plus `LANGUAGES` (the supported set) and `_NL` (the Dutch translation table).
+- [runsphera/settings.py](../runsphera/settings.py) — `get_language(conn)`, `set_language(conn, lang)`, `ALLOWED_LANGUAGES`.
+- [runsphera/llm/prompts.py](../runsphera/llm/prompts.py) — `system_prompt_for(base_prompt, locale)` prepends the per-locale language instruction.
+- [runsphera/llm/commentary.py](../runsphera/llm/commentary.py) — `invalidate_all_coach(conn)` drops every cached LLM message; called from the language-switch route so the next page render produces output in the new locale instead of serving stale text.
 
 ### Templates
 
-- [running_coach/web/templates/settings.html](../running_coach/web/templates/settings.html) — picker UI (section ④).
-- [running_coach/web/templates/settings.html](../running_coach/web/templates/settings.html) — base-theme picker.
-- Every template uses `{{ t("English source string") }}` to wrap visible literals. The `t()` function is registered as a Jinja global in [running_coach/web/app.py](../running_coach/web/app.py) bound to the current request's locale.
+- [runsphera/web/templates/settings.html](../runsphera/web/templates/settings.html) — picker UI (section ④).
+- [runsphera/web/templates/settings.html](../runsphera/web/templates/settings.html) — base-theme picker.
+- Every template uses `{{ t("English source string") }}` to wrap visible literals. The `t()` function is registered as a Jinja global in [runsphera/web/app.py](../runsphera/web/app.py) bound to the current request's locale.
 
 ### Routes
 
@@ -83,7 +83,7 @@ This is layered on top of the existing English persona prompt rather than transl
 
 ### Cache invalidation
 
-Switching languages calls [`commentary.invalidate_all_coach(conn)`](../running_coach/llm/commentary.py) which clears the entire `llm_cache` table. The next render of each surface (daily banner, weekly recap, every run reaction) re-queries Claude with the new locale.
+Switching languages calls [`commentary.invalidate_all_coach(conn)`](../runsphera/llm/commentary.py) which clears the entire `llm_cache` table. The next render of each surface (daily banner, weekly recap, every run reaction) re-queries Claude with the new locale.
 
 ## Configuration
 
@@ -91,14 +91,14 @@ Switching languages calls [`commentary.invalidate_all_coach(conn)`](../running_c
 |---|---|---|
 | Active language | `app_settings.language` (DB) | `'en'` or `'nl'`. |
 | Default for new installs | `db.py` ALTER statement (`DEFAULT 'en'`) | English unless the runner picks otherwise. |
-| Available languages | `running_coach/i18n.py` → `LANGUAGES` | Add a code + display name + a new translation dict to extend. |
+| Available languages | `runsphera/i18n.py` → `LANGUAGES` | Add a code + display name + a new translation dict to extend. |
 
 ## Adding a new language
 
 1. Pick an ISO 639-1 code (e.g. `de`).
-2. In [`i18n.py`](../running_coach/i18n.py): add `"de": "Deutsch"` to `LANGUAGES`, copy `_NL` to `_DE`, translate values, register `"de": _DE` in `_TRANSLATIONS`.
-3. In [`prompts.py`](../running_coach/llm/prompts.py): add a `_LANGUAGE_INSTRUCTION["de"]` entry telling Claude to reply in German.
-4. In [`settings.py`](../running_coach/settings.py): add `"de"` to `ALLOWED_LANGUAGES`.
+2. In [`i18n.py`](../runsphera/i18n.py): add `"de": "Deutsch"` to `LANGUAGES`, copy `_NL` to `_DE`, translate values, register `"de": _DE` in `_TRANSLATIONS`.
+3. In [`prompts.py`](../runsphera/llm/prompts.py): add a `_LANGUAGE_INSTRUCTION["de"]` entry telling Claude to reply in German.
+4. In [`settings.py`](../runsphera/settings.py): add `"de"` to `ALLOWED_LANGUAGES`.
 
 That's it — the picker UI iterates `LANGUAGES.items()` so no template changes needed.
 

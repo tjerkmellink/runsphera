@@ -19,10 +19,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach import race_calendar  # noqa: E402
-from running_coach.db import connect  # noqa: E402
-from running_coach.plans import event_swap  # noqa: E402
-from running_coach.plans import service as plan_service  # noqa: E402
+from runsphera import race_calendar  # noqa: E402
+from runsphera.db import connect  # noqa: E402
+from runsphera.plans import event_swap  # noqa: E402
+from runsphera.plans import service as plan_service  # noqa: E402
 
 
 def _next_monday() -> date:

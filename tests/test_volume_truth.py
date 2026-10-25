@@ -25,10 +25,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans._structure import totals_from_structure  # noqa: E402
-from running_coach.plans.daniels import DanielsVDOT  # noqa: E402
-from running_coach.plans.garmin_sync import planned_to_garmin_workout  # noqa: E402
-from running_coach.plans.methodology import PlanParams  # noqa: E402
+from runsphera.plans._structure import totals_from_structure  # noqa: E402
+from runsphera.plans.daniels import DanielsVDOT  # noqa: E402
+from runsphera.plans.garmin_sync import planned_to_garmin_workout  # noqa: E402
+from runsphera.plans.methodology import PlanParams  # noqa: E402
 
 
 def _params(goal="10k", weeks=12, baseline=25.0, vdot=45.0):
@@ -174,7 +174,7 @@ def test_editing_repetitions_keeps_them_at_R_pace():
     6x400 m repetition session from R (232 s/km) to I (250 s/km) on the next
     recalibrate — a silent change to the prescribed stimulus.
     """
-    from running_coach.plans.service import _derive_title, _zone_for_workout
+    from runsphera.plans.service import _derive_title, _zone_for_workout
 
     structure = {"steps": [
         {"type": "warmup", "zone": "E", "end": {"distance_m": 2000}},
@@ -191,7 +191,7 @@ def test_editing_repetitions_keeps_them_at_R_pace():
 
 
 def test_editing_strides_keeps_the_strides_identity():
-    from running_coach.plans.service import _derive_title, _zone_for_workout
+    from runsphera.plans.service import _derive_title, _zone_for_workout
 
     structure = {"steps": [
         {"type": "repeat", "iterations": 6, "steps": [
@@ -208,7 +208,7 @@ def test_editing_strides_keeps_the_strides_identity():
 
 def test_editing_a_real_interval_session_stays_at_I_pace():
     """The fix must not promote genuine I-pace intervals to R."""
-    from running_coach.plans.service import _derive_title, _zone_for_workout
+    from runsphera.plans.service import _derive_title, _zone_for_workout
 
     structure = {"steps": [
         {"type": "warmup", "zone": "E", "end": {"distance_m": 2000}},

@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block headline %}RunSphera{% endblock %}
+{% block subhead %}{% endblock %}
+
+{% block content %}
+
+{# Body data attributes drive view + face + anatomy mode via CSS. JS
+   below toggles them on click — no framework, ~30 lines. #}
+<div class="tp-body-root"
+     data-view="{{ view }}"
+     data-face="front"
+     data-anatomy="on">
+
+    {# ── HERO ──────────────────────────────────────────────────── #}
+    <p class="tp-body-eyebrow">// {{ t("BODY · STRUCTURED WELLBEING LOG") }}</p>
+    <h1 class="tp-body-hero">{{ t("How's the body?") }}</h1>
+    <p class="tp-body-lede">
+        {{ t("Tap a region you want to keep an eye on. The coach uses this to keep your training") }}
+        <em>{{ t("honest") }}</em>
+        {{ t("about how your body actually feels.") }}
+    </p>
+
+    {# ── VIEW TOGGLE ───────────────────────────────────────────── #}
+    <div class="tp-body-views" role="tablist" aria-label="{{ t('Body views') }}">
+        <button class="tp-body-view-pill {% if view == 'active'  %}on{% endif %}" data-go="active">{{ t("Active") }}</button>
+        <button class="tp-body-view-pill {% if view == 'history' %}on{% endif %}" data-go="history">{{ t("History") }}</button>
+        <button class="tp-body-view-pill {% if view == 'heatmap' %}on{% endif %}" data-go="heatmap">{{ t("Heatmap") }}</button>
+    </div>
+
+    {# ── ACTIVE VIEW ───────────────────────────────────────────── #}
+    <section class="tp-body-view-panel tp-body-view-active">
+        <div class="tp-body-active-grid">
+            {# Diagram card #}
+            <div class="card tp-body-diagram-card">
+                <div class="tp-body-anatomy-toggle" role="tablist" aria-label="{{ t('Diagram style') }}">
+                    <button data-anatomy-btn="off">{{ t("Silhouette") }}</button>
+                    <button data-anatomy-btn="on" class="on">{{ t("Anatomy") }}</button>
+                </div>
+                <div class="tp-body-fb-toggle">
+                    <button data-face="front" class="on">{{ t("Front") }}</button>
+                    <button data-face="back">{{ t("Back") }}</button>
+                </div>
+                {% with mode='active', prefix='a' %}
+                    {% include "_body_diagram.html" %}
+                {% endwith %}
+                <div class="tp-body-fig-hint">{{ t("TAP A REGION — HOVER TO PREVIEW") }}</div>
+            </div>
+
+            {# Entry panel (HTMX target) #}
+            <div class="card" id="entrySlot">
+                {% include "_body_entry_panel_empty.html" %}
+            </div>
+        </div>
+
+        <div class="tp-body-section-head">
+            <span class="mono">{{ t("Active issues") }}</span>
+            <span class="rule"></span>
+            {% if streak >= 1 and (not active_issues or (active_issues|map(attribute='current_severity')|max <= 3)) %}
+            <span class="tp-body-streak">{{ t("✓ {n} days without a flag · streak going", n=streak) }}</span>
+            {% endif %}
+        </div>
+        {% include "_body_active_issues.html" %}
+    </section>
+
+    {# ── HISTORY VIEW — month-grouped timeline ─────────────────── #}
+    <section class="tp-body-view-panel tp-body-view-history">
+        <div class="tp-body-section-head">
+            <span class="mono">{{ t("Resolved") }}</span>
+            <span class="rule"></span>
+        </div>
+        {% if history %}
+            {# Group by month_key — list is already newest-first from
+               recent_resolved, so contiguous-month-key buckets just work. #}
+            {% set _seen_months = [] %}
+            {% for h in history %}
+                {% if h.month_key not in _seen_months %}
+                    {% if not loop.first %}</div></div>{% endif %}
+                    {% if _seen_months.append(h.month_key) %}{% endif %}
+                    <div class="tp-body-hist-month">
+                        <div class="tp-body-hist-month-head">{{ h.month_label }}</div>
+                        <div class="card"><div class="tp-body-hist-list">
+                {% endif %}
+                <div class="tp-body-hist-row">
+                    <div class="tp-body-hist-main">
+                        <div class="he">{% if h.side != 'midline' %}{{ t(side_label(h.side)) }} · {% endif %}{{ t(slug_label(h.region)) }}</div>
+                        <div class="ht">{{ h.issue_type|replace('_', ' ')|capitalize }}</div>
+                        {% if h.note %}<div class="hn">{{ h.note }}</div>{% endif %}
+                    </div>
+                    <div class="tp-body-hist-span">
+                        {% if h.days_open is not none %}{{ t("OPEN {n} DAYS", n=h.days_open) }}{% endif %}
+                    </div>
+                    <div class="tp-body-hist-peak">{{ t("PEAK") }}<b class="s{{ h.severity_band_num }}">{{ h.peak_severity }}</b></div>
+                    <form method="post" action="/body/issues/{{ h.id }}/unresolve"
+                          hx-post="/body/issues/{{ h.id }}/unresolve"
+                          hx-target="#body-active-issues" hx-swap="outerHTML">
+                        <button type="submit" class="tp-body-reopen">{{ t("REOPEN") }}</button>
+                    </form>
+                </div>
+                {% if loop.last %}</div></div></div>{% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="card">
+                <div class="tp-body-empty">
+                    <h3>{{ t("Nothing resolved yet.") }}</h3>
+                    <p>{{ t("When an issue clears, it lands here so you can spot patterns.") }}</p>
+                </div>
+            </div>
+        {% endif %}
+    </section>
+
+    {# ── HEATMAP VIEW ──────────────────────────────────────────── #}
+    <section class="tp-body-view-panel tp-body-view-heatmap">
+        {% include "_body_heatmap.html" %}
+    </section>
+
+</div>
+
+<script>
+// Body page interactions — view toggle, face toggle (mobile), anatomy toggle,
+// + a window-level helper to clear the entry-panel slot back to the
+// "Pick a spot." placeholder. Vanilla, ~30 lines. The diagram itself is
+// server-rendered, but these data-attr toggles need a class flip on the root.
+window.tpBodyClearEntry = function() {
+    const slot = document.getElementById('entrySlot');
+    if (!slot) return;
+    slot.innerHTML =
+        '<div class="tp-body-entry-empty">' +
+            '<div class="ico">+</div>' +
+            '<h3>{{ t("Pick a spot.") }}</h3>' +
+            '<p>{{ t("Tap any region on the body to log how it feels or update an existing note.") }}</p>' +
+        '</div>';
+};
+(function() {
+    const root = document.querySelector('.tp-body-root');
+    if (!root) return;
+
+    // View pills — navigate to /body?view=... so the server re-renders
+    // (history + heatmap are separate template branches).
+    root.querySelectorAll('[data-go]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const v = btn.dataset.go;
+            const url = v === 'heatmap'
+                ? '/body?view=heatmap&window={{ window }}'
+                : '/body?view=' + v;
+            window.location.href = url;
+        });
+    });
+
+    // Face toggle (mobile) — pure CSS via data-face on root.
+    root.querySelectorAll('.tp-body-fb-toggle button').forEach(b => {
+        b.addEventListener('click', () => {
+            root.dataset.face = b.dataset.face;
+            root.querySelectorAll('.tp-body-fb-toggle button')
+                .forEach(x => x.classList.toggle('on', x === b));
+        });
+    });
+
+    // Anatomy toggle (Silhouette / Anatomy).
+    const anatBtns = root.querySelectorAll('[data-anatomy-btn]');
+    const syncAnat = () => {
+        const cur = root.dataset.anatomy;
+        anatBtns.forEach(b => b.classList.toggle('on', b.dataset.anatomyBtn === cur));
+    };
+    anatBtns.forEach(b => b.addEventListener('click', () => {
+        root.dataset.anatomy = b.dataset.anatomyBtn;
+        syncAnat();
+    }));
+    syncAnat();
+
+    // ── Region selection + muscle hover-link ────────────────────────
+    // Persistent .selected on the hitbox (gives the dashed accent ring).
+    // .hot on muscles with matching data-mg (lights the underlying group
+    // in accent). Hover transiently sets .hot; click persists it via
+    // .selected, surviving mouseleave.
+    function bareKey(designKey) {
+        // 'front:knee-R' → 'knee-R'; 'back:neck' → 'neck'
+        const i = designKey.indexOf(':');
+        return i === -1 ? designKey : designKey.slice(i + 1);
+    }
+    function setSelected(designKey) {
+        root.querySelectorAll('.region').forEach(r => {
+            r.classList.toggle('selected', r.dataset.region === designKey);
+        });
+        // Muscles light to the SELECTED region's group across both figs.
+        const bare = designKey ? bareKey(designKey) : null;
+        root.querySelectorAll('.muscles .m').forEach(m => {
+            m.classList.toggle('hot', !!bare && m.dataset.mg === bare);
+        });
+    }
+    // Delegate so the listeners survive HTMX swaps (the diagram doesn't
+    // re-render today, but this keeps us safe for any future re-renders
+    // of the figs).
+    root.addEventListener('click', e => {
+        const r = e.target.closest('.region');
+        if (!r) return;
+        setSelected(r.dataset.region);
+    });
+    root.addEventListener('mouseover', e => {
+        const r = e.target.closest('.region');
+        if (!r) return;
+        const bare = bareKey(r.dataset.region);
+        const svg = r.closest('svg');
+        if (svg) svg.querySelectorAll('.muscles .m[data-mg="' + bare + '"]')
+                    .forEach(m => m.classList.add('hot'));
+    });
+    root.addEventListener('mouseout', e => {
+        const r = e.target.closest('.region');
+        if (!r) return;
+        // If this region is the selected one, leave its muscle lit.
+        if (r.classList.contains('selected')) return;
+        const bare = bareKey(r.dataset.region);
+        const svg = r.closest('svg');
+        if (svg) svg.querySelectorAll('.muscles .m[data-mg="' + bare + '"]')
+                    .forEach(m => m.classList.remove('hot'));
+    });
+})();
+</script>
+
+{% endblock %}

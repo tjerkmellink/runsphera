@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans.service import estimate_vdot_from_race  # noqa: E402
+from runsphera.plans.service import estimate_vdot_from_race  # noqa: E402
 
 
 def _assert_close(actual: float, expected: float, label: str, tol: float = 1.0) -> None:

@@ -1,4 +1,4 @@
-"""Tests for running_coach.plans.readiness — the 0-100 race-readiness score
+"""Tests for runsphera.plans.readiness — the 0-100 race-readiness score
 behind the countdown card's breakdown popup (2026-08-04).
 
 Focus is the long-run-base component, the only one with non-trivial logic:
@@ -22,8 +22,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.db import connect  # noqa: E402
-from running_coach.plans import readiness  # noqa: E402
+from runsphera.db import connect  # noqa: E402
+from runsphera.plans import readiness  # noqa: E402
 
 # A 24-week marathon build: first workout 2026-05-25, race 2026-11-01.
 PLAN_START = date(2026, 5, 25)

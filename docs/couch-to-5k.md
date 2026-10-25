@@ -32,7 +32,7 @@ Every session = 5-min brisk warmup walk + main block + 5-min cooldown walk.
 
 ## How it works (implementation)
 
-- **Modules**: `running_coach/plans/c25k.py` (engine — programme table + generator), `running_coach/plans/__init__.py` (registry entry `c25k`), `running_coach/plans/methodology.py` (`uses_vdot_paces`, `fixed_days_per_week` fields).
+- **Modules**: `runsphera/plans/c25k.py` (engine — programme table + generator), `runsphera/plans/__init__.py` (registry entry `c25k`), `runsphera/plans/methodology.py` (`uses_vdot_paces`, `fixed_days_per_week` fields).
 - **Templates**: `plans_new.html` (5K goal tile, `data-fixed-dpw` days-per-week lock), `_plan_settings_modal.html` (recalibrate/VDOT sections hidden via `uses_vdot_paces`).
 - **Routes**: none new — everything flows through `POST /plans/new`.
 - **DB**: none new.

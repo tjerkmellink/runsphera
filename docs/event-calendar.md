@@ -47,22 +47,22 @@ A small **"Your races"** strip appears above the daily-tip card when at least on
 
 ### Modules
 
-- [running_coach/race_calendar.py](../running_coach/race_calendar.py) — single module with:
+- [runsphera/race_calendar.py](../runsphera/race_calendar.py) — single module with:
   - **Distance / goal helpers**: `goal_type_for_distance(km)` (maps to `'10k'` / `'15k'` / `'half_marathon'` / `'marathon'` with tolerance), `province_name(code)`, `primary_category(event)` (longest supported distance → chip color bucket).
   - **Writes**: `add_user_event(...)`, `favorite(...)`, `unfavorite(...)`.
   - **Reads**: `list_events(...)`, `get_event(...)`, `list_favorites(...)`, `is_favorited(...)`, `group_by_month(events)`, `build_month_grids(events)` (per-month Mon-Sun cell grids for the agenda view).
-  - **Curated set**: `seed_events_if_empty(conn)` — loads `running_coach/data/curated_events.json` into `race_events` on first run only (empty-table guard), mirroring the strength-library seeder; wired into `db.connect()`. `export_curated_events(conn)` — snapshots the DB into the shippable list (enriched-only; drops `external_id`; sets `source = personal-running-coach`; keeps only external hero-image URLs; **does not mutate the source DB**). This is the freeze tool behind the committed JSON.
+  - **Curated set**: `seed_events_if_empty(conn)` — loads `runsphera/data/curated_events.json` into `race_events` on first run only (empty-table guard), mirroring the strength-library seeder; wired into `db.connect()`. `export_curated_events(conn)` — snapshots the DB into the shippable list (enriched-only; drops `external_id`; sets `source = personal-running-coach`; keeps only external hero-image URLs; **does not mutate the source DB**). This is the freeze tool behind the committed JSON.
   - **Enrichment**: `scrape_event_page(url)` + helpers fetch an organiser page, parse `og:*` meta tags, download the hero image locally, and save the fields.
 
 ### Templates
 
-- [calendar.html](../running_coach/web/templates/calendar.html) — the page (renders list or agenda based on `view_mode`); hosts the event-detail `<dialog>` wrapper at the bottom.
-- [_event_row.html](../running_coach/web/templates/_event_row.html) — one race in the list view; clickable to open the modal.
-- [_calendar_agenda.html](../running_coach/web/templates/_calendar_agenda.html) — monthly calendar grids; chips are `<button>`s that open the modal via HTMX.
-- [_event_detail_modal.html](../running_coach/web/templates/_event_detail_modal.html) — modal body. Re-rendered after each enrich / manual-save so the view updates inline.
-- [index.html](../running_coach/web/templates/index.html) — adds the "Your races" strip on the dashboard.
-- [plans_new.html](../running_coach/web/templates/plans_new.html) — shows the prefill banner + carries hidden fields when launched from an event.
-- [base.html](../running_coach/web/templates/base.html) — nav link + all CSS.
+- [calendar.html](../runsphera/web/templates/calendar.html) — the page (renders list or agenda based on `view_mode`); hosts the event-detail `<dialog>` wrapper at the bottom.
+- [_event_row.html](../runsphera/web/templates/_event_row.html) — one race in the list view; clickable to open the modal.
+- [_calendar_agenda.html](../runsphera/web/templates/_calendar_agenda.html) — monthly calendar grids; chips are `<button>`s that open the modal via HTMX.
+- [_event_detail_modal.html](../runsphera/web/templates/_event_detail_modal.html) — modal body. Re-rendered after each enrich / manual-save so the view updates inline.
+- [index.html](../runsphera/web/templates/index.html) — adds the "Your races" strip on the dashboard.
+- [plans_new.html](../runsphera/web/templates/plans_new.html) — shows the prefill banner + carries hidden fields when launched from an event.
+- [base.html](../runsphera/web/templates/base.html) — nav link + all CSS.
 
 ### Routes
 
@@ -117,11 +117,11 @@ The split keeps the catalogue and the runner's selection apart. Multiple `runner
 
 ### Curated-seed format
 
-The committed [running_coach/data/curated_events.json](../running_coach/data/curated_events.json) is a JSON array of event dicts — `name`, `race_date`, `city`, `province`, `country_code`, `distances` (`[{km, label}]`), `description`, `organizer_url`, optional external `hero_image_url`, and `source: "personal-running-coach"`. To change what ships: curate events in the running app (add manually / enrich / delete the irrelevant ones), then regenerate the file from the live DB with `export_curated_events` (a one-off `python -c` call) and commit it over the old one.
+The committed [runsphera/data/curated_events.json](../runsphera/data/curated_events.json) is a JSON array of event dicts — `name`, `race_date`, `city`, `province`, `country_code`, `distances` (`[{km, label}]`), `description`, `organizer_url`, optional external `hero_image_url`, and `source: "personal-running-coach"`. To change what ships: curate events in the running app (add manually / enrich / delete the irrelevant ones), then regenerate the file from the live DB with `export_curated_events` (a one-off `python -c` call) and commit it over the old one.
 
 ## Configuration
 
-- **Shipped seed** — `running_coach/data/curated_events.json` (committed). On first run, `seed_events_if_empty` loads it into an empty `race_events`. Subsequent runs are no-ops (the table is non-empty), so a runner's own added/enriched events are never clobbered.
+- **Shipped seed** — `runsphera/data/curated_events.json` (committed). On first run, `seed_events_if_empty` loads it into an empty `race_events`. Subsequent runs are no-ops (the table is non-empty), so a runner's own added/enriched events are never clobbered.
 
 ## Known limitations
 

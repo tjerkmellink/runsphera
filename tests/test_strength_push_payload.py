@@ -26,7 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.strength.garmin_push import build_payload  # noqa: E402
+from runsphera.strength.garmin_push import build_payload  # noqa: E402
 
 
 # ── Test fixtures ─────────────────────────────────────────────────

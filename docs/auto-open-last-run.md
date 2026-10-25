@@ -18,9 +18,9 @@ The modal is the existing `#run-detail-modal`; closing it (× / click-outside / 
 ## How it works (implementation)
 
 - **Modules**:
-  - [running_coach/web/app.py](../running_coach/web/app.py) — `_latest_run_id()` (new helper), `_run_sync()` (now returns the new run's `activity_id` or `None`), `trigger_ingest()` (`POST /ingest`, now emits a `newRunDetected` HTMX event when a run arrived).
+  - [runsphera/web/app.py](../runsphera/web/app.py) — `_latest_run_id()` (new helper), `_run_sync()` (now returns the new run's `activity_id` or `None`), `trigger_ingest()` (`POST /ingest`, now emits a `newRunDetected` HTMX event when a run arrived).
 - **Templates**:
-  - [running_coach/web/templates/index.html](../running_coach/web/templates/index.html) — a one-time `newRunDetected` listener that `htmx.ajax`-loads `GET /runs/{id}` into `#run-detail-content` and calls `showModal()`.
+  - [runsphera/web/templates/index.html](../runsphera/web/templates/index.html) — a one-time `newRunDetected` listener that `htmx.ajax`-loads `GET /runs/{id}` into `#run-detail-content` and calls `showModal()`.
 - **Routes**: `POST /ingest` (touched), `GET /runs/{activity_id}` (reused, unchanged).
 - **DB**: reads `activities` (`activity_id`, `activity_type`, `start_time_gmt`) only — no schema change.
 - **External services**: Garmin (via the existing sync path).

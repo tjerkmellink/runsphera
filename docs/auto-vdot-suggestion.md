@@ -55,9 +55,9 @@ Clicking **Dismiss** records `vdot_suggestion_dismissed_at` on the activity. Sam
 
 ### Modules
 
-- **`running_coach/plans/vdot_detection.py`** — `detect_vdot_suggestion(conn)` returns the suggestion payload or None. Private helpers `_match_distance` (canonical-distance lookup with tolerance), `_has_race_keyword`, `_high_hr_fraction`, `_is_race_effort`. Public mutators `mark_applied` / `mark_dismissed` flip the per-activity state.
-- **`running_coach/plans/service.py`** — reuses the existing `estimate_vdot_from_race(distance_m, time_s)`, `update_plan_vdot`, and `recalibrate_paces` machinery.
-- **`running_coach/web/app.py`** — dashboard `index()` route adds `vdot_suggestion` to the context. `POST /plan/vdot/apply/{activity_id}` and `POST /plan/vdot/dismiss/{activity_id}` are the two new routes.
+- **`runsphera/plans/vdot_detection.py`** — `detect_vdot_suggestion(conn)` returns the suggestion payload or None. Private helpers `_match_distance` (canonical-distance lookup with tolerance), `_has_race_keyword`, `_high_hr_fraction`, `_is_race_effort`. Public mutators `mark_applied` / `mark_dismissed` flip the per-activity state.
+- **`runsphera/plans/service.py`** — reuses the existing `estimate_vdot_from_race(distance_m, time_s)`, `update_plan_vdot`, and `recalibrate_paces` machinery.
+- **`runsphera/web/app.py`** — dashboard `index()` route adds `vdot_suggestion` to the context. `POST /plan/vdot/apply/{activity_id}` and `POST /plan/vdot/dismiss/{activity_id}` are the two new routes.
 
 ### Templates
 
@@ -117,7 +117,7 @@ Nothing user-configurable yet. The five constants in `vdot_detection.py` can be 
 
 ## Verification
 
-1. **Manual smoke**: run `python -c "from running_coach.plans import vdot_detection as v; from running_coach.db import connect; from contextlib import closing; print(v.detect_vdot_suggestion(connect()))"`. With no qualifying activity, prints `None`. With one, prints the payload.
+1. **Manual smoke**: run `python -c "from runsphera.plans import vdot_detection as v; from runsphera.db import connect; from contextlib import closing; print(v.detect_vdot_suggestion(connect()))"`. With no qualifying activity, prints `None`. With one, prints the payload.
 2. **Banner appears**: trigger a fake suggestion by manually crafting one in the DB (`UPDATE activities SET activity_name = 'Test 5K race', distance_m = 5000, duration_s = 1200 WHERE activity_id = …`), then open `/`. The banner should render above the Today's Workout section.
 3. **Apply round-trip**: click Apply → `/plans/<id>/edit` should now show the new VDOT; dashboard's countdown card prediction should update on next render; `vdot_suggestion_applied_at` should be set on the activity.
 4. **Dismiss persistence**: click Dismiss → banner disappears, never re-shows for that activity even on hard refresh.

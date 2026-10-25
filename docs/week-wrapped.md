@@ -29,10 +29,10 @@ The coach line is **LLM-generated** when the week is complete and a coach-voice 
 ## How it works (implementation)
 
 - **Modules**:
-  - `running_coach/plans/service.py` — `week_stats()` (the aggregator), `current_plan_week()`, `streak_weeks()` + `_week_qualifies_for_streak()`, `week_end_iso()`, and `STREAK_MIN_ADHERENCE = 0.8`.
-  - `running_coach/llm/commentary.py` — `week_wrapped()` (cached LLM celebration), `peek_week_wrapped()`, `week_wrapped_generated_at()`, `_week_wrapped_key()`.
-  - `running_coach/llm/prompts.py` — `WEEK_WRAPPED_SYSTEM_PROMPT` + `week_wrapped_request_block()`.
-  - `running_coach/web/app.py` — `_build_week_wrapped()` helper, wired into the `index` route; `POST /week-wrapped/refresh`.
+  - `runsphera/plans/service.py` — `week_stats()` (the aggregator), `current_plan_week()`, `streak_weeks()` + `_week_qualifies_for_streak()`, `week_end_iso()`, and `STREAK_MIN_ADHERENCE = 0.8`.
+  - `runsphera/llm/commentary.py` — `week_wrapped()` (cached LLM celebration), `peek_week_wrapped()`, `week_wrapped_generated_at()`, `_week_wrapped_key()`.
+  - `runsphera/llm/prompts.py` — `WEEK_WRAPPED_SYSTEM_PROMPT` + `week_wrapped_request_block()`.
+  - `runsphera/web/app.py` — `_build_week_wrapped()` helper, wired into the `index` route; `POST /week-wrapped/refresh`.
 - **Templates**: `_week_wrapped.html` (the section + rules-based fallback copy), included from `index.html`.
 - **Routes**: `GET /` (renders the block), `POST /week-wrapped/refresh` (↻ regenerate on a complete week).
 - **DB**: reads `plan_workouts` joined to `activities` (distance, duration, training load, elevation). LLM output caches in `llm_cache` under `week_wrapped:{plan_id}:{week_number}:{sessions_done}`.

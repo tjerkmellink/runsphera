@@ -52,7 +52,7 @@ if errorlevel 1 goto setup_failed
 :shortcuts
 echo [3/3] Creating RunSphera shortcuts ^(Desktop + Start Menu^)...
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "scripts\install_shortcut.ps1"
-if errorlevel 1 echo    ^(Could not create shortcuts - you can still launch with pythonw -m running_coach.desktop.^)
+if errorlevel 1 echo    ^(Could not create shortcuts - you can still launch with pythonw -m runsphera.desktop.^)
 
 echo.
 echo ============================================================
@@ -64,7 +64,7 @@ echo   * From now on, launch RunSphera from that shortcut - not this file.
 echo.
 echo   Starting RunSphera...
 
-start "" ".venv\Scripts\pythonw.exe" -m running_coach.desktop
+start "" ".venv\Scripts\pythonw.exe" -m runsphera.desktop
 exit /b 0
 
 :setup_failed

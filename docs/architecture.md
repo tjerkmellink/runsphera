@@ -16,18 +16,18 @@ Every verdict in the app is produced by deterministic Python:
 
 | Verdict | Where it is decided |
 |---|---|
-| GO / CAUTION / EASY / REST | [plans/coach.py](../running_coach/plans/coach.py) |
-| The whole training plan | the methodology engines under [plans/](../running_coach/plans/) |
-| Execution score (0–100) | [execution_score.py](../running_coach/execution_score.py) |
-| Race readiness + projected finish | [analytics.py](../running_coach/analytics.py) |
-| Energy, carbs, hydration, meals | [nutrition/engine.py](../running_coach/nutrition/engine.py) |
-| Which supplementary activity to suggest | [tips.py](../running_coach/tips.py) |
+| GO / CAUTION / EASY / REST | [plans/coach.py](../runsphera/plans/coach.py) |
+| The whole training plan | the methodology engines under [plans/](../runsphera/plans/) |
+| Execution score (0–100) | [execution_score.py](../runsphera/execution_score.py) |
+| Race readiness + projected finish | [analytics.py](../runsphera/analytics.py) |
+| Energy, carbs, hydration, meals | [nutrition/engine.py](../runsphera/nutrition/engine.py) |
+| Which supplementary activity to suggest | [tips.py](../runsphera/tips.py) |
 
-The LLM layer ([llm/](../running_coach/llm/)) receives a decision that has already been made and phrases it. It never chooses the training load, never overrides a rule, and never has its output parsed back into application state — the cached text is displayed and nothing more.
+The LLM layer ([llm/](../runsphera/llm/)) receives a decision that has already been made and phrases it. It never chooses the training load, never overrides a rule, and never has its output parsed back into application state — the cached text is displayed and nothing more.
 
 **Why:** a prescription that changes because a sampling temperature changed is not a training plan. Determinism also means the whole suite can assert on exact numbers, and the app stays fully functional with no API key and no network.
 
-**Consequence:** when a feature needs a new judgement, the judgement goes in Python and the prompt gets told about it. Moving a decision into a prompt is a regression, even when the output looks better. LLM output is cached in `llm_cache`, keyed per calendar day (or per activity for run reactions), and invalidated explicitly by the writers in [llm/commentary.py](../running_coach/llm/commentary.py).
+**Consequence:** when a feature needs a new judgement, the judgement goes in Python and the prompt gets told about it. Moving a decision into a prompt is a regression, even when the output looks better. LLM output is cached in `llm_cache`, keyed per calendar day (or per activity for run reactions), and invalidated explicitly by the writers in [llm/commentary.py](../runsphera/llm/commentary.py).
 
 ---
 
@@ -35,7 +35,7 @@ The LLM layer ([llm/](../running_coach/llm/)) receives a decision that has alrea
 
 Everything lives in a single file: `data/running_coach.db` (override with `RUNNING_COACH_DB`). No server, no account, no cloud. Garmin credentials are sent to Garmin once and dropped; only the session token is cached, in `.garmin_tokens/`.
 
-Schema handling in [db.py](../running_coach/db.py) has two halves:
+Schema handling in [db.py](../runsphera/db.py) has two halves:
 
 * `SCHEMA` — the `CREATE TABLE IF NOT EXISTS` script. It runs on every connect and is **ignored by SQLite for tables that already exist**.
 * `_MIGRATIONS` — an ordered list of `ALTER TABLE` statements, each wrapped in a try/except that swallows "duplicate column name" and "no such column" so re-running is idempotent.
@@ -67,7 +67,7 @@ A plan is generated, not transcribed. Each methodology is a class implementing a
 Methodology.generate(params: PlanParams) -> list[PlannedWorkout]
 ```
 
-[plans/\_\_init\_\_.py](../running_coach/plans/__init__.py) holds `_REGISTRY`, mapping a stable id to `(MethodologyInfo, class | None)`. A `None` class is a "coming soon" tile — surfaced in the UI, not selectable.
+[plans/\_\_init\_\_.py](../runsphera/plans/__init__.py) holds `_REGISTRY`, mapping a stable id to `(MethodologyInfo, class | None)`. A `None` class is a "coming soon" tile — surfaced in the UI, not selectable.
 
 `MethodologyInfo` is not decoration; it **is** the contract between an engine and the UI. The flags that change behavior:
 
@@ -88,7 +88,7 @@ Methodology.generate(params: PlanParams) -> list[PlannedWorkout]
 
 ## 4. `workout_structure` is the contract with the watch
 
-The watch is a render target, not a source of truth. [plans/garmin_sync.py](../running_coach/plans/garmin_sync.py) splits workout types into three buckets:
+The watch is a render target, not a source of truth. [plans/garmin_sync.py](../runsphera/plans/garmin_sync.py) splits workout types into three buckets:
 
 | Bucket | Types | Needs `workout_structure`? |
 |---|---|---|
@@ -130,9 +130,9 @@ rounds of static review never touched it.
 
 ## 5. Server-rendered HTMX, no build step
 
-FastAPI serves full pages and HTML fragments from Jinja templates in [web/templates/](../running_coach/web/templates/). Templates whose names start with `_` are fragments returned to an `hx-target`. There is no bundler, no npm, no JSON API, and no client-side framework. Charts are Plotly HTML rendered on the server.
+FastAPI serves full pages and HTML fragments from Jinja templates in [web/templates/](../runsphera/web/templates/). Templates whose names start with `_` are fragments returned to an `hx-target`. There is no bundler, no npm, no JSON API, and no client-side framework. Charts are Plotly HTML rendered on the server.
 
-[web/app.py](../running_coach/web/app.py) is one large route module (~100 routes). That is deliberate for now: the routes are thin, and the logic they call lives in the service modules. Splitting it is a refactor worth doing on purpose, not as a side effect of adding a feature.
+[web/app.py](../runsphera/web/app.py) is one large route module (~100 routes). That is deliberate for now: the routes are thin, and the logic they call lives in the service modules. Splitting it is a refactor worth doing on purpose, not as a side effect of adding a feature.
 
 **Why:** one language, one process, one deployment artifact, and a page that works before any JavaScript loads. The app ships to its user as a folder with an `install.cmd` in it.
 
@@ -144,7 +144,7 @@ FastAPI serves full pages and HTML fragments from Jinja templates in [web/templa
 
 **Colour goes through tokens.** The status palette (`--ok` / `--warn` / `--bad` / `--info`, each with a `-solid` variant for filled chips) is the single answer to "is this good, worrying, or bad?". Never hardcode a green, amber, or red hex. `--accent` is the brand voice and the current-item marker, never a status — because it reads as red-orange, state signalled through it looks like an error. Full rules in [design-system.md](design-system.md).
 
-**Text goes through `t()`.** English literals are the lookup keys, so an untranslated string renders in English instead of throwing. `t` and `plural` are registered as per-request Jinja globals already bound to the runner's locale. Two languages today (`en`, `nl`); adding a third means extending `LANGUAGES` and dropping a dict alongside `_NL` in [i18n.py](../running_coach/i18n.py).
+**Text goes through `t()`.** English literals are the lookup keys, so an untranslated string renders in English instead of throwing. `t` and `plural` are registered as per-request Jinja globals already bound to the runner's locale. Two languages today (`en`, `nl`); adding a third means extending `LANGUAGES` and dropping a dict alongside `_NL` in [i18n.py](../runsphera/i18n.py).
 
 **Consequence:** a user-facing string added without `t()` is a bug that only shows up for Dutch readers, and a hardcoded hex is a bug that only shows up in the other colour mode. Both are invisible to the test suite.
 
@@ -152,9 +152,9 @@ FastAPI serves full pages and HTML fragments from Jinja templates in [web/templa
 
 ## 7. The LLM provider is a seam; Garmin is becoming one
 
-[llm/connector.py](../running_coach/llm/connector.py) is the single dispatcher between the app and three providers (`_anthropic`, `_openai`, `_gemini` under `llm/providers/`). It resolves the active provider from settings, returns a uniform `LLMResult`, and reports `is_available()` for the **active** provider only — so the dashboard degrades gracefully when the runner switches to a provider they have not configured. Adding a provider is a new `providers/_<name>.py`, a registry entry, a storage column, and a settings tab.
+[llm/connector.py](../runsphera/llm/connector.py) is the single dispatcher between the app and three providers (`_anthropic`, `_openai`, `_gemini` under `llm/providers/`). It resolves the active provider from settings, returns a uniform `LLMResult`, and reports `is_available()` for the **active** provider only — so the dashboard degrades gracefully when the runner switches to a provider they have not configured. Adding a provider is a new `providers/_<name>.py`, a registry entry, a storage column, and a settings tab.
 
-Ingest has no equivalent seam yet. [garmin.py](../running_coach/garmin.py) and [ingest.py](../running_coach/ingest.py) assume one account on one vendor, and Garmin's field names reach the schema directly. Widening this — Samsung, Apple, Polar, Oura, and a mobile client — is designed but not built: see the multi-device plan and the mobile MVP brief.
+Ingest has no equivalent seam yet. [garmin.py](../runsphera/garmin.py) and [ingest.py](../runsphera/ingest.py) assume one account on one vendor, and Garmin's field names reach the schema directly. Widening this — Samsung, Apple, Polar, Oura, and a mobile client — is designed but not built: see the multi-device plan and the mobile MVP brief.
 
 **Consequence:** new ingest code should not deepen the Garmin assumption any further than it has to. When a choice is cheap, prefer the shape that survives a second provider.
 
@@ -163,7 +163,7 @@ Ingest has no equivalent seam yet. [garmin.py](../running_coach/garmin.py) and [
 ## Layout
 
 ```
-running_coach/
+runsphera/
 ├── db.py              # SCHEMA + _MIGRATIONS + connect()
 ├── garmin.py          # Garmin login wrapper (token cache + MFA)
 ├── ingest.py          # CLI: Garmin → SQLite, idempotent

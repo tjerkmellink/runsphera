@@ -1,6 +1,6 @@
 # Post-marathon recovery plan — design brief
 
-> **Status:** **ready to build** — body-map shipped (the Day 1-2 triage dependency is satisfied) and sleep+HRV is parked because the runner doesn't wear the watch overnight, so the recovery-vitals strip (HRV / RHR / sleep / body-battery trends during the 28 days) becomes a **v1.1 follow-up** rather than a v1 dependency. The schedule + Day 1-2 body-map triage + LLM coach voice pivot + nutrition milestones + Day 28 transition all ship in v1. Roadmap entry: roadmap.md → *Next up · #1*. Source grounding: grounding/post-marathon.md. Not in [docs/README.md](README.md)'s "Documented features" table — that's for shipped features.
+> **Status:** **ready to build** — body-map shipped (the Day 1-2 triage dependency is satisfied) and sleep+HRV is parked because the runner doesn't wear the watch overnight, so the recovery-vitals strip (HRV / RHR / sleep / body-battery trends during the 28 days) becomes a **v1.1 follow-up** rather than a v1 dependency. The schedule + Day 1-2 body-map triage + LLM coach voice pivot + nutrition milestones + Day 28 transition all ship in v1. Roadmap entry: [roadmap.md](roadmap.md) → *Next up · #1*. Source grounding: internal grounding notes. Not in [docs/README.md](README.md)'s "Documented features" table — that's for shipped features.
 
 ## What the feature is
 
@@ -196,8 +196,8 @@ The schedule-shape subset:
 
 ## Cross-references
 
-- Grounding science: grounding/post-marathon.md
-- Roadmap entry: roadmap.md → *Next up — committed · #1*
+- Grounding science: internal grounding notes
+- Roadmap entry: [roadmap.md](roadmap.md) → *Next up — committed · #1*
 - Related: countdown card recap-phase logic ([race-day-countdown.md](race-day-countdown.md)) — recovery view is its 28-day extension
 
 ---

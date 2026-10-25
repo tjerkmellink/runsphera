@@ -37,18 +37,18 @@ the originals around so the whole thing is reversible.
 ## How it works (implementation)
 
 - **Modules**
-  - `running_coach/plans/event_swap.py` — the whole feature:
+  - `runsphera/plans/event_swap.py` — the whole feature:
     `swap_context()` (eligibility + candidates + proposed long run),
     `apply_swap()`, `revert_swap()`, `get_swap_for_event()`,
     `get_swap_for_workout()`.
-  - `running_coach/race_calendar.py` — reused reads (`get_event`) and
+  - `runsphera/race_calendar.py` — reused reads (`get_event`) and
     favorite bookkeeping.
 - **Templates**
   - `_event_detail_modal.html` — swap buttons / "in your plan" state.
   - `_event_swap_confirm.html` — the inline confirm strip (HTMX-loaded into
     `#event-swap-zone`).
   - `_plan_workout_modal.html` — "Race event" section + revert confirm.
-- **Routes** (`running_coach/web/app.py`)
+- **Routes** (`runsphera/web/app.py`)
   - `GET  /calendar/events/{id}/swap-preview` — renders the confirm strip.
   - `POST /calendar/events/{id}/swap-into-plan` — applies; answers HTMX with
     `HX-Redirect: /plans`.

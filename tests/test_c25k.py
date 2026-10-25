@@ -22,8 +22,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans.c25k import C25KPlan  # noqa: E402
-from running_coach.plans.methodology import PlanParams  # noqa: E402
+from runsphera.plans.c25k import C25KPlan  # noqa: E402
+from runsphera.plans.methodology import PlanParams  # noqa: E402
 
 # Mirrors plans/service.py _ALLOWED_TYPES-adjacent vocabulary.
 _ALLOWED_TYPES = {"easy", "long", "tempo", "intervals", "recovery", "rest", "race", "cross"}
@@ -195,8 +195,8 @@ def test_registry_day_offsets_match_engine_and_never_run_back_to_back() -> None:
     preferred_day_offsets; those must be exactly the engine's own fallback
     spacing, and must never put two sessions on consecutive days — a
     beginner's rest day between runs is C25K's cardinal rule."""
-    from running_coach.plans import get_methodology_info
-    from running_coach.plans.c25k import PREFERRED_DAY_OFFSETS
+    from runsphera.plans import get_methodology_info
+    from runsphera.plans.c25k import PREFERRED_DAY_OFFSETS
 
     info = get_methodology_info("c25k")
     assert info.preferred_day_offsets == PREFERRED_DAY_OFFSETS

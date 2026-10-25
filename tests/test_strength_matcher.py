@@ -26,7 +26,7 @@ def _fresh_db():
     fd, path = tempfile.mkstemp(suffix=".db")
     os.close(fd)
     os.environ["RUNNING_COACH_DB"] = path
-    from running_coach.db import connect
+    from runsphera.db import connect
     return connect(), path
 
 
@@ -92,7 +92,7 @@ def test_matches_via_workout_id_echo():
     _make_activity(conn, 1234, "strength_training",
                    {"workoutId": 999111, "activityId": 1234})
 
-    from running_coach.strength import matcher
+    from runsphera.strength import matcher
     result = matcher.match_strength_sessions(conn)
     assert result["matched"] == 1, f"expected 1 match, got {result}"
     row = _link(conn, sess)
@@ -108,7 +108,7 @@ def test_ignores_unrelated_strength_activity():
     _make_activity(conn, 5678, "strength_training",
                    {"workoutId": 222222, "activityId": 5678})
 
-    from running_coach.strength import matcher
+    from runsphera.strength import matcher
     result = matcher.match_strength_sessions(conn)
     assert result["matched"] == 0, f"expected 0 matches, got {result}"
     assert _link(conn, sess)["actual_activity_id"] is None
@@ -122,7 +122,7 @@ def test_ignores_activity_with_no_workout_id():
     # Note: workoutId absent from the raw payload
     _make_activity(conn, 9999, "strength_training", {"activityId": 9999})
 
-    from running_coach.strength import matcher
+    from runsphera.strength import matcher
     result = matcher.match_strength_sessions(conn)
     assert result["matched"] == 0
     assert _link(conn, sess)["actual_activity_id"] is None
@@ -137,7 +137,7 @@ def test_skips_already_matched():
     _make_activity(conn, 1234, "strength_training",
                    {"workoutId": 999111, "activityId": 1234})
 
-    from running_coach.strength import matcher
+    from runsphera.strength import matcher
     first = matcher.match_strength_sessions(conn)
     assert first["matched"] == 1
 
@@ -154,7 +154,7 @@ def test_unscheduled_session_session_no_op():
     _make_activity(conn, 7777, "strength_training",
                    {"workoutId": 11111111, "activityId": 7777})
 
-    from running_coach.strength import matcher
+    from runsphera.strength import matcher
     result = matcher.match_strength_sessions(conn)
     assert result["matched"] == 0
 
@@ -168,7 +168,7 @@ def test_picks_up_mobility_activity_type():
     sess = _make_strength_session(conn, plan, "2030-01-06", garmin_workout_id=999111)
     _make_activity(conn, 8888, "mobility", {"workoutId": 999111, "activityId": 8888})
 
-    from running_coach.strength import matcher
+    from runsphera.strength import matcher
     result = matcher.match_strength_sessions(conn)
     assert result["matched"] == 1, f"mobility type should match too, got {result}"
     assert _link(conn, sess)["actual_activity_id"] == 8888
@@ -190,7 +190,7 @@ def test_preserves_manual_completed_at():
     _make_activity(conn, 1234, "strength_training",
                    {"workoutId": 999111, "activityId": 1234})
 
-    from running_coach.strength import matcher
+    from runsphera.strength import matcher
     matcher.match_strength_sessions(conn)
     row = _link(conn, sess)
     assert row["actual_activity_id"] == 1234

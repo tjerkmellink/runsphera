@@ -2,7 +2,7 @@
 
 > Animated map of where a completed run went — the GPS track replays itself inside the run-detail modal.
 
-> **Note (v2, 2026-07-20):** this map now lives on the **Replay** slide (the modal's default view when a route exists). The modal has no tab bar — you move between slides with the prev/next nav at each panel's foot — and the masthead is hidden on Replay so the glow header + map own the top. It leads with a glow header + verdict badge and gained a stats footer. Dark mode briefly used CARTO `dark_all` tiles, but CARTO started requiring an API key (2026-09), so the map is back on keyless OSM tiles with the CSS re-tint for dark mode. See run-detail-design-brief.md §10. The data layer below is unchanged.
+> **Note (v2, 2026-07-20):** this map now lives on the **Replay** slide (the modal's default view when a route exists). The modal has no tab bar — you move between slides with the prev/next nav at each panel's foot — and the masthead is hidden on Replay so the glow header + map own the top. It leads with a glow header + verdict badge and gained a stats footer. Dark mode briefly used CARTO `dark_all` tiles, but CARTO started requiring an API key (2026-09), so the map is back on keyless OSM tiles with the CSS re-tint for dark mode. See the run-detail design brief §10. The data layer below is unchanged.
 
 ## Purpose
 
@@ -17,7 +17,7 @@ The dashboard tells the runner *how* a run went (pace, HR, laps); nothing showed
 
 ## How it works (implementation)
 
-- **Modules**: `running_coach/gps_route.py` — fetch, normalise, cache, and gate the track.
+- **Modules**: `runsphera/gps_route.py` — fetch, normalise, cache, and gate the track.
 - **Templates**: `_run_detail.html` (Route tab: radio input, label, panel, inline animation JS), `base.html` (Leaflet CDN `<link>`/`<script>`, shell-level for the same HTMX-swap reason as Plotly).
 - **Routes**: none new — `GET /runs/{activity_id}` now also hydrates the route and passes `route` to the template.
 - **DB**: new `activity_routes` table — `activity_id` PK/FK, `points_json` (compact `[[lat, lon, t_rel_s], …]`), `point_count`, `fetched_at`.

@@ -32,9 +32,9 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from running_coach import garmin
-from running_coach.strength import garmin_push
-from running_coach.strength.library import RECOVERY_MOBILITY
+from runsphera import garmin
+from runsphera.strength import garmin_push
+from runsphera.strength.library import RECOVERY_MOBILITY
 
 # Round 2: the 12 single-pose MOBILITY probes all failed to push to the
 # watch, and the user's own copies of Garmin's yoga/pilates workouts
@@ -44,7 +44,7 @@ from running_coach.strength.library import RECOVERY_MOBILITY
 _SPORT_YOGA = {"sportTypeId": 7, "sportTypeKey": "yoga", "displayOrder": 8}
 
 # The 12 exercises in Recovery & Mobility, in session order. Mirrors
-# RECOVERY_MOBILITY in running_coach/strength/library.py — kept inline so
+# RECOVERY_MOBILITY in runsphera/strength/library.py — kept inline so
 # the probe is self-contained and doesn't depend on a live plan row.
 PROBE_EXERCISES: list[tuple[str, str, int]] = [
     ("pose", "easy_seated",          45),

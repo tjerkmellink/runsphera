@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans.recommend import recommend_plan  # noqa: E402
+from runsphera.plans.recommend import recommend_plan  # noqa: E402
 
 ALL = frozenset({"daniels", "foppen_7heuvelen", "pfitzinger", "higdon", "c25k"})
 NO_C25K = ALL - {"c25k"}

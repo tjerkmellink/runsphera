@@ -32,9 +32,9 @@ Navigation on every step:
 ## How it works (implementation)
 
 - **Modules**:
-  - `running_coach/web/app.py` — `ONBOARDING_STEPS` (the ordered step keys), `_render_onboarding()` (renders a step partial + persists the resume point + bundles progress metadata), `_onboarding_step_data()` (per-step context), `_onboarding_sync_summary()`, the `/onboarding/*` routes, and the `onboarding=1` branches in `/auth/login` + `/auth/mfa`. `_run_sync()` is the extracted Garmin-pull core shared by `/ingest` and `/onboarding/sync`.
-  - `running_coach/settings.py` — `get_onboarding()`, `set_onboarding_step()`, `set_onboarding_status()` (+ `ALLOWED_ONBOARDING_STATUS`).
-  - `running_coach/db.py` — schema + migration for the two new columns.
+  - `runsphera/web/app.py` — `ONBOARDING_STEPS` (the ordered step keys), `_render_onboarding()` (renders a step partial + persists the resume point + bundles progress metadata), `_onboarding_step_data()` (per-step context), `_onboarding_sync_summary()`, the `/onboarding/*` routes, and the `onboarding=1` branches in `/auth/login` + `/auth/mfa`. `_run_sync()` is the extracted Garmin-pull core shared by `/ingest` and `/onboarding/sync`.
+  - `runsphera/settings.py` — `get_onboarding()`, `set_onboarding_step()`, `set_onboarding_status()` (+ `ALLOWED_ONBOARDING_STATUS`).
+  - `runsphera/db.py` — schema + migration for the two new columns.
 - **Templates**:
   - `web/templates/_onboarding.html` — the whole wizard, one partial with a branch per step (macros for the Back / Skip / "finish later" buttons).
   - `web/templates/base.html` — the `#onboarding-modal` dialog shell, the auto-open script (`show_onboarding`, dashboard only), and all `.onb-*` styling.
@@ -71,7 +71,7 @@ Navigation on every step:
 ## Known limitations
 
 - **Single-user / self-hosted only.** Like the rest of the app (`app_settings` id=1, one Garmin token slot), the wizard assumes one runner per install. Multi-tenant hosting would need accounts + per-user isolation first — out of scope by design.
-- **Translated for `en` + `nl` only.** All wizard strings have `nl` entries in [i18n.py](../running_coach/i18n.py); any further locale falls back to the English source (see [language.md](language.md)). Note the back button uses the distinct key `"← Back"` so it doesn't collide with the body diagram's `"Back"` ("Achter").
+- **Translated for `en` + `nl` only.** All wizard strings have `nl` entries in [i18n.py](../runsphera/i18n.py); any further locale falls back to the English source (see [language.md](language.md)). Note the back button uses the distinct key `"← Back"` so it doesn't collide with the body diagram's `"Back"` ("Achter").
 - **No metric/imperial choice.** The app is metric (km) end-to-end; a units toggle was deliberately deferred (it's a whole feature, not a wizard field). See the roadmap.
 - **The wizard never creates a plan itself** — by design. Plan generation is a flagship feature and lives on `/plans/new`; the finale hands off there. Reaching the finale marks onboarding complete whether or not the runner actually builds a plan, so a runner who bails on `/plans/new` won't be re-nagged (the Plans page has its own create affordances).
 - Closing via ×/backdrop/ESC is "not now" (reopens while pending), distinct from "I'll finish later" (dismisses). This is deliberate but subtle.

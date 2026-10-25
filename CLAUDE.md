@@ -23,13 +23,13 @@ Coverage is deliberately partial: plan engines, scoring, matching and nutrition 
 Run the application:
 
 ```powershell
-.venv\Scripts\python.exe -m running_coach.web
+.venv\Scripts\python.exe -m runsphera.web
 ```
 
 This serves the dashboard at `http://localhost:8000`.
 
 ```powershell
-.venv\Scripts\python.exe -m running_coach.desktop
+.venv\Scripts\python.exe -m runsphera.desktop
 ```
 
 This opens the native window (pywebview over Edge WebView2), which is how the runner actually launches it — from the RunSphera shortcut that `install.cmd` creates.
@@ -37,7 +37,7 @@ This opens the native window (pywebview over Edge WebView2), which is how the ru
 For development with auto-reload:
 
 ```powershell
-.venv\Scripts\uvicorn.exe running_coach.web.app:app --reload --port 8000
+.venv\Scripts\uvicorn.exe runsphera.web.app:app --reload --port 8000
 ```
 
 ## Essential documentation
@@ -60,7 +60,7 @@ Read the documentation relevant to the task before changing behavior. A line in 
 
 ## 1. Rules decide; the LLM only speaks
 
-Every verdict — GO/CAUTION/EASY/REST, the plan itself, the execution score, race readiness, fuel targets, the daily tip — is deterministic Python. `running_coach/llm/` receives a decision that has already been made and phrases it.
+Every verdict — GO/CAUTION/EASY/REST, the plan itself, the execution score, race readiness, fuel targets, the daily tip — is deterministic Python. `runsphera/llm/` receives a decision that has already been made and phrases it.
 
 The LLM never chooses training load, never overrides a rule, and its output is never parsed back into application state.
 

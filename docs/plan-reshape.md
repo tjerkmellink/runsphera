@@ -19,10 +19,10 @@ Clicking **Reshape future weeks** validates the picks (a wrong day count shows i
 
 ## How it works (implementation)
 
-- `running_coach/plans/service.py` — `reshape_plan(conn, client, plan_id, *, race_date, days_per_week, long_run_day, workout_days, today_iso)`.
-- `running_coach/web/app.py` — `POST /plans/{plan_id}/reshape`; `GET /plans/{plan_id}/edit` now passes `methodology_info` + parsed `plan_workout_days` to the modal.
-- `running_coach/web/templates/_plan_settings_modal.html` — the form (replaces the Tier 2c/d stub).
-- `running_coach/web/templates/plans.html` — `saved=reshaped` / `reshape_error` banners.
+- `runsphera/plans/service.py` — `reshape_plan(conn, client, plan_id, *, race_date, days_per_week, long_run_day, workout_days, today_iso)`.
+- `runsphera/web/app.py` — `POST /plans/{plan_id}/reshape`; `GET /plans/{plan_id}/edit` now passes `methodology_info` + parsed `plan_workout_days` to the modal.
+- `runsphera/web/templates/_plan_settings_modal.html` — the form (replaces the Tier 2c/d stub).
+- `runsphera/web/templates/plans.html` — `saved=reshaped` / `reshape_error` banners.
 
 ### Regenerate + splice
 
@@ -49,7 +49,7 @@ None. The section appears for every plan; the day pickers only for flexible-sche
 
 Automated: `.venv/Scripts/python.exe tests/test_plan_reshape.py` (8 tests: day moves, completed-row preservation, race move, Garmin cleanup, Pfitzinger re-anchor, far-race guard, validation rejections).
 
-Manual (safe to do on a scratch DB: `RUNNING_COACH_DB=/tmp/x.db uvicorn running_coach.web.app:app`):
+Manual (safe to do on a scratch DB: `RUNNING_COACH_DB=/tmp/x.db uvicorn runsphera.web.app:app`):
 
 1. Create a Daniels plan, open **Edit plan** → Schedule & race date shows the current schedule pre-filled.
 2. Change training days and move the race a week; confirm. The banner reports N workouts rebuilt; week cards show the new day pattern; the race lands on the new date; the hero line ("X days/week, long run on …") matches.

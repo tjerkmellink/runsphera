@@ -31,16 +31,16 @@ Hover the pill for a tooltip: `"3 done · 1 missed · 0 upcoming"`.
 
 ### Modules
 
-- [running_coach/plans/service.py](../running_coach/plans/service.py) — `week_adherence(week, today_iso)`. Pure function: takes a week dict (already populated with workouts by `get_plan_weeks`) and today's ISO date string, returns `{planned, done, due, missed}`. No DB access — uses what's already loaded.
+- [runsphera/plans/service.py](../runsphera/plans/service.py) — `week_adherence(week, today_iso)`. Pure function: takes a week dict (already populated with workouts by `get_plan_weeks`) and today's ISO date string, returns `{planned, done, due, missed}`. No DB access — uses what's already loaded.
 
 ### Templates
 
-- [_week_card.html](../running_coach/web/templates/_week_card.html) — calls `week_adherence(week, today_iso)` and renders the pill when `adh.due > 0`.
-- [base.html](../running_coach/web/templates/base.html) — CSS for the `.week-adherence` pill + the three state classes (`.adh-complete`, `.adh-on-track`, `.adh-behind`).
+- [_week_card.html](../runsphera/web/templates/_week_card.html) — calls `week_adherence(week, today_iso)` and renders the pill when `adh.due > 0`.
+- [base.html](../runsphera/web/templates/base.html) — CSS for the `.week-adherence` pill + the three state classes (`.adh-complete`, `.adh-on-track`, `.adh-behind`).
 
 ### Jinja global
 
-`week_adherence` is registered as a Jinja global in [app.py](../running_coach/web/app.py) alongside `week_has_pushable` and `workout_status`. Templates can call it without explicit passing.
+`week_adherence` is registered as a Jinja global in [app.py](../runsphera/web/app.py) alongside `week_has_pushable` and `workout_status`. Templates can call it without explicit passing.
 
 ### Definitions
 
@@ -64,7 +64,7 @@ The display logic:
 
 ### Where the `done` flag actually comes from
 
-`actual_activity_id` is set by [plans/matcher.py](../running_coach/plans/matcher.py) on every Garmin sync. It looks at completed running activities and tries to match each to a planned workout based on `planned_date` and workout shape. Re-runnable manually via the "Re-match" button on the plan detail page.
+`actual_activity_id` is set by [plans/matcher.py](../runsphera/plans/matcher.py) on every Garmin sync. It looks at completed running activities and tries to match each to a planned workout based on `planned_date` and workout shape. Re-runnable manually via the "Re-match" button on the plan detail page.
 
 ## Configuration
 

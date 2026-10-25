@@ -21,9 +21,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans.daniels import DanielsVDOT, _paces_for_vdot  # noqa: E402
-from running_coach.plans.methodology import PlanParams  # noqa: E402
-from running_coach.plans.service import _zone_for_workout  # noqa: E402
+from runsphera.plans.daniels import DanielsVDOT, _paces_for_vdot  # noqa: E402
+from runsphera.plans.methodology import PlanParams  # noqa: E402
+from runsphera.plans.service import _zone_for_workout  # noqa: E402
 
 
 def _params(goal: str = "5k") -> PlanParams:

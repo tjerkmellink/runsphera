@@ -19,12 +19,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans.daniels import (  # noqa: E402
+from runsphera.plans.daniels import (  # noqa: E402
     DanielsVDOT,
     _paces_for_vdot,
     _weekly_km_for_week,
 )
-from running_coach.plans.methodology import PlanParams  # noqa: E402
+from runsphera.plans.methodology import PlanParams  # noqa: E402
 
 
 def _params(race_date: date | None = None) -> PlanParams:

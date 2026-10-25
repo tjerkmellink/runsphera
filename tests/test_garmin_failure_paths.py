@@ -18,8 +18,8 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from running_coach.db import connect  # noqa: E402
-from running_coach.plans import service as plan_service  # noqa: E402
+from runsphera.db import connect  # noqa: E402
+from runsphera.plans import service as plan_service  # noqa: E402
 
 
 # ── doubles ──────────────────────────────────────────────────────────────
@@ -196,7 +196,7 @@ def test_failed_schedule_does_not_mark_session_pushed():
     it here made the UI report "Pushed to your watch." for a session that
     never arrived.
     """
-    from running_coach.strength import garmin_push
+    from runsphera.strength import garmin_push
 
     conn = _db()
     session_id = _strength_session(conn)
@@ -211,7 +211,7 @@ def test_failed_schedule_does_not_mark_session_pushed():
 
 def test_failed_schedule_still_records_the_uploaded_id():
     """Keeping the id means a retry replaces the copy instead of duplicating."""
-    from running_coach.strength import garmin_push
+    from runsphera.strength import garmin_push
 
     conn = _db()
     session_id = _strength_session(conn)
@@ -223,7 +223,7 @@ def test_failed_schedule_still_records_the_uploaded_id():
 
 
 def test_successful_push_marks_session_pushed():
-    from running_coach.strength import garmin_push
+    from runsphera.strength import garmin_push
 
     conn = _db()
     session_id = _strength_session(conn)
@@ -427,7 +427,7 @@ def _pushed_strength_session(conn):
 def test_unpush_keeps_state_when_delete_fails():
     """It returned True and cleared state, so the UI said 'Removed from your
     watch.' for a session still on the watch."""
-    from running_coach.strength import garmin_push
+    from runsphera.strength import garmin_push
 
     conn = _db()
     session_id = _pushed_strength_session(conn)
@@ -441,7 +441,7 @@ def test_unpush_keeps_state_when_delete_fails():
 
 
 def test_unpush_clears_state_on_confirmed_delete():
-    from running_coach.strength import garmin_push
+    from runsphera.strength import garmin_push
 
     conn = _db()
     session_id = _pushed_strength_session(conn)
@@ -456,7 +456,7 @@ def test_unpush_clears_state_on_confirmed_delete():
 
 def test_unpush_without_a_client_keeps_state():
     """No auth means nothing was deleted — never report success."""
-    from running_coach.strength import garmin_push
+    from runsphera.strength import garmin_push
 
     conn = _db()
     session_id = _pushed_strength_session(conn)
@@ -467,7 +467,7 @@ def test_unpush_without_a_client_keeps_state():
 
 def test_push_refuses_when_the_prior_copy_cannot_be_removed():
     """Better a loud failure than two copies of the same session on one day."""
-    from running_coach.strength import garmin_push
+    from runsphera.strength import garmin_push
 
     conn = _db()
     session_id = _pushed_strength_session(conn)
@@ -482,7 +482,7 @@ def test_push_refuses_when_the_prior_copy_cannot_be_removed():
 
 
 def test_push_replaces_the_prior_copy_when_delete_succeeds():
-    from running_coach.strength import garmin_push
+    from runsphera.strength import garmin_push
 
     conn = _db()
     session_id = _pushed_strength_session(conn)
@@ -551,7 +551,7 @@ def test_a_stranded_push_is_still_retried_not_skipped():
 # ── finding 1: the unpush route must not claim success ───────────────────
 
 def test_unpush_outcome_confirms_only_a_real_removal():
-    from running_coach.web.app import unpush_outcome
+    from runsphera.web.app import unpush_outcome
 
     key, _ = unpush_outcome(removed=True, error=None, still_pushed=False)
     assert key == "Removed from your watch."
@@ -559,14 +559,14 @@ def test_unpush_outcome_confirms_only_a_real_removal():
 
 def test_unpush_outcome_reports_a_garmin_refusal():
     """unpush_session returned False with the id still set."""
-    from running_coach.web.app import unpush_outcome
+    from runsphera.web.app import unpush_outcome
 
     key, _ = unpush_outcome(removed=False, error=None, still_pushed=True)
     assert "still on your watch" in key
 
 
 def test_unpush_outcome_reports_an_auth_failure():
-    from running_coach.web.app import unpush_outcome
+    from runsphera.web.app import unpush_outcome
 
     key, params = unpush_outcome(
         removed=False, error="Garmin isn't connected", still_pushed=True
@@ -577,7 +577,7 @@ def test_unpush_outcome_reports_an_auth_failure():
 
 def test_unpush_outcome_never_claims_removal_when_still_pushed():
     """The route hard-coded success for all four cases; three were wrong."""
-    from running_coach.web.app import unpush_outcome
+    from runsphera.web.app import unpush_outcome
 
     for error in (None, "boom"):
         key, _ = unpush_outcome(removed=False, error=error, still_pushed=True)
@@ -585,7 +585,7 @@ def test_unpush_outcome_never_claims_removal_when_still_pushed():
 
 
 def test_unpush_outcome_handles_a_session_that_was_never_pushed():
-    from running_coach.web.app import unpush_outcome
+    from runsphera.web.app import unpush_outcome
 
     key, _ = unpush_outcome(removed=False, error=None, still_pushed=False)
     assert key == "That session wasn't on your watch."

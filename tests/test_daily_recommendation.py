@@ -1,4 +1,4 @@
-"""Tests for running_coach.plans.coach.daily_recommendation — the readiness /
+"""Tests for runsphera.plans.coach.daily_recommendation — the readiness /
 ACWR rules engine behind the dashboard headline.
 
 The case worth guarding hardest is DONE: once today's session is matched to an
@@ -19,7 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans import coach as plan_coach  # noqa: E402
+from runsphera.plans import coach as plan_coach  # noqa: E402
 
 
 def _rec(workout: dict | None, readiness: dict | None, status: dict | None) -> dict | None:

@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block headline %}RunSphera{% endblock %}
+{% block subhead %}{% endblock %}
+
+{% block content %}
+<style>
+    .fuel-day-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; margin: 0.4rem 0 1.6rem; }
+    @media (max-width: 720px) { .fuel-day-strip { grid-template-columns: repeat(4, 1fr); } }
+    .fuel-day-strip .day {
+        display: flex; flex-direction: column; gap: 0.15rem;
+        padding: 0.6rem 0.5rem; min-height: 5.4rem;
+        border: 1px solid var(--line, #e2e0db); border-radius: 10px;
+        background: var(--paper-alt, #f3f1ec); color: inherit; text-decoration: none;
+        transition: border-color .12s, background .12s;
+    }
+    .fuel-day-strip .day:hover { border-color: var(--muted); }
+    .fuel-day-strip .day.selected { border-color: var(--accent); background: var(--paper, #fff); box-shadow: inset 0 0 0 1px var(--accent); }
+    .fuel-day-strip .day .dow { font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+    .fuel-day-strip .day.selected .dow { color: var(--accent); font-weight: 700; }
+    .fuel-day-strip .day .dnum { font-size: 1.15rem; font-weight: 700; line-height: 1; }
+    .fuel-day-strip .day .dtype { font-size: 0.72rem; color: var(--muted); margin-top: auto; line-height: 1.2; }
+    .fuel-day-strip .day .ddist { font-size: 0.72rem; color: var(--text); font-weight: 600; }
+    .fuel-day-strip .day .today-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-left: 0.3rem; vertical-align: middle; }
+    .fuel-workoutline { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+    .fuel-workoutline .wk { font-size: 1.05rem; font-weight: 600; }
+    .fuel-workoutline .wx { color: var(--muted); }
+
+    .fuel-macrogrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; }
+    @media (max-width: 640px) { .fuel-macrogrid { grid-template-columns: repeat(2, 1fr); } }
+    .fuel-macro .sub { color: var(--muted); font-size: 0.8rem; margin-top: 0.15rem; }
+    .fuel-macro .bar { height: 6px; border-radius: 3px; background: var(--accent); opacity: 0.85; margin-top: 0.4rem; }
+    .fuel-energy-note { color: var(--muted); font-size: 0.85rem; margin-top: 0.9rem; }
+
+    .fuel-meals { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    @media (max-width: 640px) { .fuel-meals { grid-template-columns: 1fr; } }
+    .fuel-meal .slot { font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+    .fuel-meal h3 { margin: 0.15rem 0 0.6rem; font-size: 1.05rem; }
+    .fuel-meal .ingredients { list-style: none; padding: 0; margin: 0 0 0.6rem; }
+    .fuel-meal .ingredients li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.2rem 0; border-bottom: 1px dashed var(--line, #e2e0db); font-size: 0.9rem; }
+    .fuel-meal .ingredients li:last-child { border-bottom: none; }
+    .fuel-meal .ingredients li .g { color: var(--muted); white-space: nowrap; }
+    .fuel-meal .macros { font-size: 0.8rem; color: var(--muted); margin: 0; }
+    .fuel-meal .macros b { color: var(--text); }
+    .fuel-meals-foot { color: var(--muted); font-size: 0.85rem; margin-top: 0.9rem; }
+
+    .fuel-run-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    @media (max-width: 640px) { .fuel-run-grid { grid-template-columns: 1fr; } }
+    .fuel-run-col h4 { margin: 0 0 0.3rem; font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+    .fuel-run-col p { margin: 0.15rem 0; }
+
+    .fuel-hydration .big { font-size: 1.8rem; font-weight: 700; }
+    .fuel-hydration .parts { color: var(--muted); margin-top: 0.3rem; }
+
+    .fuel-week-bars { display: flex; align-items: flex-end; gap: 0.5rem; height: 90px; margin-top: 0.6rem; }
+    .fuel-week-bars .col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+    .fuel-week-bars .col .b { width: 70%; min-height: 4px; background: var(--accent); border-radius: 3px 3px 0 0; opacity: 0.55; }
+    .fuel-week-bars .col.today .b { opacity: 1; }
+    .fuel-week-bars .col .lbl { font-size: 0.65rem; color: var(--muted); margin-top: 0.3rem; text-align: center; }
+    .fuel-week-bars .col.today .lbl { color: var(--text); font-weight: 600; }
+</style>
+
+<section class="tp-hero">
+    <p class="tp-eyebrow">{{ t("// Fuel · Eat for the work") }}</p>
+    <h1 class="tp-display">{{ t("Fuel") }}.</h1>
+    <p class="tp-lede">
+        {{ t("Calorie, carbohydrate and hydration targets that follow your plan — more on long-run days, less on rest days. Rules-based, computed on this machine.") }}
+    </p>
+</section>
+
+{% if not fuel %}
+{# No body profile yet — gate the whole feature behind Settings. #}
+<div class="card" style="text-align: center; padding: 2.5rem 1.5rem;">
+    <h3>{{ t("Tell us about your body first.") }}</h3>
+    <p style="color: var(--muted); max-width: 36rem; margin: 0.5rem auto 1.2rem;">
+        {{ t("Fuel needs your weight (and ideally height, birth year and sex) to turn training load into eat-and-drink targets. It's two minutes in Settings and never leaves this laptop.") }}
+    </p>
+    <a href="/settings#fuel" class="tp-btn primary">{{ t("Set up body profile") }}</a>
+</div>
+{% else %}
+
+{% set tg = fuel.targets %}
+{% set _days = [t("Mon"), t("Tue"), t("Wed"), t("Thu"), t("Fri"), t("Sat"), t("Sun")] %}
+
+{# ── Day selector — today + next 6, full width ────────────────── #}
+{% if day_strip %}
+<div class="fuel-day-strip">
+    {% for d in day_strip %}
+    <a href="/fuel?day={{ d.date }}" class="day{% if d.is_selected %} selected{% endif %}">
+        <span class="dow">{{ _days[d.weekday] }}{% if d.is_today %}<span class="today-dot" title="{{ t('Today') }}"></span>{% endif %}</span>
+        <span class="dnum">{{ d.day_num }}</span>
+        {% if d.distance_km %}
+        <span class="ddist">{{ "%.0f"|format(d.distance_km) }} km</span>
+        {% endif %}
+        <span class="dtype">{{ t(d.day_type_label) }}</span>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{# ── Workout context line ─────────────────────────────────────── #}
+<div class="fuel-workoutline">
+    <div>
+        {% if fuel.workout and fuel.workout.workout_type not in ('rest',) %}
+        <span class="wk">{{ fuel.workout.title or t(tg.day_type_label|capitalize) }}</span>
+        <span class="wx">· {% if fuel.workout.target_distance_km %}{{ "%.1f"|format(fuel.workout.target_distance_km) }} km{% endif %}</span>
+        {% else %}
+        <span class="wk">{{ t("Rest day") }}</span>
+        <span class="wx">· {{ t(tg.day_type_label) }}</span>
+        {% endif %}
+    </div>
+    {% if fuel.weather and fuel.weather.current_temp_c is not none %}
+    <div class="wx">{{ "%.0f"|format(fuel.weather.current_temp_c) }} °C</div>
+    {% endif %}
+</div>
+
+{# ── Energy + macros ──────────────────────────────────────────── #}
+<section style="margin-bottom: 1.6rem;">
+    <div class="tp-section-head">
+        <p class="tp-section-head-eyebrow">① {{ t("Energy & macros") }}</p>
+        <h2 class="tp-section-head-title">{{ t(tg.day_type_label|capitalize) }}</h2>
+    </div>
+    <div class="card">
+        <div class="fuel-macrogrid">
+            <div class="fuel-macro">
+                <p class="tp-flagship-stat-label">{{ t("Energy target") }}</p>
+                <p class="tp-flagship-stat-value">{% if tg.energy_kcal %}{{ "{:,}".format(tg.energy_kcal) }}{% else %}—{% endif %}<span class="tp-flagship-stat-unit">kcal</span></p>
+                {% if tg.energy_kcal %}
+                <p class="sub">{{ t("BMR") }} {{ "{:,}".format(tg.daily_life_kcal) }} + {{ t("run") }} {{ "{:,}".format(tg.run_kcal) }}{% if tg.run_kcal_measured %} ✓{% endif %}</p>
+                {% endif %}
+            </div>
+            <div class="fuel-macro">
+                <p class="tp-flagship-stat-label">{{ t("Carbs") }}</p>
+                <p class="tp-flagship-stat-value">{{ "{:,}".format(tg.carbs_g) }}<span class="tp-flagship-stat-unit">g</span></p>
+                <p class="sub">{{ tg.carbs_g_per_kg_lo }}–{{ tg.carbs_g_per_kg_hi }} g/kg</p>
+                <div class="bar" style="width: 100%;"></div>
+            </div>
+            <div class="fuel-macro">
+                <p class="tp-flagship-stat-label">{{ t("Protein") }}</p>
+                <p class="tp-flagship-stat-value">{{ "{:,}".format(tg.protein_g) }}<span class="tp-flagship-stat-unit">g</span></p>
+                <p class="sub">{{ tg.protein_g_per_kg }} g/kg</p>
+                <div class="bar" style="width: 60%;"></div>
+            </div>
+            <div class="fuel-macro">
+                <p class="tp-flagship-stat-label">{{ t("Fat") }}</p>
+                <p class="tp-flagship-stat-value">{{ "{:,}".format(tg.fat_g) }}<span class="tp-flagship-stat-unit">g</span></p>
+                <p class="sub">~{{ tg.fat_g_per_kg }} g/kg</p>
+                <div class="bar" style="width: 45%;"></div>
+            </div>
+        </div>
+        {% if not tg.energy_kcal %}
+        <p class="fuel-energy-note">{{ t("Add your height, birth year and sex in Settings for a calorie target — carbs and protein are already personalised by weight.") }}</p>
+        {% elif tg.bmr_source == 'garmin' %}
+        <p class="fuel-energy-note">{{ t("BMR from Garmin (add height, birth year & sex for the formula-based estimate).") }}</p>
+        {% endif %}
+    </div>
+</section>
+
+{# ── Meals — concrete dishes scaled to the day's carb target ───── #}
+{% if fuel.meals and fuel.meals.meals %}
+{% set mp = fuel.meals %}
+{% set _slot_labels = {'breakfast': t('Breakfast'), 'lunch': t('Lunch'), 'dinner': t('Dinner'), 'snack': t('Snack')} %}
+<section style="margin-bottom: 1.6rem;">
+    <div class="tp-section-head">
+        <p class="tp-section-head-eyebrow">② {{ t("Meals") }}</p>
+        <h2 class="tp-section-head-title">{{ t("What to eat") }}</h2>
+    </div>
+    <div class="fuel-meals">
+        {% for m in mp.meals %}
+        <div class="card fuel-meal">
+            <span class="slot">{{ _slot_labels[m.slot] }} · {{ m.carbs_g }} g {{ t("carbs") }}</span>
+            <h3>{{ m.name }}</h3>
+            <ul class="ingredients">
+                {% for ing in m.ingredients %}
+                <li><span>{{ ing.name }}</span><span class="g">{{ ing.grams }} g</span></li>
+                {% endfor %}
+            </ul>
+            <p class="macros"><b>{{ m.carbs_g }}</b> g {{ t("carbs") }} · <b>{{ m.protein_g }}</b> g {{ t("protein") }} · <b>{{ m.fat_g }}</b> g {{ t("fat") }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    <p class="fuel-meals-foot">
+        {{ t("These meals ≈ {a} g of your {b} g carb target", a=mp.assembled.carbs_g, b=mp.target_carbs_g) }}{% if mp.during_run_carbs_g %} · {{ t("plus {n} g during the run", n=mp.during_run_carbs_g) }}{% endif %}.
+        {{ t("Top up with extra snacks — portions are a starting point.") }}
+    </p>
+</section>
+{% endif %}
+
+{# ── Fuel the run (only for runs that need intra-run carbs) ────── #}
+{% if fuel.fuel_run %}
+{% set fr = fuel.fuel_run %}
+<section style="margin-bottom: 1.6rem;">
+    <div class="tp-section-head">
+        <p class="tp-section-head-eyebrow">③ {{ t("Fuel the run") }}</p>
+        <h2 class="tp-section-head-title">{{ t("~{n} min effort", n=fr.minutes) }}</h2>
+    </div>
+    <div class="card">
+        <div class="fuel-run-grid">
+            <div class="fuel-run-col">
+                <h4>{{ t("Before") }}</h4>
+                <p>{{ fr.before_carb_g_lo }}–{{ fr.before_carb_g_hi }} g {{ t("carbs") }}</p>
+                <p class="wx" style="color: var(--muted);">{{ t("2–3 h before") }}</p>
+            </div>
+            <div class="fuel-run-col">
+                <h4>{{ t("During") }}</h4>
+                <p>{{ fr.during_carb_per_hr_lo }}–{{ fr.during_carb_per_hr_hi }} g {{ t("carbs / hr") }}</p>
+                <p class="wx" style="color: var(--muted);">{{ t("≈ 1 gel every {n} min", n=fr.gel_interval_min) }}</p>
+                <p class="wx" style="color: var(--muted);">{{ fr.during_fluid_ml_per_hr_lo }}–{{ fr.during_fluid_ml_per_hr_hi }} ml {{ t("fluid / hr") }}</p>
+            </div>
+            <div class="fuel-run-col">
+                <h4>{{ t("After") }}</h4>
+                <p>{{ fr.after_carb_g }} g {{ t("carbs") }} + {{ fr.after_protein_g_lo }}–{{ fr.after_protein_g_hi }} g {{ t("protein") }}</p>
+                <p class="wx" style="color: var(--muted);">{{ t("within 30–60 min") }}</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{# ── Hydration ────────────────────────────────────────────────── #}
+{% set hy = fuel.hydration %}
+<section style="margin-bottom: 1.6rem;">
+    <div class="tp-section-head">
+        <p class="tp-section-head-eyebrow">{% if fuel.fuel_run %}④{% else %}③{% endif %} {{ t("Hydration today") }}</p>
+    </div>
+    <div class="card fuel-hydration">
+        <span class="big">~{{ hy.total_l }} L</span>
+        <div class="parts">
+            {{ t("Baseline") }} {{ "%.1f"|format(hy.baseline_ml / 1000) }} L
+            {% if hy.run_ml %} + {{ t("run") }} ~{{ "%.1f"|format(hy.run_ml / 1000) }} L{% endif %}
+            {% if hy.heat_ml %} + {{ t("warm-day bump") }} {{ "%.1f"|format(hy.heat_ml / 1000) }} L{% endif %}
+        </div>
+    </div>
+</section>
+
+{# ── Weekly carb-load strip ───────────────────────────────────── #}
+{% if strip %}
+<section style="margin-bottom: 1.6rem;">
+    <div class="tp-section-head">
+        <p class="tp-section-head-eyebrow">{{ t("Week {n} of {total}", n=strip.week_number, total=strip.total_weeks) }} · {{ strip.week_phase }}</p>
+        <h2 class="tp-section-head-title">{{ t("Carb load by day") }}</h2>
+    </div>
+    <div class="card">
+        <div class="fuel-week-bars">
+            {% for b in strip.bars %}
+            <div class="col {% if b.is_today %}today{% endif %}" title="{{ b.workout_type }} · {{ b.carbs_g }} g">
+                <div class="b" style="height: {{ b.height_pct }}%;"></div>
+                <span class="lbl">{{ _days[b.day_of_week] if b.day_of_week < 7 else '' }}<br>{{ b.carbs_g }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% endif %}
+{% endblock %}

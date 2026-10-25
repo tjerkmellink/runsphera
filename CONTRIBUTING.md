@@ -47,8 +47,8 @@ roadmap.
 Run it:
 
 ```powershell
-.venv\Scripts\python.exe -m running_coach.web          # http://localhost:8000
-.venv\Scripts\uvicorn.exe running_coach.web.app:app --reload --port 8000
+.venv\Scripts\python.exe -m runsphera.web          # http://localhost:8000
+.venv\Scripts\uvicorn.exe runsphera.web.app:app --reload --port 8000
 ```
 
 Point `RUNNING_COACH_DB` at a scratch file while developing so you never write

@@ -36,7 +36,7 @@ The *Steps* strip below it still gives the same session as scannable chips. The 
 
 ## How it works (implementation)
 
-- **Modules**: `running_coach/plans/narrative.py` — the whole renderer. `narrate(workout, locale) -> list[str]` returns display paragraphs. `running_coach/plans/service.py` gained one public alias, `zone_for_workout` (see below).
+- **Modules**: `runsphera/plans/narrative.py` — the whole renderer. `narrate(workout, locale) -> list[str]` returns display paragraphs. `runsphera/plans/service.py` gained one public alias, `zone_for_workout` (see below).
 - **Templates**: `_plan_workout_modal.html` — the `.tp-pw-desc` block loops the paragraphs into `<p>` elements.
 - **Routes**: none added. `GET /plan-workouts/{id}` renders the modal as before.
 - **DB**: nothing added. Reads existing `plan_workouts` columns only.
@@ -73,7 +73,7 @@ The closing "why" paragraph is a lookup keyed by `(workout_type, zone)`. Zone co
 
 ## Configuration
 
-Nothing to configure. Language follows the existing UI language setting (Settings → Language); translations live in the *Workout narrative* section of `running_coach/i18n.py`.
+Nothing to configure. Language follows the existing UI language setting (Settings → Language); translations live in the *Workout narrative* section of `runsphera/i18n.py`.
 
 ## Known limitations
 

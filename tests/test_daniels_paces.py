@@ -20,10 +20,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Make `running_coach` importable when running this script directly.
+# Make `runsphera` importable when running this script directly.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans.daniels import _VDOT_PACES, _paces_for_vdot  # noqa: E402
+from runsphera.plans.daniels import _VDOT_PACES, _paces_for_vdot  # noqa: E402
 
 
 # ──────────────────────────────────────────────────────────────────────────

@@ -19,7 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans.service import (  # noqa: E402
+from runsphera.plans.service import (  # noqa: E402
     _derive_title,
     _refresh_description_paces,
     _zone_for_workout,
@@ -27,7 +27,7 @@ from running_coach.plans.service import (  # noqa: E402
 
 
 # VDOT 43 paces (a mid-range fixture) — used as ground truth in
-# these tests. Sourced from running_coach/plans/daniels.py at 2026-05-29.
+# these tests. Sourced from runsphera/plans/daniels.py at 2026-05-29.
 PACES_43 = {"E": 383, "M": 323, "T": 299, "I": 277, "R": 259}
 # Pre-bugfix VDOT-50 paces (what stale descriptions tend to carry).
 PACES_50 = {"E": 350, "M": 290, "T": 270, "I": 250, "R": 232}
@@ -211,7 +211,7 @@ def test_derive_title_preserves_tempo_vocabulary() -> None:
 def test_require_vdot_paces_guard() -> None:
     """Effort-based methodologies refuse pace recalibration; pace-based and
     unknown/legacy ids pass through (the historical behaviour)."""
-    from running_coach.plans.service import _require_vdot_paces
+    from runsphera.plans.service import _require_vdot_paces
 
     for ok in ("daniels", "higdon", "pfitzinger", "some_legacy_id", None, ""):
         _require_vdot_paces(ok)  # must not raise

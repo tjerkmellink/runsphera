@@ -1,4 +1,4 @@
-# Personal Running Coach — Documentation
+# RunSphera — Documentation
 
 The project [README](../README.md) is the entry point. These pages go deeper, one feature at a time. Each follows the same skeleton ([_template.md](_template.md)) so you can always find purpose, implementation, configuration, limitations, and verification in the same spots.
 
@@ -9,7 +9,7 @@ The project [README](../README.md) is the entry point. These pages go deeper, on
 - **Verifying after a refactor?** Each page has a "Verification" section with a short manual smoke test.
 - **Adding a new feature?** Copy [_template.md](_template.md) → `docs/<feature>.md`, write it as you build, link it from this index.
 
-Working on the code — human or agent — starts with [architecture.md](architecture.md): the load-bearing decisions and the reasoning behind them.
+Working on the code — human or agent — also means [CLAUDE.md](../CLAUDE.md) (architecture summary, operational gotchas, development workflow) and [AGENTS.md](../AGENTS.md) (code review standards).
 
 ## Cross-cutting
 
@@ -22,6 +22,7 @@ Working on the code — human or agent — starts with [architecture.md](archite
 
 | Page | What it covers |
 |---|---|
+| [roadmap.md](roadmap.md) | Done · bugs · committed next-up · themed backlog · parked. Living priority list — update as items ship or get re-scoped. |
 | [dashboard.md](dashboard.md) | The `/` home surface — render order, the route's data contract, theme routing, and the widgets that live only here (status tiles, charts, recent runs). Maps to every per-card feature doc. |
 | [onboarding.md](onboarding.md) | Getting-started wizard — the guided, skippable, resumable first-run flow (connect Garmin → sync → first plan → optional coach voice & location). Fresh-install auto-open vs upgrade suppression via the schema/migration default split. |
 | [llm-coach.md](llm-coach.md) | LLM-voiced daily banner on the dashboard. Prompt layering, caching, fallback behavior. |
@@ -65,6 +66,9 @@ Features that have been designed but not yet built. The brief captures the decis
 | Brief | What it covers |
 |---|---|
 | [post-marathon-recovery.md](post-marathon-recovery.md) | 28-day auto-generated recovery plan that picks up the day after the A-race marathon. Trigger rules, UI surfaces, per-day content, explanation layers, v1 minimum. **Now unblocked** — body-map (its hard dependency) shipped; sleep+HRV deferred to v1.1. |
+| the run-detail design brief | IA-redesign brief for the run-detail modal — complete numbered inventory of all 22 on-screen elements with data sources and visibility rules, the three usage moments, load-timing quirks, known ordering friction, and the specific ask: a more logical order of features. For Claude in design mode. |
+| the multi-device plan | Roadmap + integration brief for growing beyond Garmin to Samsung Galaxy Watch (and later Apple / Polar / Suunto / Oura). The two ingestion shapes (cloud pull vs on-device SDK push), what we borrow from Open Wearables (MIT), the field-by-field SDK→SQLite mapping, provider-identity schema changes, Garmin-only gaps, a 6-phase testable rollout (server-side fixtures first, phone last), and **workout delivery** (prescribe→device: the per-platform ladder — Garmin/Apple native push, Wear OS app, universal calendar + notification baseline). |
+| the mobile MVP brief | The concrete, phone-only-testable first slice: a fully-local Android app (Kotlin + Compose + Room + Health Connect, own repo) that reads Samsung/Health-Connect runs into an on-device DB and displays them. Data-gathering seed of the future mobile client; clean `domain.Run` / `RunRepository` seam so backend sync drops in later. Test ladder: emulator + Health Connect Toolbox → phone-GPS run → physical Watch 7 for VO2max fidelity. Target architecture: web + mobile on one backend, Python brain stays server-side. |
 
 ## Features without their own page yet
 

@@ -26,9 +26,9 @@ Every workout carries a target pace derived from your VDOT, a description, and (
 ## How it works (implementation)
 
 - **Modules**
-  - `running_coach/plans/pfitzinger.py` — the engine. `class Pfitzinger18_55(Methodology)` with `total_weeks()` (always 18) and `generate()`.
-  - `running_coach/plans/daniels.py` — reused for pace calibration and structure builders (`_paces_for_vdot`, `_tempo_structure`, `_interval_structure`, `_structure_duration_s`, formatters).
-  - `running_coach/plans/__init__.py` — registry entry (`available=True`, `force_goal="marathon"`).
+  - `runsphera/plans/pfitzinger.py` — the engine. `class Pfitzinger18_55(Methodology)` with `total_weeks()` (always 18) and `generate()`.
+  - `runsphera/plans/daniels.py` — reused for pace calibration and structure builders (`_paces_for_vdot`, `_tempo_structure`, `_interval_structure`, `_structure_duration_s`, formatters).
+  - `runsphera/plans/__init__.py` — registry entry (`available=True`, `force_goal="marathon"`).
 - **Templates / Routes / DB:** none new. Reuses the existing plan-creation form, plan-detail rendering, `plans` / `plan_workouts` tables, and all downstream machinery (adherence, recalibration, swap, Garmin push).
 - **External services:** none directly; workouts flow into the existing Garmin-push path unchanged.
 

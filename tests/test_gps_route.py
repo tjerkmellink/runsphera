@@ -20,8 +20,8 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach import gps_route  # noqa: E402
-from running_coach.db import connect  # noqa: E402
+from runsphera import gps_route  # noqa: E402
+from runsphera.db import connect  # noqa: E402
 
 
 def _fresh_conn():

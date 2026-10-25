@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Daily use of the app used to mean: open VS Code, run `python -m running_coach.web`, then open a browser at `localhost:8000`. Three steps and a lingering terminal. The desktop launcher collapses that to one click on a **RunSphera** shortcut. It wraps the existing local web app in a native OS window (Edge WebView2 on Windows 11) so RunSphera feels like a standalone application while the architecture underneath is unchanged.
+Daily use of the app used to mean: open VS Code, run `python -m runsphera.web`, then open a browser at `localhost:8000`. Three steps and a lingering terminal. The desktop launcher collapses that to one click on a **RunSphera** shortcut. It wraps the existing local web app in a native OS window (Edge WebView2 on Windows 11) so RunSphera feels like a standalone application while the architecture underneath is unchanged.
 
 Setup and daily launch are now split into two things:
 
@@ -21,21 +21,21 @@ Setup and daily launch are now split into two things:
 - **Close the window** to quit — the background server shuts down with it.
 - Everything inside the window is the normal app: sync, plans, diary, settings. First-run Garmin sign-in + MFA works inside the window just as it does in a browser.
 
-If you already have a server running (e.g. you ran `python -m running_coach.web` separately), the launcher detects the open port and just opens a window against that instance instead of starting a second server.
+If you already have a server running (e.g. you ran `python -m runsphera.web` separately), the launcher detects the open port and just opens a window against that instance instead of starting a second server.
 
 ## How it works (implementation)
 
 - **Modules**:
-  - `running_coach/desktop.py` — the launcher. Attaches real stdout/stderr (see "`pythonw` has no stdout" below), sets the Windows AppUserModelID, starts `uvicorn` in a daemon thread (unless `127.0.0.1:8000` is already serving), shows the splash immediately, polls `/healthz` until the app answers, then loads the dashboard (or the Retry screen on timeout). Signals `server.should_exit` on window close.
+  - `runsphera/desktop.py` — the launcher. Attaches real stdout/stderr (see "`pythonw` has no stdout" below), sets the Windows AppUserModelID, starts `uvicorn` in a daemon thread (unless `127.0.0.1:8000` is already serving), shows the splash immediately, polls `/healthz` until the app answers, then loads the dashboard (or the Retry screen on timeout). Signals `server.should_exit` on window close.
   - `install.cmd` — repo-root installer/repair batch file. Health-checks the environment, sets it up if needed, then runs `scripts/install_shortcut.ps1` and launches the app.
   - `scripts/install_shortcut.ps1` — authors the `RunSphera.lnk` shortcuts (repo root, Desktop, Start Menu) with the icon and AppUserModelID (PowerShell + inline C#, no extra deps).
-- **Brand assets** (`running_coach/assets/RunSphera.ico`, `running_coach/web/static/brand/*`) are generated from the `brand/` masters by `scripts/build_brand_assets.py`. Committed so a fresh install has them without rebuilding.
+- **Brand assets** (`runsphera/assets/RunSphera.ico`, `runsphera/web/static/brand/*`) are generated from the `brand/` masters by `scripts/build_brand_assets.py`. Committed so a fresh install has them without rebuilding.
 - **Self-bootstrapping**: `install.cmd` health-checks — `.venv\Scripts\pythonw.exe` must exist *and* `python -c "import fastapi, uvicorn, jinja2, webview"` must succeed. If either fails (fresh checkout, or a previous install died halfway), it sets the venv up. The import check makes it self-healing — a broken venv triggers a re-install when you re-run `install.cmd`, no marker files involved.
 - **Splash/retry**: the splash and error screens are self-contained HTML built in `desktop.py` (`_splash_html` / `_error_html`); the splash embeds the hero JPEGs as base64 data URIs so it needs no server. Retry is wired through a pywebview `js_api` bridge (`_Bridge.retry`).
-- **Readiness probe**: `GET /healthz` in `running_coach/web/app.py` — returns a bare `ok`, touching no DB and rendering no template. The launcher must be able to distinguish "still booting" from "never coming up", and `/` is useless for that: it takes 1.5–3s to render, so probing it with any sane per-request timeout reads a healthy server as a dead one.
+- **Readiness probe**: `GET /healthz` in `runsphera/web/app.py` — returns a bare `ok`, touching no DB and rendering no template. The launcher must be able to distinguish "still booting" from "never coming up", and `/` is useless for that: it takes 1.5–3s to render, so probing it with any sane per-request timeout reads a healthy server as a dead one.
 - **Routes / DB / templates**: one route added (`/healthz`); otherwise it serves the existing FastAPI app verbatim.
 
-Data flow: RunSphera shortcut → `pythonw -m running_coach.desktop` → uvicorn (background thread) + pywebview window showing the splash (main thread, blocks) → HTTP-ready → load dashboard → window close → `should_exit` → thread join.
+Data flow: RunSphera shortcut → `pythonw -m runsphera.desktop` → uvicorn (background thread) + pywebview window showing the splash (main thread, blocks) → HTTP-ready → load dashboard → window close → `should_exit` → thread join.
 
 ## `pythonw` has no stdout (the silent-failure trap)
 
@@ -75,13 +75,13 @@ The launcher originally waited a fixed 60s for the server, then 120s. **Both wer
 
 ## Startup cost
 
-Measured on this machine, launching `pythonw -m running_coach.desktop` with a timestamped trace:
+Measured on this machine, launching `pythonw -m runsphera.desktop` with a timestamped trace:
 
 | Step | Cold | Warm |
 | --- | --- | --- |
-| `import running_coach.desktop` (chiefly `import uvicorn`) | 35.9s | 0.6s |
+| `import runsphera.desktop` (chiefly `import uvicorn`) | 35.9s | 0.6s |
 | `import webview` | (in the same 35.9s) | 0.2s |
-| uvicorn thread up to answering `/healthz` (imports `running_coach.web.app`) | 69.8s | 4.1s |
+| uvicorn thread up to answering `/healthz` (imports `runsphera.web.app`) | 69.8s | 4.1s |
 | `GET /` (dashboard render) | ~2s | ~1.7s |
 | **Total to dashboard** | **~116s** | **~8s** |
 
@@ -89,7 +89,7 @@ Two things follow, and both are counter-intuitive:
 
 **The dashboard render is the cheap part.** It never exceeded ~3s. All the pain is in imports.
 
-**The imports are not slow — reading them off disk is.** Warm, the entire cost is under 1s for `uvicorn` + `webview` and ~4s for the app; `python -X importtime -c "import running_coach.web.app"` totals ~2.3s and attributes ~1.1s of that to `anthropic`, imported eagerly via `running_coach.llm.commentary`. The 30–70s cold penalty is the OS and antivirus reading thousands of small `.pyc`/`.dll` files out of `.venv`. That is why a launch that takes two minutes for the user takes six seconds when reproduced a minute later: the second run reads everything from the file cache.
+**The imports are not slow — reading them off disk is.** Warm, the entire cost is under 1s for `uvicorn` + `webview` and ~4s for the app; `python -X importtime -c "import runsphera.web.app"` totals ~2.3s and attributes ~1.1s of that to `anthropic`, imported eagerly via `runsphera.llm.commentary`. The 30–70s cold penalty is the OS and antivirus reading thousands of small `.pyc`/`.dll` files out of `.venv`. That is why a launch that takes two minutes for the user takes six seconds when reproduced a minute later: the second run reads everything from the file cache.
 
 So micro-optimising imports buys a second or two warm and barely dents the cold case. **Excluding the checkout (and the venv) from real-time antivirus scanning is by far the biggest available win.** Code-side, the module now starts the uvicorn thread *before* `import webview`, so those two independent cold-start costs overlap instead of running back to back; lazy-importing `anthropic` behind the first coach-commentary call is the remaining worthwhile trim.
 
@@ -101,10 +101,10 @@ The fix is the shortcut, which carries both the `RunSphera.ico` icon **and** `Sy
 
 ## Configuration
 
-- **Host/port**: constants `HOST` / `PORT` in `running_coach/desktop.py` (default `127.0.0.1:8000`).
+- **Host/port**: constants `HOST` / `PORT` in `runsphera/desktop.py` (default `127.0.0.1:8000`).
 - **Window size**: `width` / `height` / `min_size` in the `webview.create_window(...)` call.
 - **App identity**: `APP_ID` in `desktop.py` and `$AppId` in `install_shortcut.ps1` — keep them equal.
-- **Debug variant**: run `.venv\Scripts\python.exe -m running_coach.desktop` (note: `python`, not `pythonw`) to keep a console for tracebacks.
+- **Debug variant**: run `.venv\Scripts\python.exe -m runsphera.desktop` (note: `python`, not `pythonw`) to keep a console for tracebacks.
 
 ## Known limitations
 
@@ -121,10 +121,10 @@ The fix is the shortcut, which carries both the `RunSphera.ico` icon **and** `Sy
 
 0. Bootstrap path: rename `.venv` away, double-click `install.cmd` — a setup console appears, installs everything, creates shortcuts, and starts the app. Self-heal path: `pip uninstall -y fastapi` inside the venv, run `install.cmd` again — setup re-runs and repairs it.
 1. Ensure nothing is on port 8000, then launch the RunSphera shortcut. The splash appears immediately and a "RunSphera" window swaps to the dashboard within a few seconds (longer on a cold start).
-1a. Windowless-launch regression: with nothing on port 8000, run `Start-Process .venv\Scripts\pythonw.exe -ArgumentList "-m","running_coach.desktop"` — **no** output redirection, so `sys.stdout` is `None` as it is under the shortcut — then confirm `curl http://127.0.0.1:8000/healthz` returns `ok` and the process has a window. Launching via bash instead will *not* exercise this path.
+1a. Windowless-launch regression: with nothing on port 8000, run `Start-Process .venv\Scripts\pythonw.exe -ArgumentList "-m","runsphera.desktop"` — **no** output redirection, so `sys.stdout` is `None` as it is under the shortcut — then confirm `curl http://127.0.0.1:8000/healthz` returns `ok` and the process has a window. Launching via bash instead will *not* exercise this path.
 2. Close the window. Confirm no `python`/`pythonw` process is left listening on 8000 (`Get-NetTCPConnection -LocalPort 8000 -State Listen`).
 3. Taskbar: pin the Desktop shortcut, launch it — the pinned icon stays RunSphera (not the Python feather) and the running window merges into the pin.
-4. Attach path: start `python -m running_coach.web` manually, then launch the shortcut. It opens a window against the existing server without a port-clash error.
+4. Attach path: start `python -m runsphera.web` manually, then launch the shortcut. It opens a window against the existing server without a port-clash error.
 
 ## Future improvements
 

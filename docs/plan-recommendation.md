@@ -32,7 +32,7 @@ The Higdon tier is computed even when the badge lands elsewhere, so the tier pre
 
 ## How it works (implementation)
 
-- **Modules**: `running_coach/plans/recommend.py` (pure `recommend_plan(seed, can_run_10min, available) → Recommendation` — no DB access), `running_coach/settings.py` (`get/set_can_run_10min`, tri-state), `running_coach/db.py` (migration: `app_settings.can_run_10min INTEGER`, NULL = never asked).
+- **Modules**: `runsphera/plans/recommend.py` (pure `recommend_plan(seed, can_run_10min, available) → Recommendation` — no DB access), `runsphera/settings.py` (`get/set_can_run_10min`, tri-state), `runsphera/db.py` (migration: `app_settings.can_run_10min INTEGER`, NULL = never asked).
 - **Templates**: `plans_new.html` (strip + ribbon + reason + pre-checks for goal/methodology/variant, all server-rendered — the existing `applyLock()` JS needs no changes), `_onboarding.html` (fitness-step radio), `settings.html` (fitness card radio).
 - **Routes**: `GET /plans/new` and the error re-render compute `rec`; new `POST /plans/new/self-assessment` persists the strip's answer (plain 303 redirect — the strip only shows on a blank-slate form, so nothing is lost); `POST /onboarding/fitness` and `POST /settings/fitness` accept the optional radio.
 - **Seed**: `plan_service.get_plan_seed()` output is passed verbatim — the `*_source` fields ("garmin"/"manual"/"default") are what make "known" honest.

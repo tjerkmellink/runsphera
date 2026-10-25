@@ -35,7 +35,7 @@ def _fresh_db():
     fd, path = tempfile.mkstemp(suffix=".db")
     os.close(fd)
     os.environ["RUNNING_COACH_DB"] = path
-    from running_coach.db import connect
+    from runsphera.db import connect
     conn = connect()
     return conn, path
 
@@ -81,7 +81,7 @@ def test_rotation_walks_all_slugs_in_order():
     rotation slug in declaration order, then wrap. The rotation has 5
     slugs (everything in LIBRARY except recovery_mobility); this test
     seeds 6 rest days to exercise one full lap + a wrap."""
-    from running_coach.strength.library import ROTATION_SLUGS
+    from runsphera.strength.library import ROTATION_SLUGS
     n_rotation = len(ROTATION_SLUGS)
 
     conn, _ = _fresh_db()
@@ -94,7 +94,7 @@ def test_rotation_walks_all_slugs_in_order():
                 for i in range(n_rest + 1)]
     plan_id = _make_plan(conn, workouts)
 
-    from running_coach.strength import scheduler
+    from runsphera.strength import scheduler
     n = scheduler.assign_for_plan(conn, plan_id, today_iso=str(today))
 
     assigned = _assignments(conn, plan_id)
@@ -125,7 +125,7 @@ def test_recovery_overrides_after_quality():
     ]
     plan_id = _make_plan(conn, workouts)
 
-    from running_coach.strength import scheduler
+    from runsphera.strength import scheduler
     scheduler.assign_for_plan(conn, plan_id, today_iso=str(today))
 
     by_date = dict(_assignments(conn, plan_id))
@@ -145,7 +145,7 @@ def test_re_run_is_idempotent():
                  "easy" if i == 0 else "rest") for i in range(4)]
     plan_id = _make_plan(conn, workouts)
 
-    from running_coach.strength import scheduler
+    from runsphera.strength import scheduler
     scheduler.assign_for_plan(conn, plan_id, today_iso=str(today))
     first = _assignments(conn, plan_id)
 
@@ -165,7 +165,7 @@ def test_clear_future_keeps_past():
                  "easy" if i == 0 else "rest") for i in range(4)]
     plan_id = _make_plan(conn, workouts)
 
-    from running_coach.strength import scheduler, service
+    from runsphera.strength import scheduler, service
     scheduler.assign_for_plan(conn, plan_id, today_iso=str(today))
     assert len(_assignments(conn, plan_id)) == 3, "seed didn't write 3"
 
@@ -202,7 +202,7 @@ def test_clear_future_keeps_a_session_completed_today():
                  "easy" if i == 0 else "rest") for i in range(4)]
     plan_id = _make_plan(conn, workouts)
 
-    from running_coach.strength import scheduler, service
+    from runsphera.strength import scheduler, service
     scheduler.assign_for_plan(conn, plan_id, today_iso=str(today))
     # Complete the session scheduled for the cutoff day itself.
     cutoff = str(today + timedelta(days=2))
@@ -228,7 +228,7 @@ def test_clear_future_keeps_pushed_sessions_garmin_refuses():
                  "easy" if i == 0 else "rest") for i in range(4)]
     plan_id = _make_plan(conn, workouts)
 
-    from running_coach.strength import scheduler, service
+    from runsphera.strength import scheduler, service
     scheduler.assign_for_plan(conn, plan_id, today_iso=str(today))
     cutoff = str(today + timedelta(days=2))
     conn.execute(
@@ -252,7 +252,7 @@ def test_clear_future_releases_pushed_sessions_then_deletes():
                  "easy" if i == 0 else "rest") for i in range(4)]
     plan_id = _make_plan(conn, workouts)
 
-    from running_coach.strength import scheduler, service
+    from runsphera.strength import scheduler, service
     scheduler.assign_for_plan(conn, plan_id, today_iso=str(today))
     cutoff = str(today + timedelta(days=2))
     conn.execute(
@@ -277,7 +277,7 @@ def test_clear_future_without_a_client_keeps_pushed_rows():
                  "easy" if i == 0 else "rest") for i in range(4)]
     plan_id = _make_plan(conn, workouts)
 
-    from running_coach.strength import scheduler, service
+    from runsphera.strength import scheduler, service
     scheduler.assign_for_plan(conn, plan_id, today_iso=str(today))
     cutoff = str(today + timedelta(days=2))
     conn.execute(
@@ -296,7 +296,7 @@ def test_seed_library_idempotent():
     """seed_library_if_empty is a no-op once the table is populated.
     The expected row count tracks `library.LIBRARY` so this test stays
     correct as sessions get added."""
-    from running_coach.strength import library, service
+    from runsphera.strength import library, service
     expected = len(library.LIBRARY)
 
     conn, _ = _fresh_db()

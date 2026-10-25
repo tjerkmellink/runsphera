@@ -46,7 +46,7 @@ To remove it from Garmin Connect, click **↺ Unpush** in the same place — we 
 
 ### Activity matching (auto-mark complete)
 
-When the runner completes a pushed strength session on the watch and the activity syncs back, the matcher in `running_coach/strength/matcher.py` links it to the scheduled `plan_strength_sessions` row. The chip on the rest-day cell flips to ✓ without any manual click, and the modal grows an **Actual** stats panel showing the real duration, average / max HR, calories, and Garmin training load.
+When the runner completes a pushed strength session on the watch and the activity syncs back, the matcher in `runsphera/strength/matcher.py` links it to the scheduled `plan_strength_sessions` row. The chip on the rest-day cell flips to ✓ without any manual click, and the modal grows an **Actual** stats panel showing the real duration, average / max HR, calories, and Garmin training load.
 
 The match is **strict**: it relies on Garmin echoing the pushed `workoutId` back inside the activity payload. Any strength-flavored activity that doesn't carry our pushed `workoutId` is left alone — manual gym sessions never get misattributed to a scheduled session. *Mark complete* in the modal stays available as the manual escape hatch for sessions the runner did without pushing.
 
@@ -68,7 +68,7 @@ The cache is global (not per-user). Switching language re-keys the cache because
 
 ### Garmin canonical exercise catalog
 
-[running_coach/strength/garmin_catalog.py](../running_coach/strength/garmin_catalog.py) surfaces Garmin's full exercise enum table via the `garmin-fit-sdk` dependency. That gives us the 53 canonical categories and per-category exercise lists (e.g. 61 plank variants, 43 squat variants of bodyweight type) that the watch firmware knows by name — `category` + `exerciseName` is what triggers the watch's built-in animations during a session. The library above references those enum values **directly** in every exercise dict.
+[runsphera/strength/garmin_catalog.py](../runsphera/strength/garmin_catalog.py) surfaces Garmin's full exercise enum table via the `garmin-fit-sdk` dependency. That gives us the 53 canonical categories and per-category exercise lists (e.g. 61 plank variants, 43 squat variants of bodyweight type) that the watch firmware knows by name — `category` + `exerciseName` is what triggers the watch's built-in animations during a session. The library above references those enum values **directly** in every exercise dict.
 
 ### Animation allowlist + import-time validator
 
@@ -103,22 +103,22 @@ The allowlist is empirical — built from 5 probe workouts across 75 candidate e
 
 ### Modules
 
-- [running_coach/strength/library.py](../running_coach/strength/library.py) — the six canonical sessions as Python data. Edit / extend by appending more entries to `LIBRARY`.
-- [running_coach/strength/service.py](../running_coach/strength/service.py) — read/write helpers for `plan_strength_sessions`, the seeder, and small library-fetch utilities. `todays_strength_session(conn)` powers the dashboard flagship (active plan's session for today, with matched-activity actuals joined).
-- [running_coach/strength/scheduler.py](../running_coach/strength/scheduler.py) — `assign_for_plan()` does the rotation walk with the recovery-after-quality override.
-- [running_coach/strength/garmin_catalog.py](../running_coach/strength/garmin_catalog.py) — wrapper around the FIT SDK exercise enum tables; powers the catalog browse + the push payload builder.
-- [running_coach/strength/garmin_push.py](../running_coach/strength/garmin_push.py) — `build_payload(session)` constructs the Garmin POST JSON; `push_session(conn, client, id)` uploads + schedules + records the IDs; `unpush_session(conn, client, id)` cleans up.
-- [running_coach/strength/matcher.py](../running_coach/strength/matcher.py) — `match_strength_sessions(conn)` walks every strength-flavored activity, reads `workoutId` from `raw_json`, links to the matching `plan_strength_sessions` row, stamps `actual_activity_id` + (if not already set) `completed_at`. Idempotent — re-running yields the same links. Wired into `ingest.ingest_activities` and the `/ingest` web route so it runs after each sync.
+- [runsphera/strength/library.py](../runsphera/strength/library.py) — the six canonical sessions as Python data. Edit / extend by appending more entries to `LIBRARY`.
+- [runsphera/strength/service.py](../runsphera/strength/service.py) — read/write helpers for `plan_strength_sessions`, the seeder, and small library-fetch utilities. `todays_strength_session(conn)` powers the dashboard flagship (active plan's session for today, with matched-activity actuals joined).
+- [runsphera/strength/scheduler.py](../runsphera/strength/scheduler.py) — `assign_for_plan()` does the rotation walk with the recovery-after-quality override.
+- [runsphera/strength/garmin_catalog.py](../runsphera/strength/garmin_catalog.py) — wrapper around the FIT SDK exercise enum tables; powers the catalog browse + the push payload builder.
+- [runsphera/strength/garmin_push.py](../runsphera/strength/garmin_push.py) — `build_payload(session)` constructs the Garmin POST JSON; `push_session(conn, client, id)` uploads + schedules + records the IDs; `unpush_session(conn, client, id)` cleans up.
+- [runsphera/strength/matcher.py](../runsphera/strength/matcher.py) — `match_strength_sessions(conn)` walks every strength-flavored activity, reads `workoutId` from `raw_json`, links to the matching `plan_strength_sessions` row, stamps `actual_activity_id` + (if not already set) `completed_at`. Idempotent — re-running yields the same links. Wired into `ingest.ingest_activities` and the `/ingest` web route so it runs after each sync.
 
 ### Templates
 
-- [_week_card.html](../running_coach/web/templates/_week_card.html) — adds the strength chip alongside each day cell.
-- [_plan_strength_modal.html](../running_coach/web/templates/_plan_strength_modal.html) — detail modal body, including the block / exercise / superset rendering and the push/unpush + complete/undo controls.
-- [index.html](../running_coach/web/templates/index.html) — the rest-day strength flagship branch (`{% elif todays_strength %}`) + the `#plan-strength-modal` dialog mounted on the dashboard.
-- [_flagship_aside.html](../running_coach/web/templates/_flagship_aside.html) — bonus-tip + next-race aside, extracted so both the running and strength flagships share it.
-- [_strength_explain.html](../running_coach/web/templates/_strength_explain.html) — "Explain more" link partial.
-- [_plan_settings_modal.html](../running_coach/web/templates/_plan_settings_modal.html) — toggle checkbox inside the Name & notes form.
-- [plans_new.html](../running_coach/web/templates/plans_new.html) — toggle checkbox in the Extras block.
+- [_week_card.html](../runsphera/web/templates/_week_card.html) — adds the strength chip alongside each day cell.
+- [_plan_strength_modal.html](../runsphera/web/templates/_plan_strength_modal.html) — detail modal body, including the block / exercise / superset rendering and the push/unpush + complete/undo controls.
+- [index.html](../runsphera/web/templates/index.html) — the rest-day strength flagship branch (`{% elif todays_strength %}`) + the `#plan-strength-modal` dialog mounted on the dashboard.
+- [_flagship_aside.html](../runsphera/web/templates/_flagship_aside.html) — bonus-tip + next-race aside, extracted so both the running and strength flagships share it.
+- [_strength_explain.html](../runsphera/web/templates/_strength_explain.html) — "Explain more" link partial.
+- [_plan_settings_modal.html](../runsphera/web/templates/_plan_settings_modal.html) — toggle checkbox inside the Name & notes form.
+- [plans_new.html](../runsphera/web/templates/plans_new.html) — toggle checkbox in the Extras block.
 
 ### Routes
 
@@ -266,8 +266,8 @@ Four details in the payload control whether the watch will actually accept the w
 | What | Where | Notes |
 |---|---|---|
 | Enable per plan | Plan creation form / Plan settings modal | Persisted on `plans.include_optional_strength`. |
-| Rotation order | `running_coach/strength/library.py` → `LIBRARY` | Walks the list top-to-bottom, minus `recovery_mobility` (which is auto-pulled). |
-| Quality types that trigger recovery override | `running_coach/strength/scheduler.py` → `_QUALITY_TYPES` | `{"tempo", "intervals", "long", "race"}`. |
+| Rotation order | `runsphera/strength/library.py` → `LIBRARY` | Walks the list top-to-bottom, minus `recovery_mobility` (which is auto-pulled). |
+| Quality types that trigger recovery override | `runsphera/strength/scheduler.py` → `_QUALITY_TYPES` | `{"tempo", "intervals", "long", "race"}`. |
 | Add a new session | Append a dict to `library.LIBRARY` | Schema seeder picks it up on next DB connect when the table is empty. For an existing DB, see "Re-seeding the library" below. |
 
 ### Re-seeding the library
@@ -308,7 +308,7 @@ Auto-migration of library additions is a follow-up; see "Future improvements" be
 - **Equipment filter** — add bands / dumbbells / kettlebells to the library with an equipment chip set, and let the runner say "show me only bodyweight" or "I have a kettlebell at home."
 - **Streaks + adherence on strength** — small weekly count next to the running adherence pill on the plan hero.
 - **Base-theme port** — render the chip + modal in the calm/neutral layout (the dashboard flagship is also Tempo-only for now).
-- ~~**LLM coach awareness**~~ — *shipped:* today's scheduled / completed strength session now feeds the daily-coach request context ([context.py](../running_coach/llm/context.py) → [prompts.py](../running_coach/llm/prompts.py)).
+- ~~**LLM coach awareness**~~ — *shipped:* today's scheduled / completed strength session now feeds the daily-coach request context ([context.py](../runsphera/llm/context.py) → [prompts.py](../runsphera/llm/prompts.py)).
 - ~~**Dashboard surfacing**~~ — *shipped:* rest-day strength flagship with done-flip + inline mark-done (see "On the dashboard" above).
 
 ---

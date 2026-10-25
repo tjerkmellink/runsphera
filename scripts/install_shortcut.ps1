@@ -3,7 +3,7 @@ Create a RunSphera.lnk shortcut that pins to the taskbar with the RunSphera
 icon (not the Python feather).
 
 Two things make pinning work:
-  1. The shortcut's IconLocation points at running_coach/assets/RunSphera.ico.
+  1. The shortcut's IconLocation points at runsphera/assets/RunSphera.ico.
   2. The shortcut carries System.AppUserModel.ID = "RunSphera.Coach", matching
      the SetCurrentProcessExplicitAppUserModelID the app sets at launch. That
      shared identity is what lets Windows merge the running window into the
@@ -20,9 +20,9 @@ $ErrorActionPreference = 'Stop'
 
 $Root    = Split-Path -Parent $PSScriptRoot
 $PythonW = Join-Path $Root '.venv\Scripts\pythonw.exe'
-$Icon    = Join-Path $Root 'running_coach\assets\RunSphera.ico'
+$Icon    = Join-Path $Root 'runsphera\assets\RunSphera.ico'
 $AppId   = 'RunSphera.Coach'
-$Arguments = '-m running_coach.desktop'
+$Arguments = '-m runsphera.desktop'
 
 if (-not (Test-Path $PythonW)) { throw "pythonw.exe not found at $PythonW - run install.cmd first to create the venv." }
 if (-not (Test-Path $Icon))    { throw "Icon not found at $Icon - run scripts\build_brand_assets.py first." }

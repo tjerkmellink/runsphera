@@ -34,11 +34,11 @@ mode this codebase has been bitten by most often.
 
 ## How it works (implementation)
 
-- **Modules**: [`running_coach/web/security.py`](../running_coach/web/security.py) — the
+- **Modules**: [`runsphera/web/security.py`](../runsphera/web/security.py) — the
   whole feature. `bare_host()` normalises a `Host`/`Origin` header to a bare hostname;
   `allowed_hosts()` resolves the allow-list; `SameOriginMiddleware.refusal()` is a pure
   function returning a reason string or `None`.
-- **Wiring**: [`running_coach/web/app.py`](../running_coach/web/app.py) —
+- **Wiring**: [`runsphera/web/app.py`](../runsphera/web/app.py) —
   `app.add_middleware(SameOriginMiddleware)`, immediately after the `FastAPI()` call so it
   wraps every route.
 - **Routes**: all of them. 70 `@app.post` routes are covered without being touched
@@ -105,7 +105,7 @@ Start the app on a throwaway database so nothing real is at risk:
 
 ```powershell
 $env:RUNNING_COACH_DB = "$env:TEMP\smoke.db"
-.venv\Scripts\python.exe -m uvicorn running_coach.web.app:app --port 8771
+.venv\Scripts\python.exe -m uvicorn runsphera.web.app:app --port 8771
 ```
 
 Then, from another shell:

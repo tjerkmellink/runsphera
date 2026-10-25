@@ -18,7 +18,7 @@ The explainer modal answers exactly that — long-form editorial copy per method
 ## How it works (implementation)
 
 - **Modules**:
-  - `running_coach/plans/explainers.py` — the content. `MethodologyExplainer` (tagline, credit, lead, sections) → `ExplainerSection` (heading, paragraphs, bullets, optional illustration) → `Illustration` (slug, concept, prompt). `_EXPLAINERS` dict keyed by methodology id; `get_explainer(id)` returns `None` when unauthored. `ILLUSTRATION_STYLE` is the shared house-style suffix appended to every prompt.
+  - `runsphera/plans/explainers.py` — the content. `MethodologyExplainer` (tagline, credit, lead, sections) → `ExplainerSection` (heading, paragraphs, bullets, optional illustration) → `Illustration` (slug, concept, prompt). `_EXPLAINERS` dict keyed by methodology id; `get_explainer(id)` returns `None` when unauthored. `ILLUSTRATION_STYLE` is the shared house-style suffix appended to every prompt.
 - **Templates**:
   - `web/templates/_method_detail.html` — the modal body. Renders the explainer, or falls back to the tile's own `description` + `best_for` when no explainer exists.
   - `web/templates/plans_new.html` — the tile's **Read more** button (`hx-get` → `#method-detail-content`, then `showModal()`) and the `#method-detail-modal` `<dialog>` shell.

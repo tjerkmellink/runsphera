@@ -28,15 +28,15 @@ Saving a card flashes a green confirmation banner at the top.
 
 ### Modules
 
-- [running_coach/settings.py](../running_coach/settings.py) — all read/write helpers for the `app_settings` single-row table:
+- [runsphera/settings.py](../runsphera/settings.py) — all read/write helpers for the `app_settings` single-row table:
   - Garmin: `get_garmin_email`, `set_garmin_email`, `get_garmin_full_name`, `set_garmin_full_name`, `garmin_first_name`.
   - Claude: `get_anthropic_key`, `set_anthropic_key`, `clear_anthropic_key`, `mask_anthropic_key`.
   - About-you: `get_about_you`, `set_about_you`. Cap: `ABOUT_YOU_MAX_CHARS = 1000`.
 
 ### Templates
 
-- [settings.html](../running_coach/web/templates/settings.html) — the page. Inline CSS for the card grid and pill styling.
-- [base.html](../running_coach/web/templates/base.html) — the ⚙ icon in the top nav.
+- [settings.html](../runsphera/web/templates/settings.html) — the page. Inline CSS for the card grid and pill styling.
+- [base.html](../runsphera/web/templates/base.html) — the ⚙ icon in the top nav.
 
 ### Routes
 
@@ -64,7 +64,7 @@ A row is seeded with `INSERT OR IGNORE INTO app_settings (id) VALUES (1)` on sch
 
 ### Startup hook
 
-On FastAPI startup, [app.py](../running_coach/web/app.py) reads the saved Claude key from the DB and writes it to `os.environ["ANTHROPIC_API_KEY"]` if no env var is already set. This means a DB-stored key survives restarts without needing `.env`.
+On FastAPI startup, [app.py](../runsphera/web/app.py) reads the saved Claude key from the DB and writes it to `os.environ["ANTHROPIC_API_KEY"]` if no env var is already set. This means a DB-stored key survives restarts without needing `.env`.
 
 ## Configuration
 

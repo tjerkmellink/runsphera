@@ -4,9 +4,9 @@ local @font-face CSS pointing at them. Run from the project root:
     .venv\\Scripts\\python.exe scripts\\fetch_theme_fonts.py
 
 Output:
-    running_coach/web/static/fonts/<family>-<weight>[i].woff2
-    running_coach/web/static/fonts/tempo-fonts.css
-    running_coach/web/static/fonts/redline-fonts.css
+    runsphera/web/static/fonts/<family>-<weight>[i].woff2
+    runsphera/web/static/fonts/tempo-fonts.css
+    runsphera/web/static/fonts/redline-fonts.css
 
 Google Fonts serves different files based on User-Agent; we ask for the modern
 Chrome stack to get woff2 (smallest, broadly supported).
@@ -20,7 +20,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-FONTS_DIR = ROOT / "running_coach" / "web" / "static" / "fonts"
+FONTS_DIR = ROOT / "runsphera" / "web" / "static" / "fonts"
 FONTS_DIR.mkdir(parents=True, exist_ok=True)
 
 UA = (

@@ -12,7 +12,7 @@ Three providers are pluggable from Settings → Coach voice; switching never cle
 | OpenAI | `gpt-4o-mini` | Pay-as-you-go after $5 starter credit | ~€0.10/year at one call/day; capable enough for the coach use case |
 | Gemini | `gemini-2.5-flash` | **Truly free** on AI Studio (1500 req/day) | The only ongoing-free option — get a key at aistudio.google.com |
 
-The active provider is stored in `app_settings.llm_provider`; each provider's key in its own column (`anthropic_api_key`, `openai_api_key`, `gemini_api_key`), so switching providers never clobbers another's saved key. Provider modules live in `running_coach/llm/providers/_<name>.py`, dispatched through `running_coach/llm/connector.py`.
+The active provider is stored in `app_settings.llm_provider`; each provider's key in its own column (`anthropic_api_key`, `openai_api_key`, `gemini_api_key`), so switching providers never clobbers another's saved key. Provider modules live in `runsphera/llm/providers/_<name>.py`, dispatched through `runsphera/llm/connector.py`.
 
 ## Purpose
 
@@ -52,10 +52,10 @@ A third surface, the **weekly recap**, anchors the runner to the weekly arc with
 
 ### Modules
 
-- [running_coach/llm/connector.py](../running_coach/llm/connector.py) — thin Anthropic SDK wrapper. Handles missing API keys, typed exception handling (`AuthenticationError`, `RateLimitError`, `APIError`), returns `LLMResult` or `None`. Defaults to `claude-opus-4-7` with adaptive thinking + `effort: "medium"`.
-- [running_coach/llm/prompts.py](../running_coach/llm/prompts.py) — three system prompts (`SYSTEM_PROMPT` for the daily banner, `RUN_REACTION_SYSTEM_PROMPT` for the per-run debrief, `WEEKLY_RECAP_SYSTEM_PROMPT` for the Sunday wrap-up), one shared `profile_block(...)` (cached runner identity), and three request-block builders (`request_block`, `run_reaction_request_block`, `weekly_recap_request_block`).
-- [running_coach/llm/context.py](../running_coach/llm/context.py) — pulls the runner profile, recent runs, and diary entries from SQLite. Four builders: `build_profile_context(conn)`, `build_request_context(conn, recommendation, todays_workout)`, `build_run_reaction_context(conn, activity_id)`, and `build_weekly_recap_context(conn, today=None)`. Plus the small `target_recap_week(today)` helper that picks the most-recently-completed Mon–Sun.
-- [running_coach/llm/commentary.py](../running_coach/llm/commentary.py) — three public entry points:
+- [runsphera/llm/connector.py](../runsphera/llm/connector.py) — thin Anthropic SDK wrapper. Handles missing API keys, typed exception handling (`AuthenticationError`, `RateLimitError`, `APIError`), returns `LLMResult` or `None`. Defaults to `claude-opus-4-7` with adaptive thinking + `effort: "medium"`.
+- [runsphera/llm/prompts.py](../runsphera/llm/prompts.py) — three system prompts (`SYSTEM_PROMPT` for the daily banner, `RUN_REACTION_SYSTEM_PROMPT` for the per-run debrief, `WEEKLY_RECAP_SYSTEM_PROMPT` for the Sunday wrap-up), one shared `profile_block(...)` (cached runner identity), and three request-block builders (`request_block`, `run_reaction_request_block`, `weekly_recap_request_block`).
+- [runsphera/llm/context.py](../runsphera/llm/context.py) — pulls the runner profile, recent runs, and diary entries from SQLite. Four builders: `build_profile_context(conn)`, `build_request_context(conn, recommendation, todays_workout)`, `build_run_reaction_context(conn, activity_id)`, and `build_weekly_recap_context(conn, today=None)`. Plus the small `target_recap_week(today)` helper that picks the most-recently-completed Mon–Sun.
+- [runsphera/llm/commentary.py](../runsphera/llm/commentary.py) — three public entry points:
   - `daily_coach_message(conn, recommendation, todays_workout, *, force_refresh=False)` — daily banner, day-keyed cache.
   - `run_reaction(conn, activity_id, *, force_refresh=False)` — per-activity coach debrief, cached under `run_reaction:{activity_id}` in `llm_cache`.
   - `weekly_recap(conn, *, force_refresh=False, today=None)` — last week's recap, cached under `weekly_recap:YYYY-Www`. Returns `{text, week_label, week_start_iso, week_end_iso, week_key}` so the template can render the header.
@@ -64,9 +64,9 @@ A third surface, the **weekly recap**, anchors the runner to the weekly arc with
 
 ### Templates
 
-- [_coach_message.html](../running_coach/web/templates/_coach_message.html) — the daily headline + ↻ regenerate button. Used both inline in [index.html](../running_coach/web/templates/index.html) and as the HTMX swap target.
-- [_run_reaction.html](../running_coach/web/templates/_run_reaction.html) — the post-run debrief strip + ↻ regenerate button. Included at the top of [_run_detail.html](../running_coach/web/templates/_run_detail.html); also the HTMX swap target.
-- [_weekly_recap.html](../running_coach/web/templates/_weekly_recap.html) — the "Last week" card + ↻ regenerate button. Included on the dashboard between the daily banner and Today's note; also the HTMX swap target.
+- [_coach_message.html](../runsphera/web/templates/_coach_message.html) — the daily headline + ↻ regenerate button. Used both inline in [index.html](../runsphera/web/templates/index.html) and as the HTMX swap target.
+- [_run_reaction.html](../runsphera/web/templates/_run_reaction.html) — the post-run debrief strip + ↻ regenerate button. Included at the top of [_run_detail.html](../runsphera/web/templates/_run_detail.html); also the HTMX swap target.
+- [_weekly_recap.html](../runsphera/web/templates/_weekly_recap.html) — the "Last week" card + ↻ regenerate button. Included on the dashboard between the daily banner and Today's note; also the HTMX swap target.
 
 Tempo theme adds editorial pull-quote versions of each — see [design-system.md](design-system.md#editorial-byline-trio-llm-voice-surfaces). The refresh routes select the per-theme partial based on `app_settings.get_theme(conn)` so the HTMX swap preserves the editorial layout.
 
@@ -157,12 +157,12 @@ Older weeks' cached recaps stay untouched — they describe a fixed period and w
 |---|---|---|
 | Anthropic API key | `/settings` → Claude card, or `ANTHROPIC_API_KEY` env var | DB-stored key overrides env. Cleared from Settings falls back to env value. |
 | About-you note | `/settings` → About you card | Optional. When set, surfaces in the cached profile block as "WHAT THE RUNNER WANTS YOU TO KNOW — treat as ground truth". |
-| Model | `DEFAULT_MODEL = "claude-opus-4-7"` in [connector.py](../running_coach/llm/connector.py) | Edit to downgrade for cost. Adaptive thinking + `effort: "medium"` set per call. |
+| Model | `DEFAULT_MODEL = "claude-opus-4-7"` in [connector.py](../runsphera/llm/connector.py) | Edit to downgrade for cost. Adaptive thinking + `effort: "medium"` set per call. |
 
 ## Known limitations
 
 - **Hallucinated specifics still possible.** The system prompt forbids inventing numbers, but the model can occasionally cite a metric not in the data. If you see one, regenerate via ↻; if it keeps happening for the same value, the issue is the prompt, not the model.
-- **Day-of-week is hard for LLMs.** Once observed: the weekly recap referred to "Friday's easy run" when the run was actually on Saturday. LLMs are unreliable at deriving weekday from bare ISO dates. Every date the recap, daily-coach, run-reaction, and profile prompts emit is now pre-rendered with the weekday via `_with_dow()` in [prompts.py](../running_coach/llm/prompts.py) (`'2026-05-09'` → `'Sat 2026-05-09'`). If a future prompt builder includes a new date field, run it through that helper.
+- **Day-of-week is hard for LLMs.** Once observed: the weekly recap referred to "Friday's easy run" when the run was actually on Saturday. LLMs are unreliable at deriving weekday from bare ISO dates. Every date the recap, daily-coach, run-reaction, and profile prompts emit is now pre-rendered with the weekday via `_with_dow()` in [prompts.py](../runsphera/llm/prompts.py) (`'2026-05-09'` → `'Sat 2026-05-09'`). If a future prompt builder includes a new date field, run it through that helper.
 - **No streaming.** The banner waits for the full response before rendering. With Opus + adaptive thinking, that's ~3–8s on a fresh call, ~1–2s on a cached call. Acceptable for once-a-day, but the ↻ button feels slow.
 - **No multi-day awareness in voice.** Each day's message is generated independently. Claude doesn't know what it said yesterday, so it can repeat phrasing or themes across days. Not yet a problem in practice.
 - **Cache scoped to one runner.** The cache key has no user id because this is a single-user app. If multi-user support ever ships, the cache key needs scoping.

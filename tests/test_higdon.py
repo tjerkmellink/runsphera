@@ -19,15 +19,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from running_coach.plans.methodology import PlanParams  # noqa: E402
-from running_coach.plans.higdon import (  # noqa: E402
+from runsphera.plans.methodology import PlanParams  # noqa: E402
+from runsphera.plans.higdon import (  # noqa: E402
     HigdonPlan,
     _TIERS,
     _MARATHON_WEEKS,
     _HALF_WEEKS,
     _MARATHON_LONG_KM,
 )
-from running_coach.plans.daniels import _paces_for_vdot  # noqa: E402
+from runsphera.plans.daniels import _paces_for_vdot  # noqa: E402
 
 # Mirrors service.ALLOWED_WORKOUT_TYPES; duplicated so the test avoids importing
 # service.py (which pulls the optional garminconnect dep).
@@ -173,7 +173,7 @@ def test_advanced_has_more_20milers_than_novice() -> None:
 def test_half_ladder_is_never_flattened() -> None:
     """flatten_top is a marathon concept (the two/three 20-milers) — Higdon's
     half schedules peak exactly once, for every tier."""
-    from running_coach.plans.higdon import _HALF_LONG_KM
+    from runsphera.plans.higdon import _HALF_LONG_KM
     half_peak = max(_HALF_LONG_KM)
     for v in _TIERS:
         longs = [w.target_distance_km or 0 for w in _gen("half_marathon", v) if w.workout_type == "long"]
@@ -201,7 +201,7 @@ def test_hill_repeats_distance_matches_structure() -> None:
 def test_weekday_volumes_taper_last_two_weeks() -> None:
     """The race-week 0.6× cut applies only to the final week; the week before
     gets the 0.8× taper — matching the two taper-badged weeks."""
-    from running_coach.plans.higdon import _weekday_km
+    from runsphera.plans.higdon import _weekday_km
     assert _weekday_km(10, 18, 18) == 6.0   # race week
     assert _weekday_km(10, 17, 18) == 8.0   # taper week
     assert _weekday_km(10, 16, 18) == 10.0  # last full week — no cut yet
@@ -214,8 +214,8 @@ def test_registry_variants_match_engine_tiers() -> None:
     attached day offsets must match the tier templates (the form mirrors
     them into the day pickers) and their counts must match the tier copy
     (Novice 4, Intermediate 5, Advanced 6 run days)."""
-    from running_coach.plans import get_methodology_info
-    from running_coach.plans.higdon import tier_day_offsets
+    from runsphera.plans import get_methodology_info
+    from runsphera.plans.higdon import tier_day_offsets
     info = get_methodology_info("higdon")
     assert [v[0] for v in info.variants] == list(_TIERS.keys())
     assert {v[0]: v[1] for v in info.variants} == {

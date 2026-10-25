@@ -23,11 +23,11 @@ The card always renders unless the rules return `None` (currently never — ther
 
 ### Modules
 
-- [running_coach/tips.py](../running_coach/tips.py) — single function `daily_tip(conn, today=None)`. Pure: reads today's planned workout, yesterday's planned workout, and yesterday's actual run, then walks a decision tree. Plus the `CATEGORY_LABELS` dict used by the template for human-readable names.
+- [runsphera/tips.py](../runsphera/tips.py) — single function `daily_tip(conn, today=None)`. Pure: reads today's planned workout, yesterday's planned workout, and yesterday's actual run, then walks a decision tree. Plus the `CATEGORY_LABELS` dict used by the template for human-readable names.
 
 ### Templates
 
-- [_daily_tip.html](../running_coach/web/templates/_daily_tip.html) — the card. Mirrors `today-card` HTML structure (swatch + grow body) with its own CSS class prefix `tip-card` / `tip-cat-*`.
+- [_daily_tip.html](../runsphera/web/templates/_daily_tip.html) — the card. Mirrors `today-card` HTML structure (swatch + grow body) with its own CSS class prefix `tip-card` / `tip-cat-*`.
 
 ### Routes
 
@@ -60,7 +60,7 @@ The function classifies based on today's workout type first, then falls through 
 2. Garmin `training_load >= 100` on the actual run, OR
 3. Actual run duration `≥ 75 min`.
 
-Internal helpers: `_yesterdays_planned`, `_yesterdays_run`, `_was_hard_yesterday`. Constants `_HARD_TYPES` and `_MODERATE_TYPES` mirror the same sets in [plan_coach](../running_coach/plans/coach.py).
+Internal helpers: `_yesterdays_planned`, `_yesterdays_run`, `_was_hard_yesterday`. Constants `_HARD_TYPES` and `_MODERATE_TYPES` mirror the same sets in [plan_coach](../runsphera/plans/coach.py).
 
 ## Configuration
 
@@ -84,7 +84,7 @@ None. The tip is fully deterministic from the data.
    - Wednesday (tempo/intervals) → "Bookend your quality session · 15 min".
    - Sunday (long run) → "Post-long-run reset · 10 min".
    - Rest day after a long run → "Active recovery walk · 30 min".
-4. The swatch color should match the category (check the [CSS rules](../running_coach/web/templates/base.html) section for `.tip-cat-*`).
+4. The swatch color should match the category (check the [CSS rules](../runsphera/web/templates/base.html) section for `.tip-cat-*`).
 5. Hover the duration pill — no tooltip needed; the number plus the category label tell the story.
 
 ## Future improvements
