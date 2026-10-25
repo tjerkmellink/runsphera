@@ -156,6 +156,10 @@ future direction, and the ingest layer is where that seam belongs.
 Code is MIT (see [LICENSE](LICENSE)). By contributing you agree your work is
 licensed the same way.
 
-The RunSphera **name, wordmark and icon are not covered by the MIT grant** and
-are not included in this repository. Fork the code freely; ship it under your
-own name.
+The **RunSphera name and identity are not part of the MIT grant.** The app's
+icons and splash images ship in `runsphera/web/static/brand/` because the app
+cannot render without them, and they are MIT-licensed like everything else in
+the tree — but that licence covers *using the software*, not adopting its
+name. The design masters and the wordmark are not in this repository.
+
+Fork the code freely. Ship it under your own name.

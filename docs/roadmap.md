@@ -227,4 +227,4 @@ Items off the immediate path — either bigger than they look, blocked on someth
 
 **MIT** as of 2026-10-23 — see [LICENSE](../LICENSE) and the README's License + Disclaimer sections. Self-hostable, run-your-own-instance; no hosted tier and no account, by design.
 
-Brand assets — the RunSphera name, wordmark and icon — are **not** covered by the MIT grant. Fork the code freely; ship it under your own name.
+The **RunSphera name and identity are not part of the MIT grant.** The app's icons and splash images ship in `runsphera/web/static/brand/` because the app cannot render without them, and they carry the same MIT licence as the rest of the tree — but that licence covers using the software, not adopting its name. The design masters and wordmark stay out of the public repo. Fork the code freely; ship it under your own name.
