@@ -1,0 +1,16 @@
+# Development-only dependencies. The app itself never imports these.
+#
+#   .venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-dev.txt
+#
+# Without this file a fresh clone can install and run the app but cannot run
+# the test suite — pytest was never declared anywhere. Every test module also
+# carries a `main()` runner so a single file can be executed directly with no
+# test framework at all:
+#
+#   .venv\Scripts\python.exe tests\test_daniels_paces.py
+
+pytest>=8.0
+
+# Optional. The codebase uses ruff-style `# noqa:` directives but ships no
+# ruff config, so linting is advisory rather than enforced.
+ruff>=0.6

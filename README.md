@@ -118,17 +118,18 @@ reshaped, its page is updated in the same change.
 
 ## Working on the code
 
-Start with [docs/architecture.md](docs/architecture.md) — it records the decisions
-other components depend on, and why each was made. Understand the reasoning before
-changing one.
+Start with **[CONTRIBUTING.md](CONTRIBUTING.md)** — setup, the test
+conventions, and how to open a pull request.
 
-Two contracts are easy to break silently and worth reading before you touch them:
-[docs/garmin-workout-push.md](docs/garmin-workout-push.md) (what the watch will and
-won't accept) and [docs/design-system.md](docs/design-system.md) (colour tokens and
-the `t()` translation layer — both fail invisibly to the test suite).
+Then **[CLAUDE.md](CLAUDE.md)** for the architecture summary, the operational
+gotchas, and the development workflow, and **[AGENTS.md](AGENTS.md)** for the code
+review standards. All three apply to humans and coding agents alike.
 
 ```powershell
-# Run the tests (311 tests, ~5 s, no network)
+# Install dev dependencies too — pytest is not in requirements.txt
+.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-dev.txt
+
+# Run the tests (383 tests, ~6 s, no network)
 .venv\Scripts\python.exe -m pytest tests -q
 
 # Web app with auto-reload, for development

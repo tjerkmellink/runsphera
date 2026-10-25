@@ -62,8 +62,3 @@ RunSphera.lnk
 # live elsewhere under brand/). Keep the folder, ignore its heavy contents.
 brand/source/*
 !brand/source/.gitkeep
-
-# Agent instructions — canonical copies live in the private archive repo.
-# Present on disk so coding agents read them; never published.
-CLAUDE.md
-AGENTS.md

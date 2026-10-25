@@ -213,7 +213,7 @@ running_coach/
 .venv\Scripts\python.exe -m pytest tests -q
 ```
 
-311 tests, roughly 5 seconds, no network. The convention is plain module-level `def test_*()` functions with bare `assert`s — no fixtures, no classes, no pytest-specific API — plus a `main()` runner at the bottom so each file is also executable on its own against a fresh checkout. Keep it that way; it is what lets a test double as a readable statement of what the methodology promises.
+383 tests, roughly 6 seconds, no network. The convention is plain module-level `def test_*()` functions with bare `assert`s — no fixtures, no classes, no pytest-specific API — plus a `main()` runner at the bottom so each file is also executable on its own against a fresh checkout. Keep it that way; it is what lets a test double as a readable statement of what the methodology promises.
 
 Tests that need a database build one with `tempfile.mkdtemp()` and `connect(tmp)`, or point `RUNNING_COACH_DB` at a temp file. A test must never touch `data/running_coach.db`.
 
