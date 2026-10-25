@@ -80,7 +80,7 @@ Navigation on every step:
 
 Manual smoke test (against a **copy** of the DB — never the live one):
 
-1. Point `RUNNING_COACH_DB` at a copy and reset: `UPDATE app_settings SET onboarding_status='pending', onboarding_step='welcome';`
+1. Point `RUNSPHERA_DB` at a copy and reset: `UPDATE app_settings SET onboarding_status='pending', onboarding_step='welcome';`
 2. Load `/` — the wizard auto-opens on Step 1.
 3. Click through **Skip →** / **Continue →** to Step 6 (the goal finale) — no console errors, dots advance.
 4. The finale shows "You're almost there!" with baseline stat cards. Click **Find my plan →** — the dialog hands off to `/plans/new`, and `onboarding_status` is now `completed`.

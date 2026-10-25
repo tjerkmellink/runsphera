@@ -75,7 +75,7 @@ Settings *is* the configuration surface. The only escape hatches that don't live
 | `GARMIN_EMAIL` / `GARMIN_PASSWORD` | Bypass the web sign-in flow for headless CLI ingests. Only consulted when the token cache is empty. |
 | `GARMIN_TOKEN_DIR` | Where the Garmin session token is cached. Default `./.garmin_tokens`. |
 | `ANTHROPIC_API_KEY` | Alternative to the Settings card. A key saved via Settings overrides this. |
-| `RUNNING_COACH_DB` | Override the SQLite path. Default `./data/running_coach.db`. |
+| `RUNSPHERA_DB` | Override the SQLite path. Default `./data/running_coach.db`. |
 
 ## Known limitations
 

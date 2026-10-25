@@ -1,6 +1,6 @@
 # RunSphera
 
-> **Run Better. Go Further.**
+> **Keep on running.**
 
 A local-first running coach. It pulls your data from Garmin Connect, analyzes it,
 builds a training plan around a race goal, pushes the planned sessions back to your
@@ -103,13 +103,19 @@ nothing breaks.
   headless ingest. Consulted only when the token cache is empty.
 - `GARMIN_TOKEN_DIR` — where the session token is cached. Defaults to `./.garmin_tokens`.
 - `ANTHROPIC_API_KEY` — alternative to the Settings page. A key saved in Settings wins.
-- `RUNNING_COACH_DB` — point the app at a different database file.
-- `RUNNING_COACH_ALLOWED_HOSTS` — comma-separated extra hostnames the app may be
+- `RUNSPHERA_DB` — point the app at a different database file.
+- `RUNSPHERA_ALLOWED_HOSTS` — comma-separated extra hostnames the app may be
   served on. Loopback (`localhost`, `127.0.0.1`, `::1`) is always allowed; set this
   only if you serve RunSphera to another device on your network. See
   [docs/same-origin-protection.md](docs/same-origin-protection.md).
 
 Set these in a `.env` file in the project root. The web flow needs none of them.
+
+> **Upgrading from before the RunSphera rename?** `RUNNING_COACH_DB` and
+> `RUNNING_COACH_ALLOWED_HOSTS` still work and always will. The `RUNSPHERA_*`
+> names take precedence when both are set. The database file is still
+> `data/running_coach.db` — deliberately, so an upgrade never opens an empty
+> database.
 
 ---
 

@@ -51,7 +51,7 @@ Run it:
 .venv\Scripts\uvicorn.exe runsphera.web.app:app --reload --port 8000
 ```
 
-Point `RUNNING_COACH_DB` at a scratch file while developing so you never write
+Point `RUNSPHERA_DB` at a scratch file while developing so you never write
 to a real training history.
 
 ## Running the tests

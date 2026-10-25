@@ -16,7 +16,7 @@ Working on the code — human or agent — also means [CLAUDE.md](../CLAUDE.md) 
 | Page | What it covers |
 |---|---|
 | [architecture.md](architecture.md) | The load-bearing decisions everything else follows from: rules-decide / LLM-speaks, the single SQLite file and its additive-migration rule, the methodology registry contract, `workout_structure` as the contract with the watch, server-rendered HTMX, and the token/`t()` layers. Plus the module map, the stack, and the honest limitations. |
-| [same-origin-protection.md](same-origin-protection.md) | Why a no-login localhost app still needs CSRF defence, and the two checks that provide it: a `Host` allow-list (stops DNS rebinding) plus an `Origin`/`Referer` match on state-changing methods (stops cross-origin POSTs). Covers every route via one middleware; `RUNNING_COACH_ALLOWED_HOSTS` opts in to non-loopback hosts. |
+| [same-origin-protection.md](same-origin-protection.md) | Why a no-login localhost app still needs CSRF defence, and the two checks that provide it: a `Host` allow-list (stops DNS rebinding) plus an `Origin`/`Referer` match on state-changing methods (stops cross-origin POSTs). Covers every route via one middleware; `RUNSPHERA_ALLOWED_HOSTS` opts in to non-loopback hosts. |
 
 ## Documented features
 

@@ -154,7 +154,7 @@ def _splash_html() -> str:
         else """
   <div class="overlay-mark">
     <h1 class="wordmark">RunSphera</h1>
-    <p class="tagline">Run Better. Go Further.</p>
+    <p class="tagline">Keep on running.</p>
   </div>"""
     )
     return f"""\

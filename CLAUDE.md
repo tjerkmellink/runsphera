@@ -70,13 +70,13 @@ The app must stay fully functional with no API key and no network. See architect
 
 ## 2. One SQLite file, additive migrations only
 
-`data/running_coach.db` (override: `RUNNING_COACH_DB`). Schema lives in `db.py` as `SCHEMA` plus an ordered `_MIGRATIONS` list of idempotent `ALTER TABLE` statements.
+`data/running_coach.db` (override: `RUNSPHERA_DB`). Schema lives in `db.py` as `SCHEMA` plus an ordered `_MIGRATIONS` list of idempotent `ALTER TABLE` statements.
 
 `CREATE TABLE IF NOT EXISTS` is silently ignored for a table that already exists. **Never add a column by editing `SCHEMA` alone** — add it there for fresh installs *and* append an `ALTER` to `_MIGRATIONS` for existing databases.
 
 Garmin-sourced tables are regeneratable and carry `raw_json`. Plans, workouts, diary entries, body issues and saved races are **not** regeneratable and have no backup.
 
-**Never delete rows from `plans`, `plan_workouts`, `diary_entries` or `body_*` to clean up after a test or a debugging session.** Real training history has been lost this way. Use `tempfile.mkdtemp()` + `connect(tmp)`, or point `RUNNING_COACH_DB` at a temp file.
+**Never delete rows from `plans`, `plan_workouts`, `diary_entries` or `body_*` to clean up after a test or a debugging session.** Real training history has been lost this way. Use `tempfile.mkdtemp()` + `connect(tmp)`, or point `RUNSPHERA_DB` at a temp file.
 
 Destructive migrations are not an option; a dead column stays in the schema.
 

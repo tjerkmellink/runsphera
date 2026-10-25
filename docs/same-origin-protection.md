@@ -69,7 +69,11 @@ rebinding reads data with `GET`.
 
 | Setting | Default | Where |
 |---|---|---|
-| `RUNNING_COACH_ALLOWED_HOSTS` | unset | `.env` or the environment |
+| `RUNSPHERA_ALLOWED_HOSTS` | unset | `.env` or the environment |
+
+The pre-rename `RUNNING_COACH_ALLOWED_HOSTS` is still read, and the two are
+*merged* rather than one shadowing the other — a host the operator deliberately
+allowed stays allowed whichever name they used.
 
 Allowed by default: `localhost`, `127.0.0.1`, `::1`, `0.0.0.0`, and `testserver` (the host
 Starlette's test client sends).
@@ -78,7 +82,7 @@ Serving RunSphera somewhere other than loopback — a home server you reach from
 say — means naming that host explicitly:
 
 ```
-RUNNING_COACH_ALLOWED_HOSTS=pi.local,192.168.1.40
+RUNSPHERA_ALLOWED_HOSTS=pi.local,192.168.1.40
 ```
 
 Comma-separated, case-insensitive, and additive: the loopback defaults always remain. The
@@ -104,7 +108,7 @@ pick up a new `.env`.
 Start the app on a throwaway database so nothing real is at risk:
 
 ```powershell
-$env:RUNNING_COACH_DB = "$env:TEMP\smoke.db"
+$env:RUNSPHERA_DB = "$env:TEMP\smoke.db"
 .venv\Scripts\python.exe -m uvicorn runsphera.web.app:app --port 8771
 ```
 

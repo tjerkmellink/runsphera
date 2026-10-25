@@ -49,7 +49,7 @@ None. The section appears for every plan; the day pickers only for flexible-sche
 
 Automated: `.venv/Scripts/python.exe tests/test_plan_reshape.py` (8 tests: day moves, completed-row preservation, race move, Garmin cleanup, Pfitzinger re-anchor, far-race guard, validation rejections).
 
-Manual (safe to do on a scratch DB: `RUNNING_COACH_DB=/tmp/x.db uvicorn runsphera.web.app:app`):
+Manual (safe to do on a scratch DB: `RUNSPHERA_DB=/tmp/x.db uvicorn runsphera.web.app:app`):
 
 1. Create a Daniels plan, open **Edit plan** → Schedule & race date shows the current schedule pre-filled.
 2. Change training days and move the race a week; confirm. The banner reports N workouts rebuilt; week cards show the new day pattern; the race lands on the new date; the hero line ("X days/week, long run on …") matches.

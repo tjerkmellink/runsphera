@@ -33,7 +33,7 @@ The LLM layer ([llm/](../runsphera/llm/)) receives a decision that has already b
 
 ## 2. Local-first, one SQLite file, additive migrations only
 
-Everything lives in a single file: `data/running_coach.db` (override with `RUNNING_COACH_DB`). No server, no account, no cloud. Garmin credentials are sent to Garmin once and dropped; only the session token is cached, in `.garmin_tokens/`.
+Everything lives in a single file: `data/running_coach.db` (override with `RUNSPHERA_DB`). No server, no account, no cloud. Garmin credentials are sent to Garmin once and dropped; only the session token is cached, in `.garmin_tokens/`.
 
 Schema handling in [db.py](../runsphera/db.py) has two halves:
 
@@ -215,7 +215,7 @@ runsphera/
 
 383 tests, roughly 6 seconds, no network. The convention is plain module-level `def test_*()` functions with bare `assert`s — no fixtures, no classes, no pytest-specific API — plus a `main()` runner at the bottom so each file is also executable on its own against a fresh checkout. Keep it that way; it is what lets a test double as a readable statement of what the methodology promises.
 
-Tests that need a database build one with `tempfile.mkdtemp()` and `connect(tmp)`, or point `RUNNING_COACH_DB` at a temp file. A test must never touch `data/running_coach.db`.
+Tests that need a database build one with `tempfile.mkdtemp()` and `connect(tmp)`, or point `RUNSPHERA_DB` at a temp file. A test must never touch `data/running_coach.db`.
 
 ## Known limitations
 
